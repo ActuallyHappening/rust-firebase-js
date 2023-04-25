@@ -110,8 +110,6 @@ where
 		callback(data)
 	});
 
-	
-
 	// TODO: implement unsubscribe, I've not needed it yet
 	#[allow(unused_variables)]
 	let unsubscribe = database::on_value(&db_location_reference.0, &raw_closure);
