@@ -1,5 +1,6 @@
 [package]
 name = "firebase-js-sys"
+description = "`wasm32-unknown-unknown` bindings for the Firebase modular JS SDK (`npm` firebase@9)"
 version = "0.1.0"
 edition = "2021"
 authors = []
