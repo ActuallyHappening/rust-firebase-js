@@ -1,5 +1,7 @@
-use firebase_js::app::initialize_app;
+use firebase_js::{app::initialize_app, database::get_database};
 use log::info;
+
+use crate::secrets::URL;
 
 mod secrets;
 
@@ -9,6 +11,7 @@ fn main() {
 
 	info!("firebase-js: main.rs()");
 	
-	let returned = initialize_app(&secrets::get_config());
-	// println!("returned: {:?}", returned);
+	let app = initialize_app(&secrets::get_config()).ok().unwrap();
+
+	let db = get_database(&app, URL.to_string());
 }
