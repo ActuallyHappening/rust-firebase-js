@@ -1,5 +1,7 @@
+use firebase_js::app::initialize_app;
 use log::info;
-use wasm_bindgen::JsValue;
+
+mod secrets;
 
 fn main() {
 	_ = console_log::init_with_level(log::Level::Debug);
@@ -7,6 +9,6 @@ fn main() {
 
 	info!("firebase-js: main.rs()");
 	
-	let returned = firebase_js_sys::app::ModuleApp::initialize_app(&JsValue::UNDEFINED);
+	let returned = initialize_app(&secrets::config);
 	// println!("returned: {:?}", returned);
 }
