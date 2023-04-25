@@ -1,6 +1,10 @@
 # Firebase JS SYS
-**Raw wrappers around the `firebase` npm package** for `Rust consumption.
+**Raw wrappers around the `firebase` npm package** for `Rust` consumption.
 Delicious!
+
+See [the `firebase-js` package](https://github.com/ActuallyHappening/rust-firebase-js/tree/master/firebase-js)
+for a high level implementation layer ontop of this crate, which is probably what you want rather
+than having to manually deal with each `JsValue`.
 
 ## APIs
 APIs are exposed in a similar structure to the `firebase` npm package,

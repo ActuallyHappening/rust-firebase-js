@@ -3,6 +3,10 @@ name = "firebase-js-sys"
 version = "0.1.0"
 edition = "2021"
 authors = []
+repository = "https://github.com/ActuallyHappening/rust-firebase-js/tree/master/firebase-js-sys"
+license = "MIT"
+keywords = ["firebase", "firebase-js", "firebase-database", "wasm", "wasm-bindgen"]
+categories = ["wasm", "web-programming"]
 
 # [lib]
 # crate-type = ["cdylib"]
