@@ -14,3 +14,4 @@ wasm-bindgen = { version = "0.2.84", features = ["serde"] }
 
 # Local dep
 firebase-js-sys = { path = "../firebase-js-sys" }
+serde = { version = "1.0.160", features = ["derive"] }
