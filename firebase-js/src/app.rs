@@ -1,4 +1,4 @@
-use firebase_js_sys::ModuleApp;
+use firebase_js_sys::app;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
@@ -50,7 +50,7 @@ impl FirebaseApp {
 pub fn initialize_app(firebase_config: &FirebaseConfig) -> Result<FirebaseApp, FirebaseError> {
 	match to_value(firebase_config) {
 		Ok(val) => {
-			let app: JsValue = ModuleApp::initialize_app(&val);
+			let app: JsValue = app::initialize_app(&val);
 			Ok(FirebaseApp(app))
 		},
 		Err(_) => Err(FirebaseError::UnimplementedErrorHandling),

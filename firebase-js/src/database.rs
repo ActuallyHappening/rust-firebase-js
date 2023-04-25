@@ -1,4 +1,4 @@
-use firebase_js_sys::{ModuleDatabase};
+use firebase_js_sys::{DatabaseSnapshot, app, database};
 use log::info;
 use wasm_bindgen::{prelude::Closure, JsValue};
 
@@ -31,7 +31,7 @@ mod tests {
 /// let db = get_database(&app, "https://my-project.firebaseio.com");
 /// ```
 pub fn get_database<'a>(app: &'a FirebaseApp, url: String) -> Result<Database, FirebaseError> {
-	let database = ModuleDatabase::get_database_from_url(app.get_js_value(), url);
+	let database = database::get_database_from_url(app.get_js_value(), url);
 	Ok(Database(database))
 }
 
@@ -52,7 +52,7 @@ pub fn get_database<'a>(app: &'a FirebaseApp, url: String) -> Result<Database, F
 /// let db_ref2 = get_ref(&db, "users/1234/name");
 /// ```
 pub fn get_ref(db: &Database, path: String) -> Result<DatabaseReference, FirebaseError> {
-	let reference: JsValue = ModuleDatabase::get_ref(&db.0, path);
+	let reference: JsValue = database::get_ref(&db.0, path);
 	Ok(DatabaseReference(reference))
 }
 
@@ -66,7 +66,7 @@ pub fn get_ref(db: &Database, path: String) -> Result<DatabaseReference, Firebas
 /// let db_ref = get_ref_of_root(&db, "/");
 /// ```
 pub fn get_ref_of_root(db: &Database) -> Result<DatabaseReference, FirebaseError> {
-	let reference: JsValue = ModuleDatabase::get_ref_no_path(&db.0);
+	let reference: JsValue = database::get_ref_no_path(&db.0);
 	Ok(DatabaseReference(reference))
 }
 
@@ -101,7 +101,7 @@ where
 	// };
 	// let closure: closure<T> = Closure::wrap(Box::new(transformed_callback));
 
-	let raw_closure = Closure::new(move | snapshot: DatabaseShapshot | {
+	let raw_closure = Closure::new(move | snapshot: DatabaseSnapshot | {
 		let values: JsValue = snapshot.values();
 		info!("firebase-js: on_value_changed callback fired with {:?}", values.clone());
 		// let err_msg = format!("Could not deserialize: {:?}", raw_obj.clone());
@@ -114,7 +114,7 @@ where
 
 	// TODO: implement unsubscribe, I've not needed it yet
 	#[allow(unused_variables)]
-	let unsubscribe = ModuleDatabase::on_value(&db_location_reference.0, &raw_closure);
+	let unsubscribe = database::on_value(&db_location_reference.0, &raw_closure);
 
 	raw_closure.forget();
 

@@ -1,5 +1,5 @@
-import { app } from './app';
-import { database } from './database';
+import { app as _app } from './app';
+import { database as _database } from './database';
 
-export const ModuleApp = app;
-export const ModuleDatabase = database;
+export const app = _app;
+export const database = _database;

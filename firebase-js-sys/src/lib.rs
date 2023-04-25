@@ -13,10 +13,10 @@
 //! ## Examples:
 //! Usage in general:
 //! ```rs
-//! use firebase_js_sys::ModuleApp;
+//! use firebase_js_sys::app;
 //! 
 //! // Will give runtime console error
-//! ModuleApp::initialize_app(&JsValue::UNDEFINED);
+//! app::initialize_app(&JsValue::UNDEFINED);
 //! ```
 //! 
 //! Example main.rs for using `trunk` to build + run in browser:
@@ -37,21 +37,24 @@
 //! }
 //! ```
 
-
 use wasm_bindgen::prelude::*;
 
 #[allow(non_camel_case_types)]
 type closure<Args> = Closure<dyn FnMut(Args)>;
 
-pub use app::ModuleApp;
-pub use database::{ModuleDatabase, DatabaseSnapshot};
+// pub use app::ModuleApp;
+// pub use database::{ModuleDatabase, DatabaseSnapshot};
+pub use semantic_database::*;
+pub use semantic_app::*;
 
-mod app {
+/// Module name not in the firebase SDK, but useful for code organisation
+mod semantic_app {
 	use wasm_bindgen::prelude::*;
 
 	#[wasm_bindgen(module = "/firebase-interop/bundle.js")]
 	extern "C" {
-		pub type ModuleApp;
+		#[allow(non_camel_case_types)]
+		pub type app;
 
 		/// Takes a config object and returns a firebase app instance
 		/// 
@@ -68,18 +71,20 @@ mod app {
 		/// 
 		/// initializeApp(config);
 		/// ```
-		#[wasm_bindgen(static_method_of = ModuleApp, js_name = "initializeApp")]
+		#[wasm_bindgen(static_method_of = app, js_name = "initializeApp")]
 		pub fn initialize_app(config: &JsValue) -> JsValue;
 	}
 }
 
-mod database {
+/// Module name not in the firebase SDK, but useful for organisation
+mod semantic_database {
 	use wasm_bindgen::prelude::*;
 	use crate::closure;
 
 	#[wasm_bindgen(module = "/firebase-interop/bundle.js")]
 	extern "C" {
-		pub type ModuleDatabase;
+		#[allow(non_camel_case_types)]
+		pub type database;
 
 		/// Takes a firebase app instance (reference) and returns a reference to the database associated with that app
 		/// 
@@ -91,7 +96,7 @@ mod database {
 		/// 
 		/// const db = getDatabase(app);
 		/// ```
-		#[wasm_bindgen(static_method_of = ModuleDatabase, js_name = "getDatabase")]
+		#[wasm_bindgen(static_method_of = database, js_name = "getDatabase")]
 		pub fn get_database_from_url(db: &JsValue, url: String) -> JsValue;
 
 		/// Takes a database instance (reference) and returns a firebase reference to the database, representing a specific path of the database
@@ -107,7 +112,7 @@ mod database {
 		/// ```
 		/// 
 		/// See [get_ref_no_path] for usage without a `path` argument
-		#[wasm_bindgen(static_method_of = ModuleDatabase, js_name = "ref")]
+		#[wasm_bindgen(static_method_of = database, js_name = "ref")]
 		pub fn get_ref(db: &JsValue, path: String) -> JsValue;
 
 		/// See `get_ref`'s documentation, returns a reference to the root of the database
@@ -122,7 +127,7 @@ mod database {
 		/// // Note how is it NOT equivalent to:
 		/// // ref(db, "")
 		/// ```
-		#[wasm_bindgen(static_method_of = ModuleDatabase, js_name = "ref")]
+		#[wasm_bindgen(static_method_of = database, js_name = "ref")]
 		pub fn get_ref_no_path(db: &JsValue) -> JsValue;
 
 		/// Represents a snapshow of the firebase database,
@@ -130,8 +135,8 @@ mod database {
 		pub type DatabaseSnapshot;
 
 		/// Returns the value of a [DatabaseSnapshot]
-		#[wasm_bindgen(js_class = "DatabaseShapshot", js_name = "val")]
-		fn values(this: &DatabaseSnapshot) -> JsValue;
+		#[wasm_bindgen(method, js_name = "val")]
+		pub fn values(this: &DatabaseSnapshot) -> JsValue;
 
 		// #[wasm_bindgen(static_method_of = ModuleDatabase, js_name = "getDatabase")]
 		// pub fn get_default_database(db: &JsValue) -> JsValue;
@@ -143,15 +148,15 @@ mod database {
 		/// ```js
 		/// import { onValue } from 'firebase/database';
 		/// ```
-		#[wasm_bindgen(static_method_of = ModuleDatabase, js_name = "onValue")]
+		#[wasm_bindgen(static_method_of = database, js_name = "onValue")]
 		pub fn on_value(db_ref: &JsValue, callback: &closure<DatabaseSnapshot>) -> JsValue;
 	}
 
-	impl DatabaseSnapshot {
-		pub fn values(&self) -> JsValue {
-			return values(&self);
-		}
-	}
+	// impl DatabaseSnapshot {
+	// 	pub fn values(&self) -> JsValue {
+	// 		return values(&self);
+	// 	}
+	// }
 }
 
 // #[wasm_bindgen(module = "/firebase-interop/database.js")]

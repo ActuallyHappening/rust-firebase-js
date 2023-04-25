@@ -62,10 +62,10 @@ fn main() {
 	let test_de: Test = serde_wasm_bindgen::from_value(test).ok().unwrap();
 	info!("test_de: {:?}", test_de);
 
-	let closure = on_value_changed(&reference, &move |event, raw_obj| {
-		info!("RS: raw_obj: {:?}", raw_obj);
-		log("RS: raw_obj", &raw_obj);
-		window_set(raw_obj);
+	let closure = on_value_changed(&reference, &move |event| {
+		// info!("RS: raw_obj: {:?}", raw_obj);
+		// log("RS: raw_obj", &raw_obj);
+		// window_set(raw_obj);
 		let e: Test = event.ok().unwrap();
 		info!("RS: on_value_changed() WOW! {:?}", e)
 	});

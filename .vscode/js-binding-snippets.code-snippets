@@ -17,10 +17,18 @@
 	// }
 	"js-bind": {
 		"scope": "typescript",
-		"prefix": "jsb",
+		"prefix": "jsb-old",
 		"body": [
 			"import { $1 as _$1 } from \"firebase/$2\";",
 			"_$2.$1 = wrapper(\"$1\", _$1);"
+		]
+	},
+	"js-bind2": {
+		"scope": "typescript",
+		"prefix": "jsb",
+		"body": [
+			"import { $1 } from \"firebase/$2\";",
+			"_$2.$1 = wrapper(\"$1\", $1);"
 		]
 	}
 }
