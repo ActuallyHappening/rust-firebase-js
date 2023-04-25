@@ -36,6 +36,13 @@ extern "C" {
 	fn error(s: &str);
 }
 
+#[wasm_bindgen(inline_js = "export function window_set(t) {
+	window._debug = t;
+}")]
+extern "C" {
+	fn window_set(t: JsValue);
+}
+
 fn main() {
 	_ = console_log::init_with_level(log::Level::Debug);
 	console_error_panic_hook::set_once();
@@ -58,6 +65,7 @@ fn main() {
 	let closure = on_value_changed(&reference, &move |event, raw_obj| {
 		info!("RS: raw_obj: {:?}", raw_obj);
 		log("RS: raw_obj", &raw_obj);
+		window_set(raw_obj);
 		let e: Test = event.ok().unwrap();
 		info!("RS: on_value_changed() WOW! {:?}", e)
 	});

@@ -1,7 +1,6 @@
-use firebase_js_sys::ModuleDatabase;
+use firebase_js_sys::{ModuleDatabase};
 use log::info;
-use serde::Serialize;
-use wasm_bindgen::{prelude::Closure, JsValue, convert::FromWasmAbi, closure::WasmClosure};
+use wasm_bindgen::{prelude::Closure, JsValue};
 
 use crate::{app::FirebaseApp, closure, FirebaseError};
 
@@ -91,7 +90,7 @@ pub fn get_ref_of_root(db: &Database) -> Result<DatabaseReference, FirebaseError
 /// - Potential for convenienve func to take [String] instead of &[DatabaseReference]
 pub fn on_value_changed<T>(
 	db_location_reference: &DatabaseReference,
-	callback: &'static dyn Fn(Result<T, serde_wasm_bindgen::Error>, JsValue),
+	callback: &'static dyn Fn(Result<T, serde_wasm_bindgen::Error>),
 )
 where
 	T: serde::de::DeserializeOwned,
@@ -102,12 +101,13 @@ where
 	// };
 	// let closure: closure<T> = Closure::wrap(Box::new(transformed_callback));
 
-	let raw_closure: closure<JsValue> = Closure::new(move |raw_obj: JsValue| {
-		info!("firebase-js: on_value_changed callback fired with {:?}", raw_obj.clone());
+	let raw_closure = Closure::new(move | snapshot: DatabaseShapshot | {
+		let values: JsValue = snapshot.values();
+		info!("firebase-js: on_value_changed callback fired with {:?}", values.clone());
 		// let err_msg = format!("Could not deserialize: {:?}", raw_obj.clone());
-		let data = serde_wasm_bindgen::from_value(raw_obj.clone());
+		let data = serde_wasm_bindgen::from_value(values.clone());
 
-		callback(data, raw_obj)
+		callback(data)
 	});
 
 	

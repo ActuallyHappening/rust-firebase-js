@@ -44,7 +44,7 @@ use wasm_bindgen::prelude::*;
 type closure<Args> = Closure<dyn FnMut(Args)>;
 
 pub use app::ModuleApp;
-pub use database::ModuleDatabase;
+pub use database::{ModuleDatabase, DatabaseSnapshot};
 
 mod app {
 	use wasm_bindgen::prelude::*;
@@ -125,17 +125,32 @@ mod database {
 		#[wasm_bindgen(static_method_of = ModuleDatabase, js_name = "ref")]
 		pub fn get_ref_no_path(db: &JsValue) -> JsValue;
 
+		/// Represents a snapshow of the firebase database,
+		/// get the actual values using `snapshot.values()`
+		pub type DatabaseSnapshot;
+
+		/// Returns the value of a [DatabaseSnapshot]
+		#[wasm_bindgen(js_class = "DatabaseShapshot", js_name = "val")]
+		fn values(this: &DatabaseSnapshot) -> JsValue;
+
 		// #[wasm_bindgen(static_method_of = ModuleDatabase, js_name = "getDatabase")]
 		// pub fn get_default_database(db: &JsValue) -> JsValue;
 
-		/// Registers a callback to be called when the data at the specified path changes
+		/// Registers a callback to be called when the data at the specified path changes.
+		/// Returns a database snapshot, which you can call `.val()` to receive values.
 		/// 
 		/// Equivalent to:
 		/// ```js
 		/// import { onValue } from 'firebase/database';
 		/// ```
 		#[wasm_bindgen(static_method_of = ModuleDatabase, js_name = "onValue")]
-		pub fn on_value(db_ref: &JsValue, callback: &closure<JsValue>) -> JsValue;
+		pub fn on_value(db_ref: &JsValue, callback: &closure<DatabaseSnapshot>) -> JsValue;
+	}
+
+	impl DatabaseSnapshot {
+		pub fn values(&self) -> JsValue {
+			return values(&self);
+		}
 	}
 }
 

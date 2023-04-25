@@ -1,6 +1,6 @@
 import { wrapper } from "./helper";
 
-const _database: {[key: string]: (...any: any) => any} = {};
+const _database: {[key: string]: any } = {};
 
 // import { initializeApp as _initializeApp } from "firebase/app";
 // _db.initializeApp = wrapper("initializeApp", _initializeApp); 
@@ -13,6 +13,9 @@ _database.onValue = wrapper("onValue", _onValue);
 
 import { ref as _ref } from "firebase/database";
 _database.ref = wrapper("ref", _ref);
+
+import { DataSnapshot as _DataSnapshot } from "firebase/database";
+_database.DataSnapshot = _DataSnapshot;
 
 
 
