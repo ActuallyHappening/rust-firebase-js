@@ -9,6 +9,6 @@ fn main() {
 
 	info!("firebase-js: main.rs()");
 	
-	let returned = initialize_app(&secrets::config);
+	let returned = initialize_app(&secrets::getConfig());
 	// println!("returned: {:?}", returned);
 }
