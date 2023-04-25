@@ -2,7 +2,7 @@ name: /book github pages deploy
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   deploy:
