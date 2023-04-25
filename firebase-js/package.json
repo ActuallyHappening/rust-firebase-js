@@ -1,0 +1,12 @@
+{
+	"name": "firebase-js",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"serve": "trunk serve"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC"
+}

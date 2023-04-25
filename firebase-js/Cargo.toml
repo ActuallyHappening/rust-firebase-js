@@ -1,10 +1,7 @@
 [package]
-name = "firebase-js-sys"
+name = "firebase-js"
 version = "0.1.0"
 edition = "2021"
-
-# [lib]
-# crate-type = ["cdylib"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -12,4 +9,5 @@ edition = "2021"
 console_error_panic_hook = "0.1.7"
 console_log = { version = "1.0.0" }
 log = "0.4.17"
-wasm-bindgen = { version = "0.2.84" }
+serde-wasm-bindgen = "0.5.0"
+wasm-bindgen = { version = "0.2.84", features = ["serde"] }

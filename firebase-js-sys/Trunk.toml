@@ -1,0 +1,3 @@
+[serve]
+port = 3069
+open = true

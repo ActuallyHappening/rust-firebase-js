@@ -1,0 +1,12 @@
+use log::info;
+use wasm_bindgen::JsValue;
+
+fn main() {
+	_ = console_log::init_with_level(log::Level::Debug);
+	console_error_panic_hook::set_once();
+
+	info!("firebase-js: main.rs()");
+	
+	let returned = firebase_js_sys::app::ModuleApp::initialize_app(&JsValue::UNDEFINED);
+	// println!("returned: {:?}", returned);
+}
