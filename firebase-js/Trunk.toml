@@ -2,5 +2,5 @@
 port = 3069
 open = true
 
-[[proxy]]
-backend = "http://127.0.0.1:9000/?ns=smilepal-1968c"
+# [[proxy]]
+# backend = "http://127.0.0.1:9000/?ns=smilepal-1968c"
