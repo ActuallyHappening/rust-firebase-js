@@ -1,5 +1,0 @@
-[workspace]
-members = [
-	"firebase-js",
-	"firebase-js-sys",
-]
