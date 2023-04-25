@@ -1,4 +1,5 @@
 use log::info;
+use wasm_bindgen::JsValue;
 
 fn main() {
 	_ = console_log::init_with_level(log::Level::Debug);
@@ -6,5 +7,6 @@ fn main() {
 
 	info!("YES!");
 	
-	firebase_js_sys::test();
+	let returned = firebase_js_sys::app::initialize_app(&JsValue::UNDEFINED);
+	// println!("returned: {:?}", returned);
 }

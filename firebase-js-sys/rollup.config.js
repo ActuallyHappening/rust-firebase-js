@@ -4,7 +4,7 @@ import json from '@rollup/plugin-json';
 
 export default {
 	// the entry point file described above
-	input: ['js/app.ts'],
+	input: ['js/app.ts', 'js/database.ts'],
 	watch: true,
 	// the output for the build folder described above
 	output: {

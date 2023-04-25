@@ -1,6 +1,6 @@
-use wasm_bindgen::prelude::wasm_bindgen;
+use wasm_bindgen::{prelude::{wasm_bindgen, Closure}, JsValue};
 
-#[wasm_bindgen(module = "/firebase-interop/app.js")]
-extern {
-	pub fn test();
-}
+type closure<Args> = Closure<dyn FnMut(Args)>;
+
+pub mod app;
+pub mod database;
