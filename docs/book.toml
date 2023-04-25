@@ -1,0 +1,6 @@
+[book]
+authors = ["ActuallyHappening"]
+language = "en"
+multilingual = false
+src = "src"
+title = "Firebase JS in Rust!"
