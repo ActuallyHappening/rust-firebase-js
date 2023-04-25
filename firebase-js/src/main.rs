@@ -1,4 +1,4 @@
-use firebase_js::{app::initialize_app, database::{get_database, on_value_changed, get_ref, get_ref_of_root}};
+use firebase_js::{app::initialize_app, database::{get_database, on_value_changed, get_ref_of_root}};
 use log::info;
 
 use crate::secrets::URL;

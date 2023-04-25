@@ -40,6 +40,7 @@
 
 use wasm_bindgen::prelude::*;
 
+#[allow(non_camel_case_types)]
 type closure<Args> = Closure<dyn FnMut(Args)>;
 
 pub use app::ModuleApp;

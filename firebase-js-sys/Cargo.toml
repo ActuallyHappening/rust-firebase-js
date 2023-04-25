@@ -1,10 +1,10 @@
 [package]
 name = "firebase-js-sys"
-description = "`wasm32-unknown-unknown` bindings for the Firebase modular JS SDK (`npm` firebase@9)"
 version = "0.1.0"
+description = "`wasm32-unknown-unknown` bindings for the Firebase modular JS SDK (`npm` firebase@9)"
+repository = "https://github.com/ActuallyHappening/rust-firebase-js/tree/master/firebase-js-sys"
 edition = "2021"
 authors = []
-repository = "https://github.com/ActuallyHappening/rust-firebase-js/tree/master/firebase-js-sys"
 license = "MIT"
 keywords = ["firebase", "firebase-js", "firebase-database", "wasm", "wasm-bindgen"]
 categories = ["wasm", "web-programming"]

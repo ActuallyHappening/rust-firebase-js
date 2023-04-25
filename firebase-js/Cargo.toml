@@ -1,8 +1,14 @@
 [package]
 name = "firebase-js"
-version = "0.1.0"
+version = "0.0.1"
+description = "High level interop with `npm`s `firebase@9` package for `wasm32-unknown-unknown` web targets."
+repository = "https://github.com/ActuallyHappening/rust-firebase-js/tree/master/firebase-js"
 edition = "2021"
-categories = ["api-bindings"]
+authors = []
+license = "MIT"
+keywords = ["firebase", "firebase-js", "firebase-database", "wasm", "wasm-bindgen"]
+categories = ["api-bindings", "wasm", "web-programming"]
+
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -14,5 +20,6 @@ serde-wasm-bindgen = "0.5.0"
 wasm-bindgen = { version = "0.2.84", features = ["serde"] }
 
 # Local dep
-firebase-js-sys = { path = "../firebase-js-sys" }
+firebase-js-sys = { path = "../firebase-js-sys", version = "0.1.0" }
 serde = { version = "1.0.160", features = ["derive"] }
+thiserror = "1.0.40"

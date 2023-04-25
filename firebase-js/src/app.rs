@@ -1,8 +1,10 @@
-use firebase_js_sys::app::ModuleApp;
+use firebase_js_sys::ModuleApp;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
 use serde_wasm_bindgen::to_value;
+
+use crate::FirebaseError;
 
 #[derive(Serialize, Deserialize)]
 pub struct FirebaseConfig {
@@ -45,9 +47,12 @@ impl FirebaseApp {
 	}
 }
 
-pub fn initialize_app(firebase_config: &FirebaseConfig) -> Result<FirebaseApp, JsValue> {
-	let config: JsValue = to_value(firebase_config)?;
-	let app: JsValue = ModuleApp::initialize_app(&config);
-
-	Ok(FirebaseApp(app))
+pub fn initialize_app(firebase_config: &FirebaseConfig) -> Result<FirebaseApp, FirebaseError> {
+	match to_value(firebase_config) {
+		Ok(val) => {
+			let app: JsValue = ModuleApp::initialize_app(&val);
+			Ok(FirebaseApp(app))
+		},
+		Err(_) => Err(FirebaseError::UnimplementedErrorHandling),
+	}
 }
