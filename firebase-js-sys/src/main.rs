@@ -6,4 +6,5 @@ fn main() {
 
 	info!("YES!");
 	
+	firebase_js_sys::test();
 }
