@@ -1,10 +1,11 @@
 import { wrapper } from "./helper";
 
-import { getDatabase as _getDatabase } from "firebase/database";
-export const getDatabase = wrapper("getDatabase", _getDatabase);
+const _database: {[key: string]: (...any: any) => any} = {};
 
-import { onValue as _onValue } from "firebase/database";
-export const onValue = wrapper("onValue", _onValue);
+// import { initializeApp as _initializeApp } from "firebase/app";
+// _db.initializeApp = wrapper("initializeApp", _initializeApp); 
 
 import { ref as _ref } from "firebase/database";
-export const ref = wrapper("ref", _ref);
+_database.ref = wrapper("ref", _ref);
+
+export const database = _database;

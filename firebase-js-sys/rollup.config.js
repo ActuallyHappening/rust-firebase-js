@@ -4,14 +4,15 @@ import json from '@rollup/plugin-json';
 
 export default {
 	// the entry point file described above
-	input: ['js/app.ts', 'js/database.ts'],
+	// input: ['js/app.ts', 'js/database.ts'],
+	input: 'js/bundle.ts',
 	watch: true,
 	// the output for the build folder described above
 	output: {
 		// file: 'js/*.ts',
 		// file: 'firebase-interop.js',
-		dir: 'firebase-interop',
-		// file: 'firebase-interop/bundle.js',
+		// dir: 'firebase-interop',
+		file: 'firebase-interop/bundle.js',
 		// preserveModules: true,
 
 		chunkFileNames: "chunk-[name].js",
