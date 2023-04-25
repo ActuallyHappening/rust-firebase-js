@@ -1,4 +1,4 @@
-import { r as registerVersion, w as wrapper, i as initializeApp$1 } from './index.esm2017-e441abf0.js';
+import { r as registerVersion, w as wrapper, i as initializeApp$1 } from './chunk-index.esm2017.js';
 
 var name = "firebase";
 var version = "9.20.0";
