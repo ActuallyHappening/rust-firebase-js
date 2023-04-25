@@ -1,5 +1,1 @@
-target
-dist
-node_modules
-
-secrets.rs
+book
