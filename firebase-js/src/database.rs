@@ -87,10 +87,12 @@ pub fn get_ref_of_root(db: &Database) -> Result<DatabaseReference, FirebaseError
 /// ## WIP:
 /// - Unsubscribing does not work yet
 /// - Potential for convenienve func to take [String] instead of &[DatabaseReference]
-pub fn on_value_changed(db_location_reference: &DatabaseReference, callback: &'static dyn Fn(JsValue)) {
+pub fn on_value_changed(db_location_reference: &DatabaseReference, callback: &'static dyn Fn(JsValue)) -> closure<JsValue> {
 	let closure: closure<JsValue> = Closure::wrap(Box::new(callback));
 
 	// TODO: implement unsubscribe, I've not needed it yet
 	#[allow(unused_variables)]
 	let unsubscribe = ModuleDatabase::on_value(&db_location_reference.0, &closure);
+
+	closure
 }

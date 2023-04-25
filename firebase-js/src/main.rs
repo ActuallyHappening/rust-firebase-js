@@ -1,4 +1,4 @@
-use firebase_js::{app::initialize_app, database::{get_database, on_value_changed, get_ref_of_root}};
+use firebase_js::{app::initialize_app, database::{get_database, on_value_changed, get_ref_of_root, get_ref}};
 use log::info;
 
 use crate::secrets::URL;
@@ -15,9 +15,12 @@ fn main() {
 
 	let db = get_database(&app, URL.to_string()).ok().unwrap();
 
-	let reference = get_ref_of_root(&db).ok().unwrap();
+	// let reference = get_ref_of_root(&db).ok().unwrap();
+	let reference = get_ref(&db, "public/v1".to_string()).ok().unwrap();
 
-	on_value_changed(&reference, &move |_| {
+	let closure = on_value_changed(&reference, &move |_| {
 		info!("RS: on_value_changed() WOW!")
-	})
+	});
+
+	closure.forget();
 }
