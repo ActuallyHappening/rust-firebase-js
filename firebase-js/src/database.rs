@@ -118,9 +118,19 @@ where
 {
 	let raw_closure: Closure<(dyn FnMut(DatabaseSnapshot) + 'static)> = Closure::wrap(Box::new(move | snapshot: DatabaseSnapshot | {
 		let values: JsValue = snapshot.values();
-		info!("firebase-js: on_value_changed callback fired with {:?}", values.clone());
+		
 		// let err_msg = format!("Could not deserialize: {:?}", raw_obj.clone());
 		let data = serde_wasm_bindgen::from_value(values.clone());
+
+		match data {
+			Err(_) => {
+				info!("firebase-js: on_value_changed callback failed to deserialize data: {:?}", values.clone());
+			},
+
+			_ => {
+				info!("firebase-js: on_value_changed callback fired with {:?}", values.clone())
+			}
+		}
 
 		callback(data)
 	}));
@@ -129,5 +139,6 @@ where
 	#[allow(unused_variables)]
 	let unsubscribe = database::on_value(&db_location_reference.0, &raw_closure);
 
+	// TODO: Find a better solution than leaking memory!
 	raw_closure.forget();
 }
