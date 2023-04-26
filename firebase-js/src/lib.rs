@@ -10,9 +10,8 @@ use wasm_bindgen::{JsValue};
 #[allow(non_camel_case_types)]
 type closure<Args> = Closure<dyn FnMut(Args)>;
 
-pub mod app;
-
-pub mod database;
+pub mod js_semantic;
+pub mod rusty;
 
 #[derive(Debug, Error)]
 pub enum FirebaseError {

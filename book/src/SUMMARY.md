@@ -1,4 +1,5 @@
 # Summary
 
 - [Introduction](./introduction.md)
-- [Chapter 1](./chapter_1.md)
+- [Firebase JS](./firebase_js/introduction.md)
+- [The problem](./the_problem.md)

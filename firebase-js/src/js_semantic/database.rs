@@ -1,10 +1,8 @@
-use std::rc::Rc;
-
 use firebase_js_sys::{DatabaseSnapshot, database};
 use log::info;
 use wasm_bindgen::{prelude::Closure, JsValue};
 
-use crate::{app::FirebaseApp, FirebaseError};
+use crate::{js_semantic::app::FirebaseApp, FirebaseError};
 
 // pub struct FirebaseDatabase<'a>(&'a JsValue);
 pub struct Database(JsValue);
