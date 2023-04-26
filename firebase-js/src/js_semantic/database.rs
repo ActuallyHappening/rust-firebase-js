@@ -13,25 +13,6 @@ pub struct Database(JsValue);
 #[derive(Deref)]
 pub struct DatabaseReference(JsValue);
 
-#[cfg(test)]
-mod tests {
-	use super::*;
-
-	#[test]
-	fn test_db_ref_from() {
-		let db_ref = DatabaseReference(JsValue::from_str("test"));
-
-		let closure = move |snapshot: Result<String, _>| {
-			let str: String = snapshot.ok().unwrap();
-		};
-
-		on_value_changed(&db_ref, Box::new(closure));
-	}
-
-	#[test]
-	fn test_on_value_changed() {}
-}
-
 /// Takes a [FirebaseApp] instance and a [url] and returns a [FirebaseDatabase] instance.
 /// Fails only if underlying JS function fails.
 ///

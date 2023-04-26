@@ -9,7 +9,6 @@ license = "MIT"
 keywords = ["firebase", "firebase-js", "firebase-database", "wasm", "wasm-bindgen"]
 categories = ["api-bindings", "wasm", "web-programming"]
 
-
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
@@ -24,3 +23,7 @@ firebase-js-sys = { path = "../firebase-js-sys", version = "0.1.0" }
 serde = { version = "1.0.160", features = ["derive"] }
 thiserror = "1.0.40"
 derive-deref-rs = "0.1.1"
+derive-new = "0.5.9"
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3.34"
