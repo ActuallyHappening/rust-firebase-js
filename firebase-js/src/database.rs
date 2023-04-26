@@ -67,7 +67,6 @@ pub fn get_ref(db: &Database, path: String) -> Result<DatabaseReference, Firebas
 	let reference: JsValue = database::get_ref(&db.0, path);
 	Ok(DatabaseReference(reference))
 }
-
 /// See [get_ref] documentation. Basically gains a reference to the root of your database,
 /// like (but not equivalent I don't think) to calling [get_ref] with a path of `""` or `"/"`.
 ///
@@ -81,6 +80,16 @@ pub fn get_ref_of_root(db: &Database) -> Result<DatabaseReference, FirebaseError
 	let reference: JsValue = database::get_ref_no_path(&db.0);
 	Ok(DatabaseReference(reference))
 }
+impl Database {
+	pub fn get_ref(&self, path: String) -> Result<DatabaseReference, FirebaseError> {
+		get_ref(self, path)
+	}
+	pub fn get_ref_of_root(&self) -> Result<DatabaseReference, FirebaseError> {
+		get_ref_of_root(self)
+	}
+}
+
+
 
 /// Registers a [callback] to be executed every time some data at the specified [DatabaseReference] changes.
 /// Note: This closure will be called the first time the data becomes available.
