@@ -1,8 +1,10 @@
-use firebase_js_sys::{DatabaseSnapshot, app, database};
+use std::rc::Rc;
+
+use firebase_js_sys::{DatabaseSnapshot, database};
 use log::info;
 use wasm_bindgen::{prelude::Closure, JsValue};
 
-use crate::{app::FirebaseApp, closure, FirebaseError};
+use crate::{app::FirebaseApp, FirebaseError};
 
 // pub struct FirebaseDatabase<'a>(&'a JsValue);
 pub struct Database(JsValue);
@@ -15,8 +17,18 @@ mod tests {
 
 	#[test]
 	fn test_db_ref_from() {
-		let db_ref = Database(JsValue::from_str("test"));
-		let _js_obj: JsValue = db_ref.0;
+		let db_ref = DatabaseReference(JsValue::from_str("test"));
+
+		let closure = move | snapshot: Result<String, _> | {
+			let str: String = snapshot.ok().unwrap();
+		};
+
+		on_value_changed(&db_ref, Box::new(closure));
+	}
+
+	#[test]
+	fn test_on_value_changed() {
+		
 	}
 }
 
@@ -90,39 +102,23 @@ pub fn get_ref_of_root(db: &Database) -> Result<DatabaseReference, FirebaseError
 /// - Potential for convenienve func to take [String] instead of &[DatabaseReference]
 pub fn on_value_changed<T>(
 	db_location_reference: &DatabaseReference,
-	callback: &'static dyn Fn(Result<T, serde_wasm_bindgen::Error>),
+	callback: Box<dyn Fn(Result<T, serde_wasm_bindgen::Error>)>,
 )
 where
-	T: serde::de::DeserializeOwned,
+	T: serde::de::DeserializeOwned + 'static,
 {
-	// let transformed_callback: dyn FnMut(JsValue) = move |data: JsValue| {
-	// 	let data: T = serde_wasm_bindgen::from_value(data).unwrap();
-	// 	callback(data);
-	// };
-	// let closure: closure<T> = Closure::wrap(Box::new(transformed_callback));
-
-	let raw_closure = Closure::new(move | snapshot: DatabaseSnapshot | {
+	let raw_closure: Closure<(dyn FnMut(DatabaseSnapshot) + 'static)> = Closure::wrap(Box::new(move | snapshot: DatabaseSnapshot | {
 		let values: JsValue = snapshot.values();
 		info!("firebase-js: on_value_changed callback fired with {:?}", values.clone());
 		// let err_msg = format!("Could not deserialize: {:?}", raw_obj.clone());
 		let data = serde_wasm_bindgen::from_value(values.clone());
 
 		callback(data)
-	});
+	}));
 
 	// TODO: implement unsubscribe, I've not needed it yet
 	#[allow(unused_variables)]
 	let unsubscribe = database::on_value(&db_location_reference.0, &raw_closure);
 
 	raw_closure.forget();
-
-	// ClosureHandle(raw_closure)
 }
-
-// pub struct ClosureHandle<T: WasmClosure>(closure<T>);
-
-// impl<T: WasmClosure> ClosureHandle<T> {
-// 	pub fn forget(&self) {
-// 		self.0.forget();
-// 	}
-// }
