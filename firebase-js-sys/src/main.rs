@@ -7,6 +7,6 @@ fn main() {
 
 	info!("YES!");
 	
-	let _returned = firebase_js_sys::app::initialize_app(&JsValue::UNDEFINED);
+	let _returned = firebase_js_sys::app::initialize_app(&JsValue::UNDEFINED, None);
 	// println!("returned: {:?}", returned);
 }

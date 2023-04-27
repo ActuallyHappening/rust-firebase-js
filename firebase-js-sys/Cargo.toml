@@ -9,8 +9,18 @@ license = "MIT"
 keywords = ["firebase", "firebase-js", "firebase-database", "wasm", "wasm-bindgen"]
 categories = ["wasm", "web-programming"]
 
-# [lib]
-# crate-type = ["cdylib"]
+# [workspace]
+# members = [
+# 	"firebase-wasm-rs"
+# ]
+
+[features]
+default = ["web"]
+web = []
+node = []
+
+[lib]
+crate-type = ["cdylib", "rlib"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -21,4 +31,5 @@ log = "0.4.17"
 wasm-bindgen = { version = "0.2.84" }
 
 [dev-dependencies]
+execute = "0.2.12"
 wasm-bindgen-test = "0.3.34"

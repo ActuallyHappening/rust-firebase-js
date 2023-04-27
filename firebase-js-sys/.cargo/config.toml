@@ -1,5 +1,5 @@
 [alias]
-t = "test --target wasm32-unknown-unknown && open /Applications/Visual Studio Code.app"
+t = "test --target wasm32-unknown-unknown"
 
 [target.wasm32-unknown-unknown]
 runner = 'wasm-bindgen-test-runner'

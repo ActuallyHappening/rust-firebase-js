@@ -22,16 +22,23 @@ extern "C" {
 	///
 	/// initializeApp(config);
 	/// ```
+	/// 
 	#[wasm_bindgen(catch, static_method_of = app, js_name = "initializeApp")]
-	pub fn initialize_app(config: &JsValue) -> Result<JsValue, JsValue>;
+	pub fn initialize_app(config: &JsValue, name: Option<String>) -> Result<JsValue, JsValue>;
 }
+
+// #[wasm_bindgen(module = "firebase/app")]
+// extern "C" {
+// 	#[wasm_bindgen(catch, js_name = "initializeApp")]
+// 	pub fn initialize_app(config: &JsValue, name: Option<String>) -> Result<JsValue, JsValue>;
+// }
 
 /// TS type:
 /// /** The error code for this error. */
 /// readonly code: string
 ///  /** Custom data for this error. */
 /// customData?: Record<string, unknown> | undefined;
-struct JsFirebaseError {
+struct FirebaseError {
 	code: String,
 	customData: Option<HashMap<String, JsValue>>,
 }

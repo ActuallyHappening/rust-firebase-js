@@ -39,26 +39,11 @@
 
 use wasm_bindgen::prelude::*;
 
-#[allow(non_camel_case_types)]
-type closure<Args> = Closure<dyn FnMut(Args)>;
-
-// pub use app::ModuleApp;
-// pub use database::{ModuleDatabase, DatabaseSnapshot};
-pub use semantic_database::*;
 pub use semantic_app::*;
+// pub use semantic_database::*;
 
 /// Module name not in the firebase SDK, but useful for semantic code organisation
 pub mod semantic_app;
 
-/// Module name not in the firebase SDK, but useful for organisation
-pub mod semantic_database {
-	
-}
-
-// #[wasm_bindgen(module = "/firebase-interop/database.js")]
-// extern {
-
-// 	#[wasm_bindgen(js_name = "ref")]
-// 	pub fn get_ref(db: &JsValue, path: String) -> JsValue;
-
-// }
+// Module name not in the firebase SDK, but useful for organisation
+// pub mod semantic_database;
