@@ -19,4 +19,5 @@ If you have dealt with `npm` and large interrelated JS projects before, you have
 - **JavaScript errors primarily happen at runtime** (I often encounter SyntaxErrors at runtime, when dynamic programming like `eval` or appending `script` tags to the DOM are involved)
 - **Meta programming** is hard to trace errors through in edge cases, which Rust solves quite practically with its implementations of macros.
 
-'Well, how can 
+'Well, how can you use `firebase` in a stable and debuggable manner?'
+My answer is: `Rust`
