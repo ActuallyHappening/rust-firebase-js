@@ -40,4 +40,5 @@ import {Query} from "firebase/database";
 let g: Query;
 
 
+
 export const database = _database;

@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen(module = "/firebase-interop/bundle.js")]
@@ -22,4 +24,14 @@ extern "C" {
 	/// ```
 	#[wasm_bindgen(catch, static_method_of = app, js_name = "initializeApp")]
 	pub fn initialize_app(config: &JsValue) -> Result<JsValue, JsValue>;
+}
+
+/// TS type:
+/// /** The error code for this error. */
+/// readonly code: string
+///  /** Custom data for this error. */
+/// customData?: Record<string, unknown> | undefined;
+struct JsFirebaseError {
+	code: String,
+	customData: Option<HashMap<String, JsValue>>,
 }
