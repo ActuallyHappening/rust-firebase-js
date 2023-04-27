@@ -1,0 +1,2 @@
+wasm-pack test --headless --safari --node
+open /Applications/Visual\ Studio\ Code.app

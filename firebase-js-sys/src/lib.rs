@@ -47,37 +47,11 @@ type closure<Args> = Closure<dyn FnMut(Args)>;
 pub use semantic_database::*;
 pub use semantic_app::*;
 
-/// Module name not in the firebase SDK, but useful for code organisation
-mod semantic_app {
-	use wasm_bindgen::prelude::*;
-
-	#[wasm_bindgen(module = "/firebase-interop/bundle.js")]
-	extern "C" {
-		#[allow(non_camel_case_types)]
-		pub type app;
-
-		/// Takes a config object and returns a firebase app instance
-		/// 
-		/// Equivalent to:
-		/// ```js
-		/// import { initializeApp } from 'firebase/app';
-		/// 
-		/// // Get your own config from somewhere, typically copy-paste from firebase console
-		/// const config = {
-		/// 	apiKey: "...",
-		/// 	projectId: "...",
-		/// 	...
-		/// }
-		/// 
-		/// initializeApp(config);
-		/// ```
-		#[wasm_bindgen(static_method_of = app, js_name = "initializeApp")]
-		pub fn initialize_app(config: &JsValue) -> JsValue;
-	}
-}
+/// Module name not in the firebase SDK, but useful for semantic code organisation
+pub mod semantic_app;
 
 /// Module name not in the firebase SDK, but useful for organisation
-mod semantic_database {
+pub mod semantic_database {
 	use wasm_bindgen::prelude::*;
 	use crate::closure;
 
