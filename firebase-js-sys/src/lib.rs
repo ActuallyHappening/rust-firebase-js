@@ -39,9 +39,13 @@
 //! ## Features:
 #![doc = document_features::document_features!()]
 
-// Panic if invalid feature set is detected
-#[cfg(all(not(feature = "web-not-node"), not(feature = "node-not-web")))]
-compile_error!("Must enable either `web-not-node` or `node-not-web` feature");
+// compile error is niether feature is enabled
+#[cfg(not(any(feature = "web-not-node", feature = "node-not-web")))]
+compile_error!("You must enable either the `web-not-node` or `node-not-web` feature to use this crate");
+// compile error if both features are enabled
+// #[cfg(all(feature = "web-not-node", feature = "node-not-web"))]
+// compile_error!("You must enable either the `web-not-node` or `node-not-web` feature to use this crate, not both");
+
 
 /// Tests doctests in README when running `cargo test`, see:
 /// https://doc.rust-lang.org/rustdoc/write-documentation/documentation-tests.html
