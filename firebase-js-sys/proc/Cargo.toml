@@ -13,5 +13,6 @@ license = { workspace = true }
 proc-macro = true
 
 [dependencies]
+cfg-if = "1.0.0"
 quote = "1.0.26"
 syn = "2.0.15"

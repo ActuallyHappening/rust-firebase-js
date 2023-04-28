@@ -123,6 +123,7 @@ dependencies = [
 name = "firebase-js-sys"
 version = "0.1.0"
 dependencies = [
+ "cfg-if",
  "console_error_panic_hook",
  "console_log",
  "document-features",
@@ -138,6 +139,7 @@ dependencies = [
 name = "firebase-js-sys-proc"
 version = "0.0.1"
 dependencies = [
+ "cfg-if",
  "quote",
  "syn 2.0.15",
 ]

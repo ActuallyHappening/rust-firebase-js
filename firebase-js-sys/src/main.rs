@@ -1,5 +1,6 @@
-// use log::info;
-// use wasm_bindgen::JsValue;
+use firebase_js_sys::app;
+use log::info;
+use wasm_bindgen::JsValue;
 
 // fn main() {
 // 	_ = console_log::init_with_level(log::Level::Debug);
@@ -11,10 +12,7 @@
 // 	// println!("returned: {:?}", returned);
 // }
 
-use firebase_js_sys_proc::duplicate_test;
-
-#[duplicate_test]
-fn manual_initialize_app_empty() {
+fn main() {
 	let result = app::initialize_app(&JsValue::UNDEFINED, None);
 	
 	assert!(result.is_err());

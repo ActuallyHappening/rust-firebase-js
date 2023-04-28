@@ -29,6 +29,9 @@ web-not-node = []
 ## **This is mutually exlusive to `default`** as only one runtime can be linked to at a time.
 node-not-web = []
 
+## Adds lots of logging for debugging purposes :)
+verbose-logging = []
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 
@@ -44,6 +47,7 @@ wasm-bindgen = { version = "0.2.84" }
 # Local deps
 firebase-types = { path = "../firebase-types" }
 firebase-js-sys-proc = { path = "./proc" }
+cfg-if = "1.0.0"
 
 
 [dev-dependencies]

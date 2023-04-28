@@ -53,11 +53,5 @@ compile_error!("You must enable either the `web-not-node` or `node-not-web` feat
 #[cfg(doctest)]
 pub struct ReadmeDoctests;
 
-pub use semantic_app::*;
-// pub use semantic_database::*;
-
-/// Module name not in the firebase SDK, but useful for semantic code organisation
-pub mod semantic_app;
-
-// Module name not in the firebase SDK, but useful for organisation
-// pub mod semantic_database;
+pub mod app;
+pub use app::*;
