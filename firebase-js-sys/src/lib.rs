@@ -49,8 +49,6 @@ compile_error!("Must enable either `web-not-node` or `node-not-web` feature");
 #[cfg(doctest)]
 pub struct ReadmeDoctests;
 
-use wasm_bindgen::prelude::*;
-
 pub use semantic_app::*;
 // pub use semantic_database::*;
 
