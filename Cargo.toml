@@ -2,5 +2,5 @@
 members = [
 	"firebase-js",
 	"firebase-js-sys",
-	"firebase-js-sys/firebase-wasm-rs"
+	"firebase-types",
 ]
