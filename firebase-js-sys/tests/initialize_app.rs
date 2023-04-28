@@ -2,8 +2,10 @@ use wasm_bindgen::prelude::*;
 #[allow(unused_imports)]
 use wasm_bindgen_test::{wasm_bindgen_test as test, wasm_bindgen_test_configure};
 use firebase_js_sys::app;
+use firebase_js_sys_proc::duplicate_test;
 
 #[test]
+// #[duplicate_test]
 fn manual_initialize_app_empty() {
 	let result = app::initialize_app(&JsValue::UNDEFINED, None);
 	

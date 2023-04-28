@@ -1,0 +1,33 @@
+TokenStream [Ident { ident: "fn", span: #0 bytes(234..236)
+	}, Ident { ident: "manual_initialize_app_empty", span: #0 bytes(237..264)
+	}, Group { delimiter: Parenthesis, stream: TokenStream [], span: #0 bytes(264..266)
+	}, Group { delimiter: Brace, stream: TokenStream [Ident { ident: "let", span: #0 bytes(270..273)
+			}, Ident { ident: "result", span: #0 bytes(274..280)
+			}, Punct { ch: '=', spacing: Alone, span: #0 bytes(281..282)
+			}, Ident { ident: "app", span: #0 bytes(283..286)
+			}, Punct { ch: ':', spacing: Joint, span: #0 bytes(286..287)
+			}, Punct { ch: ':', spacing: Alone, span: #0 bytes(287..288)
+			}, Ident { ident: "initialize_app", span: #0 bytes(288..302)
+			}, Group { delimiter: Parenthesis, stream: TokenStream [Punct { ch: '&', spacing: Alone, span: #0 bytes(303..304)
+					}, Ident { ident: "JsValue", span: #0 bytes(304..311)
+					}, Punct { ch: ':', spacing: Joint, span: #0 bytes(311..312)
+					}, Punct { ch: ':', spacing: Alone, span: #0 bytes(312..313)
+					}, Ident { ident: "UNDEFINED", span: #0 bytes(313..322)
+					}, Punct { ch: ',', spacing: Alone, span: #0 bytes(322..323)
+					}, Ident { ident: "None", span: #0 bytes(324..328)
+					}
+				], span: #0 bytes(302..329)
+			}, Punct { ch: ';', spacing: Alone, span: #0 bytes(329..330)
+			}, Ident { ident: "assert", span: #0 bytes(334..340)
+			}, Punct { ch: '!', spacing: Alone, span: #0 bytes(340..341)
+			}, Group { delimiter: Parenthesis, stream: TokenStream [Ident { ident: "result", span: #0 bytes(342..348)
+					}, Punct { ch: '.', spacing: Alone, span: #0 bytes(348..349)
+					}, Ident { ident: "is_err", span: #0 bytes(349..355)
+					}, Group { delimiter: Parenthesis, stream: TokenStream [], span: #0 bytes(355..357)
+					}
+				], span: #0 bytes(341..358)
+			}, Punct { ch: ';', spacing: Alone, span: #0 bytes(358..359)
+			}
+		], span: #0 bytes(267..423)
+	}
+]

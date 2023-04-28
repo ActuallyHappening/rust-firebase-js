@@ -127,10 +127,19 @@ dependencies = [
  "console_log",
  "document-features",
  "execute",
+ "firebase-js-sys-proc",
  "firebase-types",
  "log",
  "wasm-bindgen",
  "wasm-bindgen-test",
+]
+
+[[package]]
+name = "firebase-js-sys-proc"
+version = "0.0.1"
+dependencies = [
+ "quote",
+ "syn 2.0.15",
 ]
 
 [[package]]

@@ -42,8 +42,9 @@ log = "0.4.17"
 wasm-bindgen = { version = "0.2.84" }
 
 # Local deps
-[dependencies.firebase-types]
-path = "../firebase-types"
+firebase-types = { path = "../firebase-types" }
+firebase-js-sys-proc = { path = "./proc" }
+
 
 [dev-dependencies]
 execute = "0.2.12"
