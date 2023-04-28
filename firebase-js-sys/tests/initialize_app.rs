@@ -3,7 +3,7 @@ use wasm_bindgen_test::*;
 use wasm_bindgen_test::{wasm_bindgen_test as test};
 use firebase_js_sys::app;
 
-// wasm_bindgen_test_configure!(run_in_browser);
+wasm_bindgen_test_configure!(run_in_browser);
 
 #[test]
 fn manual_initialize_app_empty() {
