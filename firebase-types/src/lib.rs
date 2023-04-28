@@ -2,7 +2,6 @@
 //! Implementation agnostic types for `firebase` in Rust
 //! 
 //! ## Feature Flags
-// #![doc = document_features::document_features!()]
 #![doc = ::document_features::document_features!()]
 
 pub mod config;
