@@ -1,8 +1,9 @@
+#[cfg(feature = "serde")]
 use serde::{Serialize, Deserialize};
 #[cfg(feature = "expose-jsvalue")]
 use wasm_bindgen::prelude::*;
-#[cfg(feature = "expose-jsvalue")]
-use serde_wasm_bindgen::*;
+// #[cfg(feature = "expose-jsvalue")]
+// use serde_wasm_bindgen::*;
 
 /// ## Represents a Firebase config object.
 /// This object **is serializable to JS** as you expect.
@@ -51,35 +52,35 @@ use serde_wasm_bindgen::*;
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Default, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct FirebaseConfig {
-	#[serde(rename = "projectId")]
+	#[cfg_attr(feature = "serde", serde(rename = "projectId"))]
 	pub project_id: String,
 
 	// #[new(default)]
-	#[serde(rename = "apiKey")]
+	#[cfg_attr(feature = "serde", serde(rename = "apiKey"))]
 	pub api_key: Option<String>,
 
 	// #[new(default)]
-	#[serde(rename = "authDomain")]
+	#[cfg_attr(feature = "serde", serde(rename = "authDomain"))]
 	pub auth_domain: Option<String>,
 
 	// #[new(default)]
-	#[serde(rename = "storageBucket")]
+	#[cfg_attr(feature = "serde", serde(rename = "storageBucket"))]
 	pub storage_bucket: Option<String>,
 
 	// #[new(default)]
-	#[serde(rename = "messagingSenderId")]
+	#[cfg_attr(feature = "serde", serde(rename = "messagingSenderId"))]
 	pub messaging_sender_id: Option<String>,
 
 	// #[new(default)]
-	#[serde(rename = "appId")]
+	#[cfg_attr(feature = "serde", serde(rename = "appId"))]
 	pub app_id: Option<String>,
 
 	// #[new(default)]
-	#[serde(rename = "measurementId")]
+	#[cfg_attr(feature = "serde", serde(rename = "measurementId"))]
 	pub measurement_id: Option<String>,
 
 	// #[new(default)]
-	#[serde(rename = "databaseURL")]
+	#[cfg_attr(feature = "serde", serde(rename = "databaseURL"))]
 	pub database_url: Option<String>,
 }
 
@@ -92,6 +93,7 @@ impl FirebaseConfig {
 	}
 }
 
+#[cfg(feature = "expose-jsvalue")]
 impl TryFrom<FirebaseConfig> for JsValue {
 	type Error = JsValue;
 
