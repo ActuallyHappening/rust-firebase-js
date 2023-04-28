@@ -16,9 +16,18 @@ categories = ["wasm", "web-programming"]
 # ]
 
 [features]
-default = ["web"]
-web = []
-node = []
+default = ["node-not-web"]
+
+### If multiple runtimes could be linked to at once, you would end up with two seperate instances of `firebase` in the final bundle (which is bad!)
+### For that reason, you must enable one of the following features to specify which runtime you want to link to:
+
+## Enable to link for a `web` runtime, not a node runtime.
+## **This is mutually exlusive to `node-not-web`** as only one runtime can be linked to at a time.
+web-not-node = []
+
+## Enable to link for a `node` runtime, not a web runtime.
+## **This is mutually exlusive to `default`** as only one runtime can be linked to at a time.
+node-not-web = []
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -28,6 +37,7 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 console_error_panic_hook = "0.1.7"
 console_log = { version = "1.0.0" }
+document-features = "0.2.7"
 log = "0.4.17"
 wasm-bindgen = { version = "0.2.84" }
 

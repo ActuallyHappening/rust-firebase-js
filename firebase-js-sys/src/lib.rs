@@ -36,7 +36,12 @@
 //! 	// println!("returned: {:?}", app);
 //! }
 //! ```
-//! 
+//! ## Features:
+#![doc = document_features::document_features!()]
+
+// Panic if invalid feature set is detected
+#[cfg(all(not(feature = "web-not-node"), not(feature = "node-not-web")))]
+compile_error!("Must enable either `web-not-node` or `node-not-web` feature");
 
 /// Tests doctests in README when running `cargo test`, see:
 /// https://doc.rust-lang.org/rustdoc/write-documentation/documentation-tests.html

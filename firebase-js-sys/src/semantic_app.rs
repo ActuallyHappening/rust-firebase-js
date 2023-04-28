@@ -1,6 +1,7 @@
 use wasm_bindgen::prelude::*;
 
-#[wasm_bindgen(module = "/firebase-interop/bundle.js")]
+#[cfg_attr(feature = "web-not-node", wasm_bindgen(module = "/target/js/bundle-es.js"))]
+#[cfg_attr(feature = "node-not-web", wasm_bindgen(module = "/target/js/bundle-cjs.js"))]
 extern "C" {
 	#[allow(non_camel_case_types)]
 	pub type app;
