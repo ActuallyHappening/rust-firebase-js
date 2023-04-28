@@ -4,6 +4,12 @@ version = "0.0.1"
 edition = "2021"
 repository = "https://github.com/ActuallyHappening/rust-firebase-js/tree/master/firebase-types"
 categories = ["api-bindings", "wasm", "web-programming"]
+authors = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+license-file = { workspace = true }
+# TODO: Add more specific documentation link
+documentation = "https://actuallyhappening.github.io/rust-firebase-js/" 
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

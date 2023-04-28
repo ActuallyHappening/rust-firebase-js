@@ -1,3 +1,5 @@
+use std::env::VarError;
+
 #[cfg(feature = "serde")]
 use serde::{Serialize, Deserialize};
 #[cfg(feature = "expose-jsvalue")]
@@ -85,11 +87,59 @@ pub struct FirebaseConfig {
 }
 
 impl FirebaseConfig {
+	/// ## Constructs a [FirebaseConfig] from a project id.
+	/// This is the most basic constructor.
+	/// 
+	/// ## Example:
+	/// ```rust
+	/// use firebase_types::config::FirebaseConfig;
+	/// 
+	/// let config = FirebaseConfig::new("some-project-id".to_owned());
+	/// 
+	/// assert_eq!(config.project_id, "some-project-id");
+	/// ```
 	pub fn new(project_id: impl ToString) -> Self {
 		Self {
 			project_id: project_id.to_string(),
 			..Default::default()
 		}
+	}
+
+	/// ## Constructs a [FirebaseConfig] from environment variables.
+	/// This is done at runtime using `std::env::var`.
+	/// 
+	/// ## Example poly-fill (requires FIREBASE_PROJECT_ID to be set in current environment):
+	/// ```rust
+	/// use firebase_types::config::FirebaseConfig;
+	/// 
+	/// let config = FirebaseConfig::new_from_env().expect("env var FIREBASE_PROJECT_ID to be set");
+	/// let raw_env = std::env::var("FIREBASE_PROJECT_ID").expect("env var FIREBASE_PROJECT_ID to be set");
+	/// let custom_config = FirebaseConfig::new(raw_env.clone());
+	/// 
+	/// assert_eq!(config.project_id, raw_env);
+	/// assert_eq!(custom_config.project_id, raw_env);
+	/// assert_eq!(config, custom_config);
+	/// ```
+	pub fn new_from_env() -> Result<Self, VarError> {
+		let project_id: String = std::env::var("FIREBASE_PROJECT_ID")?;
+		let api_key = std::env::var("FIREBASE_API_KEY").ok();
+		let auth_domain = std::env::var("FIREBASE_AUTH_DOMAIN").ok();
+		let storage_bucket = std::env::var("FIREBASE_STORAGE_BUCKET").ok();
+		let messaging_sender_id = std::env::var("FIREBASE_MESSAGING_SENDER_ID").ok();
+		let app_id = std::env::var("FIREBASE_APP_ID").ok();
+		let measurement_id = std::env::var("FIREBASE_MEASUREMENT_ID").ok();
+		let database_url = std::env::var("FIREBASE_DATABASE_URL").ok();
+
+		Ok(Self {
+			project_id,
+			api_key,
+			auth_domain,
+			storage_bucket,
+			messaging_sender_id,
+			app_id,
+			measurement_id,
+			database_url,
+		})
 	}
 }
 

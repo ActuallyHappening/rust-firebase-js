@@ -33,7 +33,6 @@ wasm-bindgen = { version = "0.2.84" }
 # Local deps
 [dependencies.firebase-types]
 path = "../firebase-types"
-version = "0.0.1"
 
 [dev-dependencies]
 execute = "0.2.12"

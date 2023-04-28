@@ -4,3 +4,11 @@ members = [
 	"firebase-js-sys",
 	"firebase-types",
 ]
+
+[workspace.package]
+authors = []
+homepage = "https://actuallyhappening.github.io/rust-firebase-js/"
+repository = "https://github.com/ActuallyHappening/rust-firebase-js"
+license = "MIT"
+license-file = "LICENSE"
+documentation = "https://actuallyhappening.github.io/rust-firebase-js/"
