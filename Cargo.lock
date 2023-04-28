@@ -117,6 +117,7 @@ dependencies = [
  "console_error_panic_hook",
  "console_log",
  "execute",
+ "firebase-types",
  "log",
  "wasm-bindgen",
  "wasm-bindgen-test",

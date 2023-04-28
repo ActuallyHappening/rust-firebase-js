@@ -33,12 +33,4 @@ extern "C" {
 // 	pub fn initialize_app(config: &JsValue, name: Option<String>) -> Result<JsValue, JsValue>;
 // }
 
-/// TS type:
-/// /** The error code for this error. */
-/// readonly code: string
-///  /** Custom data for this error. */
-/// customData?: Record<string, unknown> | undefined;
-struct FirebaseError {
-	code: String,
-	customData: Option<HashMap<String, JsValue>>,
-}
+
