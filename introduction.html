@@ -83,7 +83,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html" class="active"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="chapter_1.html"><strong aria-hidden="true">2.</strong> Chapter 1</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html" class="active"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="the_problem.html"><strong aria-hidden="true">1.1.</strong> The problem</a></li><li class="chapter-item expanded "><a href="package_relationships.html"><strong aria-hidden="true">1.2.</strong> Package relationships</a></li></ol></li><li class="chapter-item expanded "><a href="firebase_js_sys/introduction.html"><strong aria-hidden="true">2.</strong> Firebase JS SYS</a></li><li class="chapter-item expanded "><a href="firebase_types/introduction.html"><strong aria-hidden="true">3.</strong> Firebase Types</a></li><li class="chapter-item expanded "><a href="firebase_js/introduction.html"><strong aria-hidden="true">4.</strong> Firebase JS</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -145,13 +145,23 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
+<p>Well, you made it!
+This is the documentation in book form for the <code>firebase-js</code> (and <code>firebase-js-sys</code>) packages, freely available on <a href="https://crates.io">crates.io</a></p>
+<!-- TODO: Link to creates.io packages -->
+<h2 id="versioning"><a class="header" href="#versioning">Versioning</a></h2>
+<p>These packages are still very much in development, esspecially the high-level <code>firebase-js</code>, however they do work.
+There will be breaking changes, obviously proceed with due caution and I suggest <code>git clone</code>ing for maximum flexibility.</p>
+<p>It is likely these crates will never be promoted to <code>1.0.0</code> by myself, so contributions are welcome!
+I will try my best to review and merge any PRs as well as triarge and resolve GH issues that pop up.</p>
+<p>These packages will try to follow SemVer as best as possible, but during the <code>0.x</code> versions breaking changes will occur
+during minor releases.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
 
-                            <a rel="next" href="chapter_1.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="the_problem.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -162,7 +172,7 @@
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
 
-                    <a rel="next" href="chapter_1.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="the_problem.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

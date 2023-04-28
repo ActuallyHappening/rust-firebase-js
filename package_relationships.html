@@ -3,8 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Firebase JS in Rust!</title>
-        <meta name="robots" content="noindex" />
+        <title>Package relationships - Firebase JS in Rust!</title>
 
 
         <!-- Custom HTML head -->
@@ -84,7 +83,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="the_problem.html"><strong aria-hidden="true">1.1.</strong> The problem</a></li><li class="chapter-item expanded "><a href="package_relationships.html"><strong aria-hidden="true">1.2.</strong> Package relationships</a></li></ol></li><li class="chapter-item expanded "><a href="firebase_js_sys/introduction.html"><strong aria-hidden="true">2.</strong> Firebase JS SYS</a></li><li class="chapter-item expanded "><a href="firebase_types/introduction.html"><strong aria-hidden="true">3.</strong> Firebase Types</a></li><li class="chapter-item expanded "><a href="firebase_js/introduction.html"><strong aria-hidden="true">4.</strong> Firebase JS</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="the_problem.html"><strong aria-hidden="true">1.1.</strong> The problem</a></li><li class="chapter-item expanded "><a href="package_relationships.html" class="active"><strong aria-hidden="true">1.2.</strong> Package relationships</a></li></ol></li><li class="chapter-item expanded "><a href="firebase_js_sys/introduction.html"><strong aria-hidden="true">2.</strong> Firebase JS SYS</a></li><li class="chapter-item expanded "><a href="firebase_types/introduction.html"><strong aria-hidden="true">3.</strong> Firebase Types</a></li><li class="chapter-item expanded "><a href="firebase_js/introduction.html"><strong aria-hidden="true">4.</strong> Firebase JS</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -145,43 +144,7 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
-<p>Well, you made it!
-This is the documentation in book form for the <code>firebase-js</code> (and <code>firebase-js-sys</code>) packages, freely available on <a href="https://crates.io">crates.io</a></p>
-<!-- TODO: Link to creates.io packages -->
-<h2 id="versioning"><a class="header" href="#versioning">Versioning</a></h2>
-<p>These packages are still very much in development, esspecially the high-level <code>firebase-js</code>, however they do work.
-There will be breaking changes, obviously proceed with due caution and I suggest <code>git clone</code>ing for maximum flexibility.</p>
-<p>It is likely these crates will never be promoted to <code>1.0.0</code> by myself, so contributions are welcome!
-I will try my best to review and merge any PRs as well as triarge and resolve GH issues that pop up.</p>
-<p>These packages will try to follow SemVer as best as possible, but during the <code>0.x</code> versions breaking changes will occur
-during minor releases.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="the-problem"><a class="header" href="#the-problem">The problem</a></h1>
-<p>Imagine you want to build a website (and/or integrate a custom backend), using the <code>firebase</code> provided by Google.
-You have many options:</p>
-<ul>
-<li>Plain JavaScript with the <code>firebase</code> npm package / SDK</li>
-<li>Flutter / Dart with <code>flutterfire</code> package</li>
-</ul>
-<!-- TODO: LInk to flutterfire -->
-<ul>
-<li>JavaScript frameworks, integration the <code>firebase</code> JS SDK</li>
-</ul>
-<p>However, all of the above solutions use languages that are sub-optimal.</p>
-<p>In <code>dart</code>, for example, you cannot establish type-safe JavaScript interop. Period.
-The interop does exist, but for your own custom purposes it requires you authoring (and probably publishing) a Flutter plugin.
-Then, the types are validated at runtime only, since <code>dart</code> typing is like that, and compiling with optimizations has the potential for the wrong types to 'leak' through your code base.</p>
-<p>'Well,' you might respond, 'what about the other JS solutions? They seem pretty standard, being the only solution for many decades.'
-I would resopnd with the argument, 'Can't we do better?'
-If you have dealt with <code>npm</code> and large interrelated JS projects before, you have often come up against an error like <code>undefined is not a function</code>. Tracking this errors is relatively time consuming compared with tracking <code>Rust</code> errors, for a few major reasons:</p>
-<ul>
-<li><strong>Rust is compiled <em>and</em> knows everything about your project</strong> (not necessarily guarenteed with other compiled languages)</li>
-<li><strong>JavaScript errors primarily happen at runtime</strong> (I often encounter SyntaxErrors at runtime, when dynamic programming like <code>eval</code> or appending <code>script</code> tags to the DOM are involved)</li>
-<li><strong>Meta programming</strong> is hard to trace errors through in edge cases, which Rust solves quite practically with its implementations of macros.</li>
-</ul>
-<p>'Well, how can you use <code>firebase</code> in a stable and debuggable manner?'
-My answer is: <code>Rust</code></p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="package-relationships"><a class="header" href="#package-relationships">Package relationships</a></h1>
+                        <h1 id="package-relationships"><a class="header" href="#package-relationships">Package relationships</a></h1>
 <p><code>firebase-js</code> depends on:</p>
 <ul>
 <li><code>firebase-js-wrappers</code> for type wrappers</li>
@@ -194,49 +157,18 @@ My answer is: <code>Rust</code></p>
 <li>Bunch of hand-written <code>js</code> code and the <code>npm</code> package <code>firebase</code></li>
 </ul>
 <p><code>firebase-js-wrappers</code> depends on: Nothing important.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="firebase-js-sys"><a class="header" href="#firebase-js-sys">Firebase JS sys</a></h1>
-<p>This crate provides a low-level wrapper around the Firebase JS SDK, the useful
-functions and types are <code>#[wasm_bindgen]</code>ed into Rust, keeping JS semantics.</p>
-<p>This package intends to be a solid foundation for building onto of, with
-extensive tests and common known errors mapped into Rust.</p>
-<p>Contributions welcome!</p>
-<h2 id="aim"><a class="header" href="#aim">Aim</a></h2>
-<p>To provide the very first 'glue' between Rust and JS for firebase.
-Any errors emenating from this library should be soley from the JavaScript world,
-caused by an incorrect value being passed into a <em>rust</em> function that should
-be interpretted as a <em>JS</em> function.</p>
-<p>This library is definitely not practical to use, is is designed to provide a
-stable base to build other libraries on top of, notably <code>firebase-js</code>.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="firebase-types"><a class="header" href="#firebase-types">Firebase Types</a></h1>
-<p>Implementation agnostic types for 'native' <code>firebase</code> types in Rust.
-These types try to reflect the types you would use in the official firebase SDKs.</p>
-<h2 id="installation"><a class="header" href="#installation">Installation</a></h2>
-<h3 id="cargo"><a class="header" href="#cargo">Cargo</a></h3>
-<p>Install using cargo like:</p>
-<pre><code class="language-bash">cargo add firebase-types
-</code></pre>
-<p>By default, this package ships with features <code>serde</code> but not <code>expose-jsvalue</code>.
-I (the author) am using this package to implement <code>firebase-js</code>, interopping with JS,
-which is the reason for the <code>expose-jsvalue</code>.
-You can obviously disable <code>serde</code> if you so desire:</p>
-<pre><code class="language-bash">cargo add firebase-types --no-default-features
-</code></pre>
-<h3 id="git"><a class="header" href="#git"><code>git</code></a></h3>
-<p>Clone the repo like so:</p>
-<pre><code class="language-bash">git clone https://github.com/ActuallyHappening/rust-firebase-js/
-</code></pre>
-<p>Then, you can establish a local dependency for more fine-grained control:</p>
-<pre><code class="language-toml">[dependancies.firebase-types]
-path = &quot;../path/to/repo/firebase-types&quot;
-version = &quot;X.Y.Z&quot; # Optional for publishing, relies on `crates.io` version instead of local
-</code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="firebase-js"><a class="header" href="#firebase-js">Firebase JS</a></h1>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="the_problem.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
 
+                            <a rel="next" href="firebase_js_sys/introduction.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
 
                         <div style="clear: both"></div>
                     </nav>
@@ -244,7 +176,13 @@ version = &quot;X.Y.Z&quot; # Optional for publishing, relies on `crates.io` ver
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="the_problem.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
 
+                    <a rel="next" href="firebase_js_sys/introduction.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
             </nav>
 
         </div>
@@ -267,11 +205,6 @@ version = &quot;X.Y.Z&quot; # Optional for publishing, relies on `crates.io` ver
 
         <!-- Custom JS scripts -->
 
-        <script>
-        window.addEventListener('load', function() {
-            window.setTimeout(window.print, 100);
-        });
-        </script>
 
     </div>
     </body>
