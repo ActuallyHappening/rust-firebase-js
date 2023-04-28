@@ -1,5 +1,6 @@
 [package]
 name = "firebase-types"
+description = "Implementation agnostic types of firebase for use in rust"
 version = "0.0.1"
 edition = "2021"
 repository = "https://github.com/ActuallyHappening/rust-firebase-js/tree/master/firebase-types"
