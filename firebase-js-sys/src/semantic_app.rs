@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen(module = "/firebase-interop/bundle.js")]
@@ -26,11 +24,3 @@ extern "C" {
 	#[wasm_bindgen(catch, static_method_of = app, js_name = "initializeApp")]
 	pub fn initialize_app(config: &JsValue, name: Option<String>) -> Result<JsValue, JsValue>;
 }
-
-// #[wasm_bindgen(module = "firebase/app")]
-// extern "C" {
-// 	#[wasm_bindgen(catch, js_name = "initializeApp")]
-// 	pub fn initialize_app(config: &JsValue, name: Option<String>) -> Result<JsValue, JsValue>;
-// }
-
-

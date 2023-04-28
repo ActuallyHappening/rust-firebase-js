@@ -4,8 +4,9 @@ version = "0.0.1"
 description = "High level interop with `npm`s `firebase@9` package for `wasm32-unknown-unknown` web targets."
 repository = "https://github.com/ActuallyHappening/rust-firebase-js/tree/master/firebase-js"
 edition = "2021"
-authors = []
-license = "MIT"
+authors = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
 keywords = ["firebase", "firebase-js", "firebase-database", "wasm", "wasm-bindgen"]
 categories = ["api-bindings", "wasm", "web-programming"]
 

@@ -4,8 +4,9 @@ version = "0.1.0"
 description = "`wasm32-unknown-unknown` bindings for the Firebase modular JS SDK (`npm` firebase@9)"
 repository = "https://github.com/ActuallyHappening/rust-firebase-js/tree/master/firebase-js-sys"
 edition = "2021"
-authors = []
-license = "MIT"
+authors = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
 keywords = ["firebase", "firebase-js", "firebase-database", "wasm", "wasm-bindgen"]
 categories = ["wasm", "web-programming"]
 

@@ -7,24 +7,35 @@ categories = ["api-bindings", "wasm", "web-programming"]
 authors = { workspace = true }
 homepage = { workspace = true }
 license = { workspace = true }
-license-file = { workspace = true }
 # TODO: Add more specific documentation link
 documentation = "https://actuallyhappening.github.io/rust-firebase-js/" 
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-default = ["serde", "expose-jsvalue"]
+## By default, no features are enabled
+default = []
+
+# default = ["serde", "expose-jsvalue"]
+## Enables generic serde support
 serde = ["dep:serde"]
-# Requries `serde` feature
+
+## Enables support for deferencing [Deserializable] types in `JsValue` using `serde-wasm-bindgen`
+## Implies `serde` feature
 expose-jsvalue = ["serde", "dep:wasm-bindgen", "dep:serde-wasm-bindgen"]
 
 [dependencies]
 serde = { version = "1.0.160", features = ["derive"], optional = true }
 serde-wasm-bindgen = { version = "0.5.0", optional = true }
 wasm-bindgen = { version = "0.2.84", optional = true }
+document-features = { version = "0.2.7", optional = false }
 
 [dev-dependencies]
 getrandom = { version = "0.2.9", features = ["js"] }
 rand = "0.8.5"
 
+[package.metadata.docs.rs]
+cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples=examples"]
+# Alternative: enable all features so they are all documented
+# features = ["document-features"]
+all-features = true

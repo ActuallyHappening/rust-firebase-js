@@ -1,6 +1,7 @@
 # Firebase Types
-Implementation agnostic types for `firebase`
+Implementation agnostic types for `firebase` in Rust
 
-```rust
-assert_eq!(1+1, 2);
-```
+## Recommended Documentation:
+Documentation in Rust-Firebase-JS project book: https://actuallyhappening.github.io/rust-firebase-js/firebase_types/introduction.html
+
+Documentation on docs.rs: [https://docs.rs/firebase-types](https://docs.rs/firebase-types)

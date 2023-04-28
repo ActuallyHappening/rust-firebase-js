@@ -36,6 +36,13 @@
 //! 	// println!("returned: {:?}", app);
 //! }
 //! ```
+//! 
+
+/// Tests doctests in README when running `cargo test`, see:
+/// https://doc.rust-lang.org/rustdoc/write-documentation/documentation-tests.html
+#[doc = include_str!("../README.md")]
+#[cfg(doctest)]
+pub struct ReadmeDoctests;
 
 use wasm_bindgen::prelude::*;
 
