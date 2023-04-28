@@ -2,6 +2,12 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::*;
 
+// mod _debug;
+// #[proc_macro]
+// pub fn test(_input: TokenStream) -> TokenStream {
+// 	_debug::debug_impl(_input)
+// }
+
 #[proc_macro]
 pub fn target_name(_input: TokenStream) -> TokenStream {
 	quote! {
@@ -12,6 +18,7 @@ pub fn target_name(_input: TokenStream) -> TokenStream {
 		}
 	}.into()
 }
+
 
 
 #[proc_macro]
