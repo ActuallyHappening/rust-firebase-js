@@ -16,7 +16,8 @@ proc-macro = true
 cfg-if = "1.0.0"
 proc-macro2 = "1.0.56"
 quote = "1.0.26"
+wasm-bindgen = "0.2.84"
 
 [dependencies.syn]
 version = "2.0.15"
-features = ["proc-macro", "parsing", "full"]
+features = ["proc-macro", "parsing", "full", "printing", "extra-traits"]

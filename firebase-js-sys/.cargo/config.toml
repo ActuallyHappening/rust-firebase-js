@@ -1,6 +1,7 @@
 [alias]
 t = "test --target wasm32-unknown-unknown"
 tm = "test --quiet test_macro -- --nocapture"
+em = "expand --bin firebase-js-sys-proc"
 
 [target.wasm32-unknown-unknown]
 runner = 'wasm-bindgen-test-runner'

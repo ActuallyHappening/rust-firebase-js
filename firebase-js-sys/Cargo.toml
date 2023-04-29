@@ -10,6 +10,20 @@ license = { workspace = true }
 keywords = ["firebase", "firebase-js", "firebase-database", "wasm", "wasm-bindgen"]
 categories = ["wasm", "web-programming"]
 
+exclude = [
+	"js/**",
+	"!js/bundle-*.js",
+	"package.json",
+	"pnpm-lock.yaml",
+	"index.html",
+	"test",
+	"Trunk.toml",
+	"build.rs",
+	"tests",
+	".cargo",
+	"tsconfig.json",
+]
+
 # [workspace]
 # members = [
 # 	"firebase-wasm-rs"

@@ -143,6 +143,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.15",
+ "wasm-bindgen",
 ]
 
 [[package]]

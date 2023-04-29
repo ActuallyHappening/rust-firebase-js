@@ -7,7 +7,7 @@ export default {
 	watch: true,
 	output: {
 		// file: 'firebase-interop/bundle-cjs.js',
-		file: 'target/js/bundle-cjs.js',
+		file: 'js/bundle-cjs.js',
 		sourcemap: 'inline',
 		format: 'cjs'
 	},

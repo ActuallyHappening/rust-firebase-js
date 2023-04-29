@@ -21,11 +21,53 @@ pub fn target_name(_input: TokenStream) -> TokenStream {
 
 #[proc_macro_attribute]
 pub fn nothing(attr: TokenStream, input: TokenStream) -> TokenStream {
-	// panic!("Attr: {:?}\nItem: {:?}", attr, input);
-	// eprintln!("Attr: {:?}", attr);
-	eprintln!("Item: {:?}", input);
-	
-	quote!{}.into()
+	// eprintln!("Item: {:#?}", input);
+	eprintln!("Attr: {:?}", attr);
+
+	// let args = parse_macro_input!(attr as AttributeArgs);
+	let item = parse_macro_input!(input as ItemFn);
+	eprintln!("Item: {:#?}", item);
+
+	quote! {
+		use wasm_bindgen::prelude::wasm_bindgen;
+		#[wasm_bindgen]
+		extern "C" {
+			pub fn yes() -> i32;
+		}
+		// #[cfg_attr(
+		// 	feature = "web-not-node",
+		// 	::wasm_bindgen(module = "/target/js/bundle-es.js")
+		// )]
+		// #[cfg_attr(
+		// 	feature = "node-not-web",
+		// 	::wasm_bindgen(module = "/target/js/bundle-cjs.js")
+		// )]
+		// extern "C" {
+		// 	#[allow(non_camel_case_types)]
+		// 	#[::wasm_bindgen(js_name = "app")]
+		// 	type _app;
+
+		// 	/// Takes a config object and returns a firebase app instance
+		// 	///
+		// 	/// Equivalent to:
+		// 	/// ```js
+		// 	/// import { initializeApp } from 'firebase/app';
+		// 	///
+		// 	/// // Get your own config from somewhere, typically copy-paste from firebase console
+		// 	/// const config = {
+		// 	/// 	apiKey: "...",
+		// 	/// 	projectId: "...",
+		// 	/// 	...
+		// 	/// }
+		// 	///
+		// 	/// initializeApp(config);
+		// 	/// ```
+		// 	///
+		// 	#[::wasm_bindgen(catch, static_method_of = _app, js_name = "initializeApp")]
+		// 	pub fn initialize_app(config: &::wasm_bindgen::JsValue, name: Option<String>) -> Result<::wasm_bindgen::JsValue, ::wasm_bindgen::JsValue>;
+		// }
+	}
+	.into()
 }
 
 #[proc_macro]
@@ -61,7 +103,7 @@ pub fn duplicate_test(input: TokenStream) -> TokenStream {
 			///
 			/// initializeApp(config);
 			/// ```
-			/// 
+			///
 			#[wasm_bindgen(catch, static_method_of = #, js_name = "initializeApp")]
 			pub fn initialize_app(config: &JsValue, name: Option<String>) -> Result<JsValue, JsValue>;
 		}
