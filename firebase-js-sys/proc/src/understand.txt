@@ -1,0 +1,144 @@
+fn function_name(argument_label1: String, argument_label2: CustomType) -> ReturnType {
+	let code = "this is literaly code";
+}
+
+as ItemFn
+
+ItemFn {
+    attrs: [],
+    vis: Visibility::Inherited,
+    sig: Signature {
+        constness: None,
+        asyncness: None,
+        unsafety: None,
+        abi: None,
+        fn_token: Fn,
+        ident: Ident {
+            ident: "function_name",
+            span: #0 bytes(137..150),
+        },
+        generics: Generics {
+            lt_token: None,
+            params: [],
+            gt_token: None,
+            where_clause: None,
+        },
+        paren_token: Paren,
+        inputs: [
+            FnArg::Typed(
+                PatType {
+                    attrs: [],
+                    pat: Pat::Ident {
+                        attrs: [],
+                        by_ref: None,
+                        mutability: None,
+                        ident: Ident {
+                            ident: "argument_label1",
+                            span: #0 bytes(151..166),
+                        },
+                        subpat: None,
+                    },
+                    colon_token: Colon,
+                    ty: Type::Path {
+                        qself: None,
+                        path: Path {
+                            leading_colon: None,
+                            segments: [
+                                PathSegment {
+                                    ident: Ident {
+                                        ident: "String",
+                                        span: #0 bytes(168..174),
+                                    },
+                                    arguments: PathArguments::None,
+                                },
+                            ],
+                        },
+                    },
+                },
+            ),
+            Comma,
+            FnArg::Typed(
+                PatType {
+                    attrs: [],
+                    pat: Pat::Ident {
+                        attrs: [],
+                        by_ref: None,
+                        mutability: None,
+                        ident: Ident {
+                            ident: "argument_label2",
+                            span: #0 bytes(176..191),
+                        },
+                        subpat: None,
+                    },
+                    colon_token: Colon,
+                    ty: Type::Path {
+                        qself: None,
+                        path: Path {
+                            leading_colon: None,
+                            segments: [
+                                PathSegment {
+                                    ident: Ident {
+                                        ident: "CustomType",
+                                        span: #0 bytes(193..203),
+                                    },
+                                    arguments: PathArguments::None,
+                                },
+                            ],
+                        },
+                    },
+                },
+            ),
+        ],
+        variadic: None,
+        output: ReturnType::Type(
+            RArrow,
+            Type::Path {
+                qself: None,
+                path: Path {
+                    leading_colon: None,
+                    segments: [
+                        PathSegment {
+                            ident: Ident {
+                                ident: "ReturnType",
+                                span: #0 bytes(208..218),
+                            },
+                            arguments: PathArguments::None,
+                        },
+                    ],
+                },
+            },
+        ),
+    },
+    block: Block {
+        brace_token: Brace,
+        stmts: [
+            Stmt::Local {
+                attrs: [],
+                let_token: Let,
+                pat: Pat::Ident {
+                    attrs: [],
+                    by_ref: None,
+                    mutability: None,
+                    ident: Ident {
+                        ident: "code",
+                        span: #0 bytes(227..231),
+                    },
+                    subpat: None,
+                },
+                init: Some(
+                    LocalInit {
+                        eq_token: Eq,
+                        expr: Expr::Lit {
+                            attrs: [],
+                            lit: Lit::Str {
+                                token: "this is literaly code",
+                            },
+                        },
+                        diverge: None,
+                    },
+                ),
+                semi_token: Semi,
+            },
+        ],
+    },
+}

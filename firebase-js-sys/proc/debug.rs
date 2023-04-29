@@ -3,36 +3,42 @@
 use std::prelude::rust_2021::*;
 #[macro_use]
 extern crate std;
-use syn::ItemFn;
-use wasm_bindgen::JsValue;
 fn main() {
-    struct CustomType;
-    struct ReturnType;
-    use wasm_bindgen::JsValue;
-    extern "C" {
-        #[allow(non_camel_case_types)]
-        #[::wasm_bindgen(js_name = "app")]
-        type _app;
-        /// Takes a config object and returns a firebase app instance
-        ///
-        /// Equivalent to:
-        /// ```js
-        /// import { initializeApp } from 'firebase/app';
-        ///
-        /// // Get your own config from somewhere, typically copy-paste from firebase console
-        /// const config = {
-        /// 	apiKey: "...",
-        /// 	projectId: "...",
-        /// 	...
-        /// }
-        ///
-        /// initializeApp(config);
-        /// ```
-        ///
-        #[::wasm_bindgen(catch, static_method_of = _app, js_name = "initializeApp")]
-        pub fn initialize_app(
-            config: &JsValue,
-            name: Option<String>,
-        ) -> Result<JsValue, JsValue>;
+    struct _CustomType;
+    struct _ReturnType;
+    use wasm_bindgen::prelude::wasm_bindgen;
+    #[allow(nonstandard_style)]
+    #[allow(clippy::all, clippy::nursery, clippy::pedantic, clippy::restriction)]
+    ///
+    fn function_name(
+        argument_label1: String,
+        argument_label2: _CustomType,
+    ) -> _ReturnType {
+        #[cfg(not(all(target_arch = "wasm32", not(target_os = "emscripten"))))]
+        unsafe fn __wbg_functionname_a535acec05228e54(
+            argument_label1: <String as wasm_bindgen::convert::IntoWasmAbi>::Abi,
+            argument_label2: <_CustomType as wasm_bindgen::convert::IntoWasmAbi>::Abi,
+        ) -> <_ReturnType as wasm_bindgen::convert::FromWasmAbi>::Abi {
+            drop(argument_label1);
+            drop(argument_label2);
+            {
+                ::std::rt::begin_panic(
+                    "cannot call wasm-bindgen imported functions on \
+                    non-wasm targets",
+                )
+            };
+        }
+        unsafe {
+            let _ret = {
+                let argument_label1 = <String as wasm_bindgen::convert::IntoWasmAbi>::into_abi(
+                    argument_label1,
+                );
+                let argument_label2 = <_CustomType as wasm_bindgen::convert::IntoWasmAbi>::into_abi(
+                    argument_label2,
+                );
+                __wbg_functionname_a535acec05228e54(argument_label1, argument_label2)
+            };
+            <_ReturnType as wasm_bindgen::convert::FromWasmAbi>::from_abi(_ret)
+        }
     }
 }

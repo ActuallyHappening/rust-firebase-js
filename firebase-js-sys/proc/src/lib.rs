@@ -26,13 +26,17 @@ pub fn nothing(attr: TokenStream, input: TokenStream) -> TokenStream {
 
 	// let args = parse_macro_input!(attr as AttributeArgs);
 	let item = parse_macro_input!(input as ItemFn);
-	eprintln!("Item: {:#?}", item);
+	// eprintln!("Item: {:#?}", item);
 
-	quote! {
+	let sig = &item.sig;
+	let sig_str = quote!(#sig);
+	eprintln!("Sig str: {:?}", sig_str.to_string());
+
+	let expanded = quote! {
 		use wasm_bindgen::prelude::wasm_bindgen;
 		#[wasm_bindgen]
 		extern "C" {
-			pub fn yes() -> i32;
+			#sig_str;
 		}
 		// #[cfg_attr(
 		// 	feature = "web-not-node",
@@ -47,27 +51,15 @@ pub fn nothing(attr: TokenStream, input: TokenStream) -> TokenStream {
 		// 	#[::wasm_bindgen(js_name = "app")]
 		// 	type _app;
 
-		// 	/// Takes a config object and returns a firebase app instance
-		// 	///
-		// 	/// Equivalent to:
-		// 	/// ```js
-		// 	/// import { initializeApp } from 'firebase/app';
-		// 	///
-		// 	/// // Get your own config from somewhere, typically copy-paste from firebase console
-		// 	/// const config = {
-		// 	/// 	apiKey: "...",
-		// 	/// 	projectId: "...",
-		// 	/// 	...
-		// 	/// }
-		// 	///
-		// 	/// initializeApp(config);
-		// 	/// ```
-		// 	///
+		// /// Test doc
 		// 	#[::wasm_bindgen(catch, static_method_of = _app, js_name = "initializeApp")]
 		// 	pub fn initialize_app(config: &::wasm_bindgen::JsValue, name: Option<String>) -> Result<::wasm_bindgen::JsValue, ::wasm_bindgen::JsValue>;
 		// }
-	}
-	.into()
+	};
+
+	eprintln!("Expanded: {}", expanded.to_string());
+
+	expanded.into()
 }
 
 #[proc_macro]
