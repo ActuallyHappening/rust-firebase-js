@@ -22,6 +22,7 @@ pub fn target_name(_input: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn nothing(attr: TokenStream, input: TokenStream) -> TokenStream {
 	// eprintln!("Item: {:#?}", input);
+	let attr = parse_macro_input!(attr as Meta);
 	eprintln!("Attr: {:?}", attr);
 
 	// let args = parse_macro_input!(attr as AttributeArgs);
@@ -30,31 +31,28 @@ pub fn nothing(attr: TokenStream, input: TokenStream) -> TokenStream {
 
 	let sig = &item.sig;
 	let sig_str = quote!(#sig);
+
 	eprintln!("Sig str: {:?}", sig_str.to_string());
 
 	let expanded = quote! {
 		use wasm_bindgen::prelude::wasm_bindgen;
+		#[cfg_attr(
+			feature = "web-not-node",
+			::wasm_bindgen(module = "/target/js/bundle-es.js")
+		)]
+		#[cfg_attr(
+			feature = "node-not-web",
+			::wasm_bindgen(module = "/target/js/bundle-cjs.js")
+		)]
 		#[wasm_bindgen]
 		extern "C" {
+			#[allow(non_camel_case_types)]
+			#[::wasm_bindgen(js_name = "app")]
+			type _app;
+
+			#[::wasm_bindgen(catch, static_method_of = _app, js_name = "initializeApp")]
 			#sig_str;
 		}
-		// #[cfg_attr(
-		// 	feature = "web-not-node",
-		// 	::wasm_bindgen(module = "/target/js/bundle-es.js")
-		// )]
-		// #[cfg_attr(
-		// 	feature = "node-not-web",
-		// 	::wasm_bindgen(module = "/target/js/bundle-cjs.js")
-		// )]
-		// extern "C" {
-		// 	#[allow(non_camel_case_types)]
-		// 	#[::wasm_bindgen(js_name = "app")]
-		// 	type _app;
-
-		// /// Test doc
-		// 	#[::wasm_bindgen(catch, static_method_of = _app, js_name = "initializeApp")]
-		// 	pub fn initialize_app(config: &::wasm_bindgen::JsValue, name: Option<String>) -> Result<::wasm_bindgen::JsValue, ::wasm_bindgen::JsValue>;
-		// }
 	};
 
 	eprintln!("Expanded: {}", expanded.to_string());
