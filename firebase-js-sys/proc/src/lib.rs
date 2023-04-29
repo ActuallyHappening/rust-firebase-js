@@ -1,5 +1,5 @@
 use proc_macro::TokenStream;
-use quote::quote;
+use quote::{quote, format_ident};
 use syn::*;
 
 // mod _debug;
@@ -19,20 +19,43 @@ pub fn target_name(_input: TokenStream) -> TokenStream {
 	}.into()
 }
 
+/// Binds a regular function signature using wasm-bindgen
 #[proc_macro_attribute]
-pub fn nothing(attr: TokenStream, input: TokenStream) -> TokenStream {
-	// eprintln!("Item: {:#?}", input);
-	let attr = parse_macro_input!(attr as Meta);
-	eprintln!("Attr: {:?}", attr);
+pub fn js_bind(attr: TokenStream, input: TokenStream) -> TokenStream {
+	let attr = parse_macro_input!(attr as LitStr);
+	let attr_indent = format_ident!("{}", attr.value());
 
-	// let args = parse_macro_input!(attr as AttributeArgs);
+	eprintln!("Attr: {:#?}", attr);
+
 	let item = parse_macro_input!(input as ItemFn);
-	// eprintln!("Item: {:#?}", item);
-
 	let sig = &item.sig;
 	let sig_str = quote!(#sig);
-
 	eprintln!("Sig str: {:?}", sig_str.to_string());
+	let sig_name = &sig.ident;
+
+	let module_name = attr_indent;
+	let module_name_underscore = format_ident!("_{}", &module_name);
+
+	let sig_inputs = &sig.inputs;
+	eprintln!("Sig inputs: {:#?}", sig_inputs);
+
+	let parameters = sig_inputs.iter().map(|arg| {
+		match arg {
+			FnArg::Receiver(_) => panic!("Cannot use receiver in js_bind"),
+			FnArg::Typed(pat_type) => {
+				let pat = &pat_type.pat;
+				let ty = &pat_type.ty;
+				quote!(#pat: #ty)
+			}
+		}
+	});
+
+	let function_wrapper = quote! {
+		#sig_str {
+			// #module_name_underscore::#attr_indent(#(#sig_inputs),*)
+			#module_name_underscore::#sig_name();
+		}
+	};
 
 	let expanded = quote! {
 		use wasm_bindgen::prelude::wasm_bindgen;
@@ -47,57 +70,17 @@ pub fn nothing(attr: TokenStream, input: TokenStream) -> TokenStream {
 		#[wasm_bindgen]
 		extern "C" {
 			#[allow(non_camel_case_types)]
-			#[::wasm_bindgen(js_name = "app")]
-			type _app;
+			#[::wasm_bindgen(js_name = #module_name)]
+			type #module_name_underscore;
 
-			#[::wasm_bindgen(catch, static_method_of = _app, js_name = "initializeApp")]
+			#[::wasm_bindgen(catch, static_method_of = #module_name_underscore, js_name = "initializeApp")]
 			#sig_str;
 		}
+
+		#function_wrapper
 	};
 
 	eprintln!("Expanded: {}", expanded.to_string());
-
-	expanded.into()
-}
-
-#[proc_macro]
-pub fn duplicate_test(input: TokenStream) -> TokenStream {
-	// panic!("Attr: {:?}\nItem: {:?}", attr, input);
-	// eprintln!("Attr: {:?}", attr);
-	eprintln!("Item: {:?}", input);
-	let _input = parse_macro_input!(input as DeriveInput);
-
-	let module_name = "_app";
-	let js_module_name = "app";
-
-	let expanded = quote! {
-		#[cfg_attr(feature = "web-not-node", wasm_bindgen(module = "/target/js/bundle-es.js"))]
-		#[cfg_attr(feature = "node-not-web", wasm_bindgen(module = "/target/js/bundle-cjs.js"))]
-		extern "C" {
-			#[allow(non_camel_case_types)]
-			#[wasm_bindgen(js_name = #js_module_name)]
-			pub type #module_name;
-
-			/// Takes a config object and returns a firebase app instance
-			///
-			/// Equivalent to:
-			/// ```js
-			/// import { initializeApp } from 'firebase/app';
-			///
-			/// // Get your own config from somewhere, typically copy-paste from firebase console
-			/// const config = {
-			/// 	apiKey: "...",
-			/// 	projectId: "...",
-			/// 	...
-			/// }
-			///
-			/// initializeApp(config);
-			/// ```
-			///
-			#[wasm_bindgen(catch, static_method_of = #, js_name = "initializeApp")]
-			pub fn initialize_app(config: &JsValue, name: Option<String>) -> Result<JsValue, JsValue>;
-		}
-	};
 
 	expanded.into()
 }
