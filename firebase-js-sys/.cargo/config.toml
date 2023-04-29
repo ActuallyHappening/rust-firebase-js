@@ -1,5 +1,6 @@
 [alias]
 t = "test --target wasm32-unknown-unknown"
+tm = "test --quiet test_macro -- --nocapture"
 
 [target.wasm32-unknown-unknown]
 runner = 'wasm-bindgen-test-runner'

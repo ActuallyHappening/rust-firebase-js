@@ -19,7 +19,14 @@ pub fn target_name(_input: TokenStream) -> TokenStream {
 	}.into()
 }
 
-
+#[proc_macro_attribute]
+pub fn nothing(attr: TokenStream, input: TokenStream) -> TokenStream {
+	// panic!("Attr: {:?}\nItem: {:?}", attr, input);
+	// eprintln!("Attr: {:?}", attr);
+	eprintln!("Item: {:?}", input);
+	
+	quote!{}.into()
+}
 
 #[proc_macro]
 pub fn duplicate_test(input: TokenStream) -> TokenStream {

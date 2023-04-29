@@ -44,3 +44,17 @@ pub fn initialize_app(config: &JsValue, name: Option<String>) -> Result<JsValue,
 
 	_app::initialize_app(config, name)
 }
+
+#[cfg(test)]
+mod tests {
+	use firebase_js_sys_proc::nothing;
+
+	#[test]
+	fn test_macro() {
+		eprintln!("Beginning test ...");
+
+		
+
+		panic!("Test finished")
+	}
+}
