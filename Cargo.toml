@@ -2,8 +2,11 @@
 members = [
 	"firebase-js",
 	"firebase-js-sys",
-	"firebase-js-sys/proc",
-	"firebase-js-sys/proc/syner",
+	"js-bind",
+	"js-bind/core",
+	"js-bind/proc",
+	# "firebase-js-sys/proc",
+	# "firebase-js-sys/proc/syner",
 	"firebase-types",
 ]
 

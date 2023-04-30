@@ -1,5 +1,5 @@
 [package]
-name = "firebase-js-sys-proc"
+name = "js-bind-proc"
 version = "0.0.1"
 edition = "2021"
 repository = "https://github.com/ActuallyHappening/rust-firebase-js/tree/master/firebase-js-sys/proc"

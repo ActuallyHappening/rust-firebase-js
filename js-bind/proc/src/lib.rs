@@ -130,11 +130,11 @@ fn handle_doc_comments(func: &ItemFn) {
 	_handle_doc(doc_comments);
 }
 
-/// Binds a regular function signature using wasm-bindgen
-#[proc_macro_attribute]
-pub fn js_bind(attr: TokenStream, input: TokenStream) -> TokenStream {
-
-	let item = parse_macro_input!(input as ItemFn);
+fn _js_bind_impl(attr: proc_macro2::TokenStream, input: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
+	// let attr: proc_macro::TokenStream = proc_macro::TokenStream::from(attr);
+	let input: proc_macro::TokenStream = proc_macro::TokenStream::from(input);
+	// let item = parse_macro_input!(input as ItemFn);
+	let item = syn::parse::<ItemFn>(input).map_err(|e| e.to_compile_error()).expect("ItemFn to parse properly");
 	// eprintln!("Item: {:#?}", item);
 	let sig = &item.sig;
 	let sig_str = quote!(#sig);
@@ -150,7 +150,9 @@ pub fn js_bind(attr: TokenStream, input: TokenStream) -> TokenStream {
 	// let module_name = attr_indent;
 	// let module_name_underscore = format_ident!("_{}", &module_name);
 
-	let attrs = parse_macro_input!(attr as JsBindAttrs);
+	// let attrs = parse_macro_input!(attr as JsBindAttrs);
+	let attrs = syn::parse::<JsBindAttrs>(input).map_err(|e| e.to_compile_error()).expect("ItemFn to parse properly");
+	
 	// eprintln!("Attr: {:#?}", attrs);
 	let js_mod_name = Ident::new(&attrs.js_mod_name, sig.span());
 	let js_mod_name_str = format!(r"{}", js_mod_name.to_string());
@@ -235,4 +237,11 @@ pub fn js_bind(attr: TokenStream, input: TokenStream) -> TokenStream {
 	// eprintln!("Expanded: {}", expanded.to_string());
 
 	expanded.into()
+}
+
+/// Binds a regular function signature using wasm-bindgen
+#[proc_macro_attribute]
+pub fn js_bind(attr: TokenStream, input: TokenStream) -> TokenStream {
+
+	
 }
