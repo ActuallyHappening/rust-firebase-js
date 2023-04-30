@@ -35,9 +35,28 @@ fn convert_from_snake_case_to_camel_case(name: String) -> String {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+struct CodeContext {
+	function_name: String,
+	js_function_name: String,
+	js_module_name: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct CodeBlock {
 	lines: Vec<String>,
-	parameters: Vec<String>,
+	parameters: CodeParams,
+	context: CodeContext,
+}
+
+impl CodeBlock {
+	pub fn new(lines: Vec<String>, context: CodeContext) -> CodeBlock {
+		Self {
+			// TODO: not clone for performance?
+			lines: lines.clone(),
+			parameters: CodeParams::from_strings(lines),
+			context,
+		}
+	}
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -48,11 +67,15 @@ struct CodeParams {
 }
 
 impl CodeParams {
-	pub fn from_strings(vec: Vec<String>) -> CodeParams {
+	/// Transforms a string vector into a CodeParams struct
+	/// 
+	pub fn from_strings(start_line: String) -> CodeParams {
+		let items: Vec<&str> = start_line.trim().to_owned().split(",").collect();
 		Self {
-			lang_identifier: vec.first().cloned(),
-			test_option: vec.get(1).cloned(),
-			other: vec.get(2..).map(|v| v.to_vec()),
+			// TODO: Not clone for performance?
+			lang_identifier: items.first().map(|f| f.to_owned()),
+			test_option: items.get(1).cloned(),
+			other: items.get(2..).map(|v| v.to_vec()),
 		}
 	}
 }
@@ -61,20 +84,27 @@ fn _handle_doc(doc: Vec<String>) {
 	// eprintln!("Doc: {:?}", doc);
 
 	// Extract ```rs ``` code blocks
-	let mut code_blocks = Vec::new();
+	let mut code_blocks: Vec<Vec<String>> = Vec::new();
 	let mut in_code_block = false;
-	let mut code_block = String::new();
+	let mut code_block: Vec<String> = Vec::new();
 	for line in doc {
 		let line = line.trim();
 		if line.starts_with("```") {
 			if in_code_block {
+				// Exiting code block
+				code_block.push(line.to_owned());
 				code_blocks.push(code_block);
-				code_block = String::new();
+				code_block = Vec::new();
+				in_code_block = false;
+			} else {
+				// Entering code block
+				code_block = Vec::new(); // Repetition of line 4 above
+				code_block.push(line.to_owned());
+				in_code_block = true;
 			}
-			in_code_block = !in_code_block;
 		} else if in_code_block {
-			code_block.push_str(&line);
-			code_block.push('\n');
+			// In code block, not boundary
+			code_block.push(line.to_owned());
 		}
 	}
 
