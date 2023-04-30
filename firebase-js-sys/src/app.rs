@@ -1,3 +1,4 @@
+use firebase_js_sys_proc::js_bind;
 use wasm_bindgen::prelude::*;
 
 #[cfg_attr(
@@ -45,16 +46,9 @@ pub fn initialize_app(config: &JsValue, name: Option<String>) -> Result<JsValue,
 	_app::initialize_app(config, name)
 }
 
-#[cfg(test)]
-mod tests {
-	use firebase_js_sys_proc::nothing;
+// #[js_bind("app")]
+// pub fn initialize_app(config: &JsValue, name: Option<String>) -> Result<JsValue, JsValue> {}
 
-	#[test]
-	fn test_macro() {
-		eprintln!("Beginning test ...");
-
-		
-
-		panic!("Test finished")
-	}
+pub fn tt() {
+	initialize_app(&JsValue::UNDEFINED, None);
 }

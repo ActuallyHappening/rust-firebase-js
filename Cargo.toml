@@ -3,7 +3,7 @@ members = [
 	"firebase-js",
 	"firebase-js-sys",
 	"firebase-js-sys/proc",
-	"firebase-js-sys/proc/impl",
+	"firebase-js-sys/proc/syner",
 	"firebase-types",
 ]
 
