@@ -11,9 +11,14 @@ license = { workspace = true }
 
 [lib]
 proc-macro = true
+
 [features]
-default = ["node-not-web"]
-## For testing purposes
+# default = ["strict-feature-checks"]
+default = ["strict-feature-checks", "node-not-web"]
+
+strict-feature-checks = []
+# default = ["node-not-web"]
+# ## For testing purposes
 node-not-web = []
 
 [dependencies]

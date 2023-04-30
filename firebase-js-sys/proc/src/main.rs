@@ -1,17 +1,14 @@
-use wasm_bindgen::JsValue;
 use firebase_js_sys_proc::js_bind;
+use wasm_bindgen::JsValue;
 
 fn main() {
-	struct _CustomType;
 
-	struct _ReturnType;
+	#[js_bind("mod_name")]
+	/// ```rs
+	/// Run this please!
+	/// ```
+	fn some_func_name(param: String) -> Result<i32, JsValue> {}
 
-	#[js_bind("mod")]
-	/// Documentation of macro usage func
-	fn function_name(argument_label1: String, argument_label2: u64) -> Result<i32, JsValue> {
-		let code = "this is literaly code";
-	}
-
-	// yes();
-	function_name("ff".to_string(), 69u64);
+	some_func_name("".to_string()).ok();
+	_mod_name::some_func_name("".to_string()).ok();
 }
