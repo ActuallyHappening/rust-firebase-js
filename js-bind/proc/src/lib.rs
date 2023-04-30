@@ -1,5 +1,5 @@
 use proc_macro::TokenStream;
-use js_bind_core::*;
+use js_bind_core::impls::{js_bind::_js_bind_impl, target_name::_target_name_impl};
 
 #[proc_macro]
 pub fn target_name(input: TokenStream) -> TokenStream {
