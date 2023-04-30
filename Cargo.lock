@@ -139,7 +139,15 @@ dependencies = [
 name = "firebase-js-sys-proc"
 version = "0.0.1"
 dependencies = [
+ "firebase-js-sys-proc-impl",
+]
+
+[[package]]
+name = "firebase-js-sys-proc-impl"
+version = "0.1.0"
+dependencies = [
  "cfg-if",
+ "log",
  "proc-macro2",
  "quote",
  "syn 2.0.15",

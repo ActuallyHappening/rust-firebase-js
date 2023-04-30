@@ -19,6 +19,7 @@ exclude = [
 	"test",
 	"Trunk.toml",
 	"build.rs",
+	"main.rs",
 	"tests",
 	".cargo",
 	"tsconfig.json",
@@ -30,7 +31,7 @@ exclude = [
 # ]
 
 [features]
-default = ["node-not-web"]
+default = ["node-not-web", "verbose-logging"]
 
 ### If multiple runtimes could be linked to at once, you would end up with two seperate instances of `firebase` in the final bundle (which is bad!)
 ### For that reason, you must enable one of the following features to specify which runtime you want to link to:
