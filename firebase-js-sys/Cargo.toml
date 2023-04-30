@@ -61,7 +61,7 @@ wasm-bindgen = { version = "0.2.84" }
 
 # Local deps
 firebase-types = { path = "../firebase-types" }
-firebase-js-sys-proc = { path = "./proc", default-features = false }
+# firebase-js-sys-proc = { path = "./proc", default-features = false }
 cfg-if = "1.0.0"
 
 

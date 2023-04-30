@@ -1,5 +1,6 @@
 [package]
 name = "js-bind-core"
+description = "js-bind proc macro impls & core functionality + types"
 version = "0.1.0"
 edition = "2021"
 authors = { workspace = true }
@@ -9,3 +10,10 @@ license = { workspace = true }
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+cfg-if = "1.0.0"
+convert_case = "0.6.0"
+log = { version = "0.4.17", features = ["std"] }
+proc-macro2 = "1.0.56"
+quote = "1.0.26"
+syn = { version = "2.0.15", features = ["extra-traits", "full"] }
+wasm-bindgen = "0.2.84"

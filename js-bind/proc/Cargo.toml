@@ -1,5 +1,6 @@
 [package]
 name = "js-bind-proc"
+description = "Procedural macro exports for js-bind package, see js-bind-core for impls"
 version = "0.0.1"
 edition = "2021"
 repository = "https://github.com/ActuallyHappening/rust-firebase-js/tree/master/firebase-js-sys/proc"
@@ -22,10 +23,5 @@ strict-feature-checks = []
 node-not-web = []
 
 [dependencies]
-cfg-if = "1.0.0"
-convert_case = "0.6.0"
-log = { version = "0.4.17", features = ["std"] }
-proc-macro2 = "1.0.56"
-quote = "1.0.26"
-syn = { version = "2.0.15", features = ["extra-traits", "full"] }
-wasm-bindgen = "0.2.84"
+# Local deps
+js-bind-core = { path = "../core" }
