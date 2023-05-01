@@ -4,7 +4,7 @@ use syn::parse::*;
 use quote::*;
 use syn::spanned::Spanned;
 
-use crate::config::{Config, ConfigLock};
+use crate::config::{Config, ConfigLock, Function};
 
 
 #[derive(Debug)]
@@ -33,13 +33,18 @@ fn convert_from_snake_case_to_camel_case(name: String) -> String {
 }
 
 pub fn _js_bind_impl(_attr: proc_macro2::TokenStream, _input: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
-	let _input: ItemFn = syn::parse2(_input).expect("Cannot parse input as a function");
+	let input: ItemFn = syn::parse2(_input).expect("Cannot parse input as a function");
 	let attr: JsBindAttrs = syn::parse2(_attr).expect(r##"Cannot parse attributes as `method = "something"`"##);
 
 	let cwd = std::env::current_dir().expect("Cannot get current working directory");
 	let config = Config::from_config_dir(&cwd).expect("Cannot parse config");
 	let mode = config.modes.get(&attr.mode).expect(&format!(r##"Cannot find mode "{}" in config"##, &attr.mode));
-	let lock = ConfigLock::from_config_dir(&cwd).expect("Cannot parse config lock");
+	let mut lock = ConfigLock::from_config_dir(&cwd).expect("Cannot parse config lock");
+
+	let func_name = input.sig.ident.to_string();
+	let mod_name = mode.mod_name.clone();
+	let func: Function = Function::new(func_name, mod_name);
+	lock.append_func(&cwd,	func).expect("Cannot add function to config lock");
 	
 	quote!{pub fn works() -> i32 {42}}.into()
 }

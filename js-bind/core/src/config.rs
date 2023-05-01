@@ -49,8 +49,9 @@ impl Config {
 	}
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize, Default)]
 pub struct ConfigLock {
+	/// TODO: Support parsing from file with no keys
 	functions: Vec<Function>,
 }
 
@@ -66,35 +67,42 @@ impl ConfigLock {
 	}
 
 	pub fn from_config_dir(path: &PathBuf) -> anyhow::Result<Self> {
-		let mut path = path.clone();
-		path.push("js-bind-lock");
-		path.set_extension("toml");
+		let path = Self::from_dir_to_file(path);
 
-		let err_msg = format!("Couldn't read file 'js-bind-lock.toml' at path {:?}", &path);
+		let err_msg = format!("Couldn't read file 'js-bind.lock' at path {:?}", &path);
 		// Check if exists
-		if !path.try_exists().context(format!("Can't tell if js-bind-lock.toml file exists as path {:?}", &path))? {
+		if !path.try_exists().context(format!("Can't tell if js-bind.lock file exists as path {:?}", &path))? {
 			// Make empty file
-			std::fs::write(
-				&path,
-				&BEGINNING_LOCK_MSG,
-			)
-			.context("Failed to write to empty js-bind-lock.toml file")?;
+			Self::default().write_at_file(&path).context("Couldn't write default empty file")?;
 		}
 		let config_str = std::fs::read_to_string(&path).context(err_msg)?;
 		Ok(Self::from_toml_config_str(&config_str)?)
 	}
 
-	fn write_at_dir(&self, path: &PathBuf) -> anyhow::Result<()> {
+	fn write_at_file(&self, file_path: &PathBuf) -> anyhow::Result<()> {
 		let config_str = toml::to_string_pretty(&self).context("Failed to serialize ConfigLock")?;
 		let data = format!("{}{}", BEGINNING_LOCK_MSG, config_str);
-		std::fs::write(path, data).context("Failed to write to js-bind-lock.toml file")?;
+		std::fs::write(file_path, data).context(format!("Failed to write to js-bind.lock file at path: {:?}", &file_path))?;
 		Ok(())
 	}
 
+	fn from_dir_to_file(dir: &PathBuf) -> PathBuf {
+		let mut path = dir.clone();
+		path.push("js-bind");
+		path.set_extension("lock");
+		path
+	}
+
 	/// Appends the specified [Function] to the end of the [ConfigLock] file.
-	pub fn append_func(&mut self, dir: &PathBuf, func: Function) -> anyhow::Result<()> {
+	/// The [bool] returned indicates if any changes were needed to be written to file.
+	pub fn append_func(&mut self, dir: &PathBuf, func: Function) -> anyhow::Result<bool> {
+		// Check if duplicate exists, if it does return
+		if self.functions.iter().any(|f| f == &func) {
+			return Ok(false);
+		}
 		self.functions.push(func);
-		self.write_at_dir(dir).context("Couldn't write at dir when adding function")
+		self.write_at_file(&Self::from_dir_to_file(dir)).context("Couldn't write at dir when adding function")?;
+		Ok(true)
 	}
 }
 
@@ -103,17 +111,13 @@ pub struct Function {
 	name: String,
 	#[serde(rename = "mod")]
 	mod_name: String,
-
-	// timestamp: i64,
 }
 
 impl Function {
 	pub fn new(name: String, mod_name: String) -> Self {
-		// let timestamp = chrono::Utc::now().timestamp_millis();
 		Self {
 			name,
 			mod_name,
-			// timestamp,
 		}
 	}
 }
