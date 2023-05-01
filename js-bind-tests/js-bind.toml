@@ -1,49 +1,13 @@
+[build]
+output-dir = "/js"
+
 [build.codegen]
-output-file = "/js/bundle.ts"
+ts = true # implied
+bundle-name = "bundle" # no ext
+rollup-config = "rollup.config.js"
+npm-driver = "pnpm"
 
 
 [modes.top-level-function]
 type = "function"
 mod = "example/mod"
-
-# [modes.function]
-# # Example for importing like this:
-
-# # // import * as _app from "test_module/app"
-# # import { funcName as _funcName } from "test_module/app"
-# # export const funcName = function(...args) {
-# #		console.log("[js-bind] funcName called with args:", args)
-# # 	return _funcName(...args)
-# # }
-# # // export const app = _app;
-
-# # for rust code like:
-
-# # #[js_bind(mode = "function")]
-# # pub fn func_name() -> String {}
-
-# # Which expands to `wasm-bindgen` code like this:
-
-# # #[wasm_bindgen(module = "/js/test-cjs.js")] // Depending on features enabled
-# # extern "C" {
-# # 	//#[wasm_bindgen(js_namespace = "app")]
-# # 	#[wasm_bindgen(catch, js_name = "funcName")]
-# # 	fn func_name() -> Result<String, JsValue>;
-# # }
-# # pub fn func_name() -> String {
-# # 	func_name().expect("[js-bind] func_name failed!").into()
-# # }
-
-# file-ref = "bundle"
-# #js-export-name = "app"
-# js-mod-import = "test_module/app"
-
-# js-casing = "Camel" # Auto convert casing
-
-# [[files.bundle]]
-# on-feature = "node-not-web"
-# rollup-config = "/js/node-config.js"
-
-# [[files.bundle]]
-# on-feature = "web-not-node"
-# rollup-config = "/js/web-config.js"

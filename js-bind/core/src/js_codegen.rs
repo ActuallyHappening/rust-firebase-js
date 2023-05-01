@@ -2,11 +2,11 @@ use crate::config::{Mode, Build};
 
 
 
-pub struct JsCodeBlock {
-	lines: Vec<String>
+/// Represents a file that is produced by JS codegen
+pub struct JsOutputFile {
 }
 
-impl JsCodeBlock {
+impl JsOutputFile {
 	pub fn new(name: String, mode: Mode, build_options: Build) {
 		match mode.item_type.as_str() {
 			"function" => {
