@@ -1,0 +1,1 @@
+pub use js_bind_proc::*;

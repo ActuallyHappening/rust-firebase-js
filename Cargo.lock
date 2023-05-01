@@ -254,6 +254,10 @@ dependencies = [
 [[package]]
 name = "js-bind"
 version = "0.1.0"
+dependencies = [
+ "js-bind-core",
+ "js-bind-proc",
+]
 
 [[package]]
 name = "js-bind-core"

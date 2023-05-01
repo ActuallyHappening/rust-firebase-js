@@ -25,8 +25,11 @@ fn convert_from_snake_case_to_camel_case(name: String) -> String {
 }
 
 
-
 pub fn _js_bind_impl(attr: proc_macro2::TokenStream, input: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
+	
+}
+
+pub fn _js_bind_impl2(attr: proc_macro2::TokenStream, input: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
 	let item = syn::parse::<ItemFn>(input.into()).map_err(|e| e.to_compile_error()).expect("ItemFn to parse properly");
 	// eprintln!("Item: {:#?}", item);
 	
