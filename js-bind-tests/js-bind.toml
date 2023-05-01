@@ -1,12 +1,18 @@
-[build]
+[build.codegen] # Applied to all targets
 output-dir = "/js"
-
-[build.codegen]
-# ts = true # implied
-# bundle-name = "bundle" # no ext
-# rollup-config = "rollup.config.js"
 npm-driver = "pnpm"
 
+[build.target.node.codegen]
+ts = true
+feature-flag = "link-node" # Will prefer node over web
+bundle-name = "bundle-cjs" # no ext
+rollup-config = "js/node.config.js"
+
+[build.target.web.codegen]
+ts = true
+feature-flag = "link-web"
+bundle-name = "bundle-esm"
+rollup-config = "js/web.config.js"
 
 [modes.top-level-function]
 type = "function"

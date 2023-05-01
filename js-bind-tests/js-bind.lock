@@ -3,8 +3,8 @@
 # Edit at your own risk!
 [[functions]]
 name = "test"
-mod = "example/mod"
+mode-name = "top-level-function"
 
 [[functions]]
 name = "test_again"
-mod = "example/mod"
+mode-name = "top-level-function"

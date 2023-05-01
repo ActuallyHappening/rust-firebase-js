@@ -42,8 +42,8 @@ pub fn _js_bind_impl(_attr: proc_macro2::TokenStream, _input: proc_macro2::Token
 	let mut lock = ConfigLock::from_config_dir(&cwd).expect("Cannot parse config lock");
 
 	let func_name = input.sig.ident.to_string();
-	let mod_name = mode.mod_name.clone();
-	let func: Function = Function::new(func_name, mod_name);
+	let mode_name = attr.mode;
+	let func: Function = Function::new(func_name, mode_name);
 	lock.append_func(&cwd,	func).expect("Cannot add function to config lock");
 	
 	// quote!{pub fn works() -> i32 {42}}.into()

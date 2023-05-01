@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::config::{Config, ConfigLock, Function, CodeGenBuild};
+use crate::config::{Config, ConfigLock, Function, Target};
 
 /// Represents a file to be outputted by the codegen
 struct JsCodegenFile {
@@ -12,7 +12,19 @@ struct JsCodegenFile {
 pub fn build_script_execute() {
 	let cwd = std::env::current_dir().expect("to work");
 	let config = Config::from_config_dir(&cwd).expect("Cannot parse config");
+	prepare(&config, &cwd);
+	
 	let lock = ConfigLock::from_config_dir(&cwd).expect("Cannot parse config lock");
+}
+
+struct RollupHandle {
+
+}
+
+impl RollupHandle {
+	pub fn prepare() {
+
+	}
 }
 
 /// Checks the `npm_driver` is installed,
@@ -32,6 +44,8 @@ pub fn prepare(config: &Config, cwd: &PathBuf) {
 		.success();
 	if !npm_driver_installed {
 		panic!("The npm driver '{}' is not installed", &npm_driver);
+	} else {
+		println!("Using npm driver '{}'", &npm_driver)
 	}
 
 	// Check that rollup is installed
@@ -43,14 +57,21 @@ pub fn prepare(config: &Config, cwd: &PathBuf) {
 		.success();
 	if !rollup_installed {
 		panic!("Rollup is not installed");
+	} else {
+		println!("Using rollup");
 	}
 
 	// Check that the rollup config file exists
-	let rollup_config = &config.build.codegen.rollup_config;
-	let path = cwd.join(rollup_config);
-	if !path.exists() {
-		panic!("The rollup config file '{:?}' does not exist at ", &path);
+	fn check_file(path: String) {
+		let path: PathBuf = path.into();
+		if !path.exists() {
+			panic!("The rollup config file '{:?}' does not exist at ", &path);
+		} else {
+			println!("Using rollup config file '{:?}'", &path);
+		}
 	}
+	check_file(config.build.target.node.rollup_config.clone());
+	check_file(config.build.target.web.rollup_config.clone());
 
 	// Check that the tsconfig.json file exists
 	if config.build.codegen.ts {

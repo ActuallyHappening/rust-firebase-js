@@ -1,107 +1,26 @@
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, path::PathBuf};
+use smart_default::SmartDefault;
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize)]
+/// ```rust
+/// use js_bind_core::config::*;
+/// // let string = include_str!("../../js-bind.toml");
+/// let string = std::fs::read_to_string("../../../js-bind.toml".to_string()).expect("Couldn't read file");
+/// let config: Config = toml::from_str(string.as_str()).expect("to work");
+/// ```
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
 #[serde(default)]
 pub struct Config {
 	pub build: Build,
 	pub modes: HashMap<String, Mode>,
 }
 
-/// Represents the [build] part of the config
-/// ```toml
-/// [build]
-/// output-dir = "js"
-/// 
-/// [build.codegen]
-/// # see CodeGenBuild
-/// ```
-/// [CodeGenBuild]
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
-#[serde(default)]
-pub struct Build {
-	#[serde(rename = "output-dir")]
-	pub output_dir: String,
-	pub codegen: CodeGenBuild,
+#[derive(Debug, Hash, Clone, PartialEq, Eq, Deserialize, Serialize)]
+pub enum Target {
+	Web,
+	Node,
 }
-
-impl Default for Build {
-	fn default() -> Self {
-		Self {
-			output_dir: "js".to_owned(),
-			codegen: CodeGenBuild::default(),
-		}
-	}
-}
-
-/// Represents the [build.codegen] part of the config
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
-#[serde(default)]
-pub struct CodeGenBuild {
-	pub ts: bool,
-
-	#[serde(rename = "bundle-name")]
-	pub bundle_name: String,
-
-	#[serde(rename = "rollup-config")]
-	pub rollup_config: String,
-
-	#[serde(rename = "npm-driver")]
-	pub npm_driver: String,
-}
-
-/// ```toml
-/// [build]
-/// output-dir = "js"
-///
-/// [build.codegen]
-/// ts = true # implied
-/// bundle-name = "bundle" # no ext
-/// rollup-config = "rollup.config.js"
-/// npm-driver = "pnpm"
-/// ```
-///
-/// ```rust
-/// use js_bind_core::config::*;
-/// let string = r##"
-/// [build]
-/// output-dir = "js"
-///
-/// [build.codegen]
-/// 	ts = true # implied
-/// 	bundle-name = "bundle" # no ext
-/// 	rollup-config = "rollup.config.js"
-/// 	npm-driver = "npm"
-/// "##;
-///
-/// let de: Config = toml::from_str(string).expect("to work");
-///
-/// assert_eq!(de, Default::default())
-/// ```
-impl Default for CodeGenBuild {
-	fn default() -> Self {
-		Self {
-			ts: true,
-			bundle_name: "bundle".to_owned(),
-			rollup_config: "rollup.config.js".to_owned(),
-			npm_driver: "npm".to_owned(),
-		}
-	}
-}
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
-pub struct Mode {
-	#[serde(rename = "mod")]
-	pub mod_name: String,
-
-	#[serde(rename = "type")]
-	pub item_type: String,
-	// #[serde(rename = "js-export-type")]
-	// js_casing: String,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
-pub struct File {}
 
 impl Config {
 	pub fn from_toml_config_str(string: &str) -> anyhow::Result<Self> {
@@ -118,7 +37,93 @@ impl Config {
 	}
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize, Default)]
+/// Represents the [build] part of the config
+/// ```toml
+/// [build]
+/// output-dir = "js"
+/// 
+/// [build.codegen]
+/// # see CodeGenBuild
+/// ```
+/// [CodeGenBuild]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(default)]
+pub struct Build {
+	pub codegen: CodeGenOptions,
+	pub target: Targets,
+}
+
+#[derive(Debug, Hash, Default, Clone, PartialEq, Eq, Deserialize, Serialize)]
+pub struct Targets {
+	pub node: CodeGenOptionsNode,
+	pub web: CodeGenOptionsWeb,
+}
+
+#[derive(Debug, Hash, SmartDefault, Clone, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(default)]
+pub struct CodeGenOptions {
+	#[default(true)]
+	pub ts: bool,
+
+	#[serde(rename = "npm-driver")]
+	#[default("npm")]
+	pub npm_driver: String,
+}
+
+
+/// Represents the [build.codegen] part of the config
+#[derive(Debug, Hash, SmartDefault, Clone, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(default)]
+pub struct CodeGenOptionsNode {
+	#[serde(rename = "bundle-name")]
+	#[default("bundle-cjs.js")]
+	pub bundle_name: String,
+
+	#[serde(rename = "rollup-config")]
+	#[default("js/node.config.js")]
+	pub rollup_config: String,
+
+	#[serde(rename = "feature-flag")]
+	#[default("link-node")]
+	pub feature_flag: String,
+}
+
+/// Represents the [build.codegen] part of the config
+#[derive(Debug, Hash, SmartDefault, Clone, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(default)]
+pub struct CodeGenOptionsWeb {
+	#[serde(rename = "bundle-name")]
+	#[default("bundle-esm.js")]
+	pub bundle_name: String,
+
+	#[serde(rename = "rollup-config")]
+	#[default("js/web.config.js")]
+	pub rollup_config: String,
+
+	#[serde(rename = "feature-flag")]
+	#[default("link-web")]
+	pub feature_flag: String,
+}
+
+#[derive(Debug, Hash, Clone, PartialEq, Eq, Deserialize, Serialize)]
+pub struct Mode {
+	#[serde(rename = "mod")]
+	pub mod_name: String,
+
+	#[serde(rename = "type")]
+	pub item_type: String,
+	
+	// #[serde(rename = "js-export-type")]
+	// js_casing: String,
+}
+
+#[derive(Debug, Hash, Clone, PartialEq, Eq, Deserialize, Serialize)]
+enum ItemType {
+	#[serde(rename = "function")]
+	Function
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Deserialize, Serialize, Default)]
 pub struct ConfigLock {
 	#[serde(default)]
 	functions: Vec<Function>,
@@ -185,15 +190,15 @@ impl ConfigLock {
 	}
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Deserialize, Serialize)]
 pub struct Function {
 	name: String,
-	#[serde(rename = "mod")]
-	mod_name: String,
+	#[serde(rename = "mode-name")]
+	mode_name: String,
 }
 
 impl Function {
-	pub fn new(name: String, mod_name: String) -> Self {
-		Self { name, mod_name }
+	pub fn new(name: String, mode_name: String) -> Self {
+		Self { name, mode_name }
 	}
 }

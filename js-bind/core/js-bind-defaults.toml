@@ -1,0 +1,22 @@
+[build.codegen] # Applied to all targets
+# [CodeGenBuild]
+ts = true
+npm-driver = "pnpm"
+
+[build.target.node.codegen]
+# [CodeGenOptions]
+ts = true
+# feature-flag = "link-node" # Will prefer node over web NOT IMPLEMENTED
+bundle-name = "bundle-cjs.js"
+rollup-config = "js/node.config.js"
+
+[build.target.web.codegen]
+# [CodeGenOptions]
+ts = true
+# feature-flag = "link-web" # NOT IMPLEMENTED
+bundle-name = "bundle-esm.js"
+rollup-config = "js/web.config.js"
+
+[modes.top-level]
+#type = "function"
+mod = "example/mod"
