@@ -9,6 +9,15 @@ pub struct Config {
 	pub modes: HashMap<String, Mode>,
 }
 
+/// Represents the [build] part of the config
+/// ```toml
+/// [build]
+/// output-dir = "js"
+/// 
+/// [build.codegen]
+/// # see CodeGenBuild
+/// ```
+/// [CodeGenBuild]
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(default)]
 pub struct Build {
@@ -27,6 +36,21 @@ impl Default for Build {
 }
 
 /// Represents the [build.codegen] part of the config
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(default)]
+pub struct CodeGenBuild {
+	pub ts: bool,
+
+	#[serde(rename = "bundle-name")]
+	pub bundle_name: String,
+
+	#[serde(rename = "rollup-config")]
+	pub rollup_config: String,
+
+	#[serde(rename = "npm-driver")]
+	pub npm_driver: String,
+}
+
 /// ```toml
 /// [build]
 /// output-dir = "js"
@@ -48,52 +72,23 @@ impl Default for Build {
 /// 	ts = true # implied
 /// 	bundle-name = "bundle" # no ext
 /// 	rollup-config = "rollup.config.js"
-/// 	npm-driver = "pnpm"
+/// 	npm-driver = "npm"
 /// "##;
 ///
 /// let de: Config = toml::from_str(string).expect("to work");
 ///
-/// let config = Config {
-/// 	build: Build {
-/// 		codegen: CodeGenBuild {
-/// 			ts: Some(true),
-/// 			bundle_name: Some("bundle".to_owned()),
-/// 			rollup_config: Some("rollup.config.js".to_owned()),
-/// 			npm_driver: Some("pnpm".to_owned()),
-/// 		},
-/// 		..Default::default()
-///		},
-/// 	..Default::default()
-/// };
-///
-/// assert_eq!(de, config)
+/// assert_eq!(de, Default::default())
 /// ```
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
-#[serde(default)]
-pub struct CodeGenBuild {
-	pub ts: Option<bool>,
-
-	#[serde(rename = "bundle-name")]
-	pub bundle_name: Option<String>,
-
-	#[serde(rename = "rollup-config")]
-	pub rollup_config: Option<String>,
-
-	#[serde(rename = "npm-driver")]
-	pub npm_driver: Option<String>,
-}
-
 impl Default for CodeGenBuild {
 	fn default() -> Self {
 		Self {
-			ts: Some(true),
-			bundle_name: Some("bundle".to_owned()),
-			rollup_config: Some("rollup.config.js".to_owned()),
-			npm_driver: Some("npm".to_owned()),
+			ts: true,
+			bundle_name: "bundle".to_owned(),
+			rollup_config: "rollup.config.js".to_owned(),
+			npm_driver: "npm".to_owned(),
 		}
 	}
 }
-
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub struct Mode {
 	#[serde(rename = "mod")]

@@ -2,9 +2,9 @@
 output-dir = "/js"
 
 [build.codegen]
-ts = true # implied
-bundle-name = "bundle" # no ext
-rollup-config = "rollup.config.js"
+# ts = true # implied
+# bundle-name = "bundle" # no ext
+# rollup-config = "rollup.config.js"
 npm-driver = "pnpm"
 
 
