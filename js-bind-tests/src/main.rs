@@ -3,7 +3,7 @@ use js_bind::js_bind;
 fn main() {
 	// testing
 
-	#[js_bind]
+	#[js_bind(method = "top-level-function")]
 	pub fn test() {}
 
 	println!("Works?: {}", works());

@@ -32,9 +32,11 @@ fn convert_from_snake_case_to_camel_case(name: String) -> String {
 
 pub fn _js_bind_impl(_attr: proc_macro2::TokenStream, _input: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
 	let _input: ItemFn = syn::parse2(_input).expect("Cannot parse input as a function");
-	let _attr: JsBindAttrs = syn::parse2(_attr).expect(r##"Cannot parse attributes as `method = "something"`"##);
+	let attr: JsBindAttrs = syn::parse2(_attr).expect(r##"Cannot parse attributes as `method = "something"`"##);
 
-	let _config = crate::config::Config::from_config_dir("/");
+	let cwd = std::env::current_dir().expect("Cannot get current working directory");
+	let config = crate::config::Config::from_config_dir(cwd).expect("Cannot parse config");
+	let mode = config.modes.get(&attr.mode).expect(&format!(r##"Cannot find mode "{}" in config"##, &attr.mode));
 	
 	quote!{pub fn works() -> i32 {42}}.into()
 }

@@ -1,5 +1,10 @@
-[build]
-js-codegen-file = "/js/bundle.ts"
+[build.codegen]
+output-file = "/js/bundle.ts"
+
+
+[modes.top-level-function]
+type = "function"
+mod = "example/mod"
 
 # [modes.function]
 # # Example for importing like this:
