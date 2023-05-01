@@ -5,4 +5,6 @@ fn main() {
 
 	#[js_bind]
 	pub fn test() {}
+
+	println!("Works?: {}", works());
 }

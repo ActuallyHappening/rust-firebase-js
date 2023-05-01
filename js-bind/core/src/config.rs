@@ -55,10 +55,11 @@ impl Config {
 	}
 	pub fn from_config_dir(path: &str) -> anyhow::Result<Config> {
 		let config_path = format!("{}/js-bind.toml", path);
-		let config_str = std::fs::read_to_string(config_path).context(&format!(
+		let err_msg = format!(
 			"Couldn't read file 'js-bind.toml' at path {:?}",
-			config_path
-		))?;
+			&config_path
+		);
+		let config_str = std::fs::read_to_string(&config_path).context(err_msg)?;
 		Ok(Config::from_toml_config_str(&config_str)?)
 	}
 }

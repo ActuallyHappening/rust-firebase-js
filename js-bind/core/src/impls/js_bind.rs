@@ -25,8 +25,11 @@ fn convert_from_snake_case_to_camel_case(name: String) -> String {
 }
 
 
-pub fn _js_bind_impl(attr: proc_macro2::TokenStream, input: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
+pub fn _js_bind_impl(_attr: proc_macro2::TokenStream, _input: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
+	let config = crate::config::Config::from_config_dir("/");
+
 	
+	quote!{pub fn works() -> i32 {42}}.into()
 }
 
 pub fn _js_bind_impl2(attr: proc_macro2::TokenStream, input: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
