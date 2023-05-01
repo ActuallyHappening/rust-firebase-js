@@ -6,5 +6,8 @@ fn main() {
 	#[js_bind(method = "top-level-function")]
 	pub fn test() {}
 
-	println!("Works?: {}", works());
+	#[js_bind(method = "top-level-function")]
+	pub fn test_again() {}
+
+	// println!("Works?: {}", works());
 }

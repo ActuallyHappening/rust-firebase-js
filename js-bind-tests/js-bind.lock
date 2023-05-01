@@ -4,3 +4,7 @@
 [[functions]]
 name = "test"
 mod = "example/mod"
+
+[[functions]]
+name = "test_again"
+mod = "example/mod"

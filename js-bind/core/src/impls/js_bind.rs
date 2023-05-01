@@ -46,7 +46,8 @@ pub fn _js_bind_impl(_attr: proc_macro2::TokenStream, _input: proc_macro2::Token
 	let func: Function = Function::new(func_name, mod_name);
 	lock.append_func(&cwd,	func).expect("Cannot add function to config lock");
 	
-	quote!{pub fn works() -> i32 {42}}.into()
+	// quote!{pub fn works() -> i32 {42}}.into()
+	quote!{}.into()
 }
 
 // pub fn _js_bind_impl2(attr: proc_macro2::TokenStream, input: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
