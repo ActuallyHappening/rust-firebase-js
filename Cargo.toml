@@ -5,6 +5,7 @@ members = [
 	"js-bind",
 	"js-bind/core",
 	"js-bind/proc",
+	"js-bind-tests",
 	# "firebase-js-sys/proc",
 	# "firebase-js-sys/proc/syner",
 	"firebase-types",
