@@ -68,6 +68,10 @@ pub struct CodeGenOptions {
 	#[serde(rename = "npm-driver")]
 	#[default("npm")]
 	pub npm_driver: String,
+
+	#[serde(rename = "generic-bundle")]
+	#[default("js/bundle.ts")]
+	pub generic_bundle: String,
 }
 
 
@@ -126,7 +130,7 @@ enum ItemType {
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Deserialize, Serialize, Default)]
 pub struct ConfigLock {
 	#[serde(default)]
-	functions: Vec<Function>,
+	pub functions: Vec<Function>,
 }
 
 const BEGINNING_LOCK_MSG: &str = r##"
@@ -192,9 +196,9 @@ impl ConfigLock {
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Deserialize, Serialize)]
 pub struct Function {
-	name: String,
+	pub name: String,
 	#[serde(rename = "mode-name")]
-	mode_name: String,
+	pub mode_name: String,
 }
 
 impl Function {
