@@ -36,10 +36,10 @@ pub fn _js_bind_impl(_attr: proc_macro2::TokenStream, _input: proc_macro2::Token
 	let _input: ItemFn = syn::parse2(_input).expect("Cannot parse input as a function");
 	let attr: JsBindAttrs = syn::parse2(_attr).expect(r##"Cannot parse attributes as `method = "something"`"##);
 
-	let mut cwd = std::env::current_dir().expect("Cannot get current working directory");
-	let config = Config::from_config_dir(&mut cwd).expect("Cannot parse config");
+	let cwd = std::env::current_dir().expect("Cannot get current working directory");
+	let config = Config::from_config_dir(&cwd).expect("Cannot parse config");
 	let mode = config.modes.get(&attr.mode).expect(&format!(r##"Cannot find mode "{}" in config"##, &attr.mode));
-	let lock = ConfigLock::from_config_dir(&mut cwd).expect("Cannot parse config lock");
+	let lock = ConfigLock::from_config_dir(&cwd).expect("Cannot parse config lock");
 	
 	quote!{pub fn works() -> i32 {42}}.into()
 }

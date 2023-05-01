@@ -39,7 +39,8 @@ impl Config {
 		toml::from_str(string).context("Couldn't parse config str")
 		// .expect(&format!("Failed to parse config string:\n {:?}", string))
 	}
-	pub fn from_config_dir(path: &mut PathBuf) -> anyhow::Result<Self> {
+	pub fn from_config_dir(path: &PathBuf) -> anyhow::Result<Self> {
+		let mut path = path.clone();
 		path.push("js-bind");
 		path.set_extension("toml");
 		let err_msg = format!("Couldn't read file 'js-bind.toml' at path {:?}", &path);
@@ -71,7 +72,7 @@ impl ConfigLock {
 
 		let err_msg = format!("Couldn't read file 'js-bind-lock.toml' at path {:?}", &path);
 		// Check if exists
-		if !path.exists() {
+		if !path.try_exists().context(format!("Can't tell if js-bind-lock.toml file exists as path {:?}", &path))? {
 			// Make empty file
 			std::fs::write(
 				&path,
