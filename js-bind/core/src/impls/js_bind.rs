@@ -1,21 +1,27 @@
 use convert_case::{Case, Casing};
+use proc_macro2::TokenStream;
 use quote::*;
 use smart_default::SmartDefault;
-use syn::parse::*;
 use syn::*;
+use syn::{parse::*, spanned::Spanned};
 
 use crate::config::{Config, FromTOMLCwd};
 
-#[derive(Debug, Default)]
+#[derive(Debug, SmartDefault)]
 struct JsBindAttrs {
-	/// If Some(_), implied that this macro is being used at the top level of an `extern` block
-	/// If None, implied that this macro is being used at the top level of a function
 	/// The module ref to import from
 	module: BindVarient,
 
+	options: BindOptions,
+}
+
+#[derive(Debug, SmartDefault)]
+struct BindOptions {
 	/// Whether to inject documentation regarding the function as imported from JS
+	#[default(true)]
 	doc: bool,
 	/// Whether to take the documentation tests marked with `# JS_BIND_TEST` and put then in tests dir
+	#[default(true)]
 	test: bool,
 }
 
@@ -51,11 +57,26 @@ impl Parse for JsBindAttrs {
 			));
 		}
 
+		match input.parse::<Token![,]>() {
+			Ok(_) => {
+				// There is a comma, keep parsing!
+				attrs.options = BindOptions::parse(input)?;
+			},
+			Err(_) => {},
+		}
+
+		Ok(attrs)
+	}
+}
+
+impl Parse for BindOptions {
+	fn parse(input: ParseStream) -> Result<BindOptions> {
+		let mut options = BindOptions::default();
 		while !input.is_empty() {
 			let option = input.parse::<Ident>()?;
 			match option.to_string().as_str() {
-				"doc" => attrs.doc = true,
-				"test" => attrs.test = true,
+				"doc" => options.doc = true,
+				"test" => options.test = true,
 				_ => {
 					return Err(Error::new(
 						option.span(),
@@ -70,7 +91,7 @@ impl Parse for JsBindAttrs {
 				input.parse::<Token![,]>()?;
 			}
 		}
-		Ok(attrs)
+		Ok(options)
 	}
 }
 
@@ -98,6 +119,90 @@ fn extract_docs(attrs: &Vec<Attribute>) -> Vec<String> {
 	doc_comments
 }
 
+fn get_functions(input: &ItemForeignMod) -> Vec<&ForeignItemFn> {
+	let mut functions = Vec::new();
+	for item in &input.items {
+		if let ForeignItem::Fn(foreign_item_fn) = item {
+			functions.push(foreign_item_fn);
+		}
+	}
+	functions
+}
+
+fn find_js_bind_attr(input: &ForeignItemFn) -> syn::Result<Option<&Attribute>> {
+	let mut js_bind_attr = None;
+	for attr in &input.attrs {
+		if attr.path().is_ident("js_bind") {
+			if let Some(_) = js_bind_attr {
+				// throw error
+				Err(Error::new(
+					attr.span(),
+					"Multiple #[js_bind] attributes found on a single function",
+				))?;
+			}
+			js_bind_attr = Some(attr);
+		}
+	}
+	Ok(js_bind_attr)
+}
+
+/// Takes an attribute like `#[js_bind()]` and adds a `_mod` field to it
+/// if not already present, like `#[js_bind(_mod = "foobar")]`
+fn add_default_mod(input: &Attribute, module: String) -> syn::Result<Attribute> {
+	assert_eq!(input.meta.path().segments[0].ident.to_string(), "js_bind");
+
+	let list = input.meta.require_list()?;
+	match list.parse_args::<JsBindAttrs>() {
+		Ok(_) => {
+			return Ok(input.clone());
+		}
+		Err(err_manual_mod) => {
+			// Doesn't have `module` or `_mod`, we might be in luck!
+			match list.parse_args::<BindOptions>() {
+				Ok(_) => {
+					// Yes, ready to fill in with `module` or `_mod`
+					let mut attr = input.clone();
+
+					let new_tokens = list.tokens.clone().into_iter().chain(
+						quote! {
+							_mod = #module,
+						}
+						.into_iter(),
+					);
+					let tokens = TokenStream::from_iter(new_tokens);
+					let merged_tokens = TokenStream::from_iter(
+						tokens
+							.into_iter()
+							.chain(list.tokens.clone().into_iter().skip(1)),
+					);
+
+					attr.meta = Meta::List(MetaList {
+						path: list.path.clone(),
+						delimiter: list.delimiter.clone(),
+						tokens: merged_tokens,
+					});
+
+					return Ok(attr);
+				}
+				Err(err_no_mod) => {
+					// Doesn't parse as anything valid, we must be in the wrong place
+					let mut top_err = Error::new(
+						input.span(),
+						format!(
+							r##"(From top level #[js_bind] macro:) Cannot parse my child macro's inputs to (potentially) add a `_mod` attribute.
+Please make sure your use of #[js_bind] is valid here. The root error should be combined with this error, so see below."##
+						),
+					);
+					top_err.combine(err_manual_mod);
+					top_err.combine(err_no_mod);
+					// top_err.to_compile_error();
+					return Err(top_err);
+				}
+			}
+		}
+	}
+}
+
 /// If passed `#[js_bind(module = "foobar")]` then assumes its input is a foreign block
 /// Else, assumes it is passed _mod = "foobar" and parses it as a function
 pub fn _js_bind_impl(
@@ -110,13 +215,40 @@ pub fn _js_bind_impl(
 	};
 
 	if let BindVarient::TopLevel(module) = attrs.module {
+		// TOP LEVEL
 		let input: ItemForeignMod = match syn::parse2(input) {
 			Ok(syntax_tree) => {
-				println!("Syntax tree: {:#?}", syntax_tree);
+				// println!("Syntax tree: {:#?}", syntax_tree);
 				syntax_tree
 			}
-			Err(err) => return proc_macro2::TokenStream::from(err.to_compile_error()),
+			Err(err) => return TokenStream::from(err.to_compile_error()),
 		};
+
+		// loop through ever function in the foreign block
+		// and add default `_mod` field if not already provided
+		let functions = get_functions(&input);
+		// println!("Found {} functions: {:?}", functions.len(), functions);
+		for f in functions {
+			println!("Found function! Name: {}", f.sig.ident.to_string());
+			let attr = match find_js_bind_attr(f) {
+				Ok(attr) => attr,
+				Err(err) => return TokenStream::from(err.to_compile_error()),
+			};
+			match attr {
+				Some(attr) => {
+					// println!("Found attr: {:#?}", attr);
+					match add_default_mod(attr, module.clone()) {
+						Ok(new_attr) => {
+							// TODO: Take new_attr and replace the old attr
+						}
+						Err(err) => return TokenStream::from(err.to_compile_error()),
+					}
+				}
+				None => {
+					println!("No attr found");
+				}
+			}
+		}
 
 		let config = Config::from_cwd().expect("Cannot parse config");
 
@@ -127,7 +259,7 @@ pub fn _js_bind_impl(
 		expanded.into()
 	} else {
 		// Acting on a specific function / type inside wasm-bindgen
-		let input: ItemFn = match syn::parse2(input) {
+		let input: ForeignItemFn = match syn::parse2(input) {
 			Ok(syntax_tree) => syntax_tree,
 			Err(err) => return proc_macro2::TokenStream::from(err.to_compile_error()),
 		};
@@ -142,127 +274,3 @@ pub fn _js_bind_impl(
 	// let docs = extract_docs(&input.attrs);
 	// eprintln!("Docs: {:#?}", docs);
 }
-
-// pub fn _js_bind_impl(_attr: proc_macro2::TokenStream, _input: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
-// 	let input: ItemFn = syn::parse2(_input).expect("Cannot parse input as a function");
-// 	let attr: JsBindAttrs = syn::parse2(_attr).expect(r##"Cannot parse attributes as `method = "something"`"##);
-
-// 	let cwd = std::env::current_dir().expect("Cannot get current working directory");
-// 	let config = Config::from_config_dir(&cwd).expect("Cannot parse config");
-// 	let mode = config.modes.get(&attr.mode).expect(&format!(r##"Cannot find mode "{}" in config"##, &attr.mode));
-// 	let mut lock = ConfigLock::from_config_dir(&cwd).expect("Cannot parse config lock");
-
-// 	let func_name = input.sig.ident.to_string();
-// 	let mode_name = attr.mode;
-// 	let func: Function = Function::new(func_name, mode_name);
-// 	lock.append_func(&cwd,	func).expect("Cannot add function to config lock");
-
-// 	// quote!{pub fn works() -> i32 {42}}.into()
-// 	quote!{}.into()
-// }
-
-// pub fn _js_bind_impl2(attr: proc_macro2::TokenStream, input: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
-// 	let item = syn::parse::<ItemFn>(input.into()).map_err(|e| e.to_compile_error()).expect("ItemFn to parse properly");
-// 	// eprintln!("Item: {:#?}", item);
-
-// 	let sig = &item.sig;
-// 	let sig_str = quote!(#sig);
-// 	// eprintln!("Sig str: {:?}", sig_str.to_string());
-// 	let sig_name = &sig.ident;
-
-// 	// handle_doc_comments(&item);
-
-// 	// let attr = parse_macro_input!(attr as LitStr);
-// 	// let attr_indent = format_ident!("{}", attr.value());
-// 	// // eprintln!("Attr: {:#?}", attr);
-// 	// let module_name = attr_indent;
-// 	// let module_name_underscore = format_ident!("_{}", &module_name);
-
-// 	// let attrs = parse_macro_input!(attr as JsBindAttrs);
-// 	let attrs = syn::parse::<JsBindAttrs>(attr.into()).map_err(|e| e.to_compile_error()).expect("ItemFn to parse properly");
-
-// 	// eprintln!("Attr: {:#?}", attrs);
-// 	let js_mod_name = Ident::new(&attrs.js_mod_name, sig.span());
-// 	let js_mod_name_str = format!(r"{}", js_mod_name.to_string());
-// 	let _js_mod_name = format_ident!("_{}", &js_mod_name);
-// 	let js_method_name_str = format!(r#"{}"#, attrs.js_method_name.unwrap_or(convert_from_snake_case_to_camel_case(sig_name.to_string())));
-
-// 	let sig_inputs = &sig.inputs;
-// 	// eprintln!("Sig inputs: {:#?}", sig_inputs);
-
-// 	let passed_parameters = sig_inputs.iter().map(|arg| {
-// 		match arg {
-// 			FnArg::Receiver(_) => panic!("Cannot use receiver in js_bind"),
-// 			FnArg::Typed(pat_type) => {
-// 				let pat = &pat_type.pat;
-// 				// let ty = &pat_type.ty;
-// 				// quote!(#pat: #ty)
-// 				quote!(#pat)
-// 			}
-// 		}
-// 	});
-
-// 	let function_wrapper = quote! {
-// 		pub #sig_str {
-// 			// #module_name_underscore::#attr_indent(#(#sig_inputs),*)
-// 			// #module_name_underscore::#sig_name()
-// 			// #[cfg(feature = "verbose-logging")]
-// 			::log::info!("Calling function: {}::{}(<parameters pass not implemented yet>)", stringify!(#_js_mod_name), stringify!(#sig_name));
-// 			#_js_mod_name::#sig_name(#(#passed_parameters),*)
-// 		}
-// 	};
-
-// 	let _internal_docs = format!(r##"This is an internal function, generated by the #[js_bind] macro. By design, the module is private"##);
-// 	let internal_docs = quote! {
-// 		#[doc = #_internal_docs]
-// 	};
-
-// 	#[cfg(feature = "strict-feature-checks")]
-// 	let feature_checks = quote! {
-// 		// If no feature enabled
-// 		#[cfg(all(not(feature = "node-not-web"), not(feature = "web-not-node")))]
-// 		compile_error!("Must enable either feature `web-not-node` or `node-not-web`");
-// 		// If both features enabled
-// 		#[cfg(all(feature = "node-not-web", feature = "web-not-node"))]
-// 		compile_error!("Most not enable both features `web-not-node` and `node-not-web`");
-// 	};
-// 	#[cfg(not(feature = "strict-feature-checks"))]
-// 	let feature_checks = quote! {
-// 		// If no feature enabled
-// 		#[cfg(all(not(feature = "node-not-web"), not(feature = "web-not-node")))]
-// 		eprintln!("[strict-feature-checks=false => no error] Must enable either feature `web-not-node` or `node-not-web`");
-// 		// If both features enabled
-// 		#[cfg(all(feature = "node-not-web", feature = "web-not-node"))]
-// 		eprintln!("[strict-feature-checks=false => no error] Most not enable both features `web-not-node` and `node-not-web`");
-// 	};
-
-// 	let expanded = quote! {
-// 		#feature_checks
-
-// 		// use wasm_bindgen::prelude::wasm_bindgen;
-// 		// If either feature is enabled
-// 		#[cfg_attr(
-// 			all(feature = "web-not-node", not(feature = "node-not-web")),
-// 			::wasm_bindgen::prelude::wasm_bindgen(module = "/js/bundle-es.js")
-// 		)]
-// 		#[cfg_attr(
-// 			all(feature = "node-not-web", not(feature = "web-not-node")),
-// 			::wasm_bindgen::prelude::wasm_bindgen(module = "/js/bundle-cjs.js")
-// 		)]
-// 		extern "C" {
-// 			#[allow(non_camel_case_types)]
-// 			#[::wasm_bindgen::prelude::wasm_bindgen(js_name = #js_mod_name_str)]
-// 			type #_js_mod_name;
-
-// 			#[::wasm_bindgen::prelude::wasm_bindgen(catch, static_method_of = #_js_mod_name, js_name = #js_method_name_str)]
-// 			#internal_docs
-// 			#sig_str;
-// 		}
-
-// 		#function_wrapper
-// 	};
-
-// 	// eprintln!("Expanded: {}", expanded.to_string());
-
-// 	expanded.into()
-// }

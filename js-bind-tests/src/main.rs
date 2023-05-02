@@ -1,11 +1,11 @@
 use js_bind::js_bind;
-use wasm_bindgen::prelude::wasm_bindgen;
+// use wasm_bindgen::prelude::wasm_bindgen;
 
 #[js_bind(module = "test/app")]
 extern "C" {
 	// #[wasm_bindgen]
 	/// Documentation!
-	#[js_bind(_mod = "foobar", doc, test)]
+	#[js_bind(doc, test)]
 	pub fn works() -> bool;
 
 }
