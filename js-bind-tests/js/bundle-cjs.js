@@ -1,0 +1,10 @@
+'use strict';
+
+var mod = require('example/mod');
+
+var test = mod.test;
+var test_again = mod.test_again;
+
+exports.test = test;
+exports.test_again = test_again;
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiYnVuZGxlLWNqcy5qcyIsInNvdXJjZXMiOlsiYnVuZGxlLnRzIl0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCB7IHRlc3QgYXMgX3Rlc3QgfSBmcm9tIFwiZXhhbXBsZS9tb2RcIjtcbmV4cG9ydCBjb25zdCB0ZXN0ID0gX3Rlc3RcbmltcG9ydCB7IHRlc3RfYWdhaW4gYXMgX3Rlc3RfYWdhaW4gfSBmcm9tIFwiZXhhbXBsZS9tb2RcIjtcbmV4cG9ydCBjb25zdCB0ZXN0X2FnYWluID0gX3Rlc3RfYWdhaW4iXSwibmFtZXMiOlsiX3Rlc3QiLCJfdGVzdF9hZ2FpbiJdLCJtYXBwaW5ncyI6Ijs7OztBQUNPLElBQU0sSUFBSSxHQUFHQSxTQUFLO0FBRWxCLElBQU0sVUFBVSxHQUFHQzs7Ozs7In0=

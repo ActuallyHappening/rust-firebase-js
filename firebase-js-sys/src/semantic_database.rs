@@ -6,6 +6,8 @@ extern "C" {
 	#[allow(non_camel_case_types)]
 	pub type database;
 
+	pub fn test() -> bool;
+
 	/// Takes a firebase app instance (reference) and returns a reference to the database associated with that app
 	///
 	/// Equivalent to:
@@ -70,4 +72,9 @@ extern "C" {
 	/// ```
 	#[wasm_bindgen(static_method_of = database, js_name = "onValue")]
 	pub fn on_value(db_ref: &JsValue, callback: &closure<DatabaseSnapshot>) -> JsValue;
+}
+
+fn test() {
+	test();
+	database::get_database_from_url(&JsValue::UNDEFINED, String::new());
 }

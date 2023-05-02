@@ -1,0 +1,7 @@
+import { test as test$1, test_again as test_again$1 } from 'example/mod';
+
+var test = test$1;
+var test_again = test_again$1;
+
+export { test, test_again };
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiYnVuZGxlLWVzLmpzIiwic291cmNlcyI6WyJidW5kbGUudHMiXSwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IHsgdGVzdCBhcyBfdGVzdCB9IGZyb20gXCJleGFtcGxlL21vZFwiO1xuZXhwb3J0IGNvbnN0IHRlc3QgPSBfdGVzdFxuaW1wb3J0IHsgdGVzdF9hZ2FpbiBhcyBfdGVzdF9hZ2FpbiB9IGZyb20gXCJleGFtcGxlL21vZFwiO1xuZXhwb3J0IGNvbnN0IHRlc3RfYWdhaW4gPSBfdGVzdF9hZ2FpbiJdLCJuYW1lcyI6WyJfdGVzdCIsIl90ZXN0X2FnYWluIl0sIm1hcHBpbmdzIjoiOztBQUNPLElBQU0sSUFBSSxHQUFHQSxPQUFLO0FBRWxCLElBQU0sVUFBVSxHQUFHQzs7OzsifQ==

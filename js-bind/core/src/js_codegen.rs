@@ -19,10 +19,21 @@ pub fn build_script_execute() {
 		bundle.add_func(&config, func);
 	});
 	let path = cwd.join(config.build.codegen.generic_bundle);
-	eprintln!("Writing bundle: {:?}", &bundle);
+	// eprintln!("Writing bundle: {:?}", &bundle);
 	bundle.write_at_file(&path);
 
-
+	let node_handle = RollupHandle::new(
+		&cwd,
+		config.build.target.node.rollup_config,
+		config.build.target.node.bundle_name,
+	);
+	let web_handle = RollupHandle::new(
+		&cwd,
+		config.build.target.web.rollup_config,
+		config.build.target.web.bundle_name,
+	);
+	node_handle.compile();
+	web_handle.compile();
 }
 
 /// Represents a file to be outputted by the codegen engine.
@@ -64,35 +75,51 @@ impl JsCodegenFile {
 
 	pub fn write_at_file(&self, file_path: &PathBuf) {
 		let data = self.lines.join("\n");
-		std::fs::write(file_path, &data).expect(format!("Failed to write file at path: {:?}", file_path).as_str());
+		std::fs::write(file_path, &data)
+			.expect(format!("Failed to write file at path: {:?}", file_path).as_str());
 	}
 }
 
-
-
 struct RollupHandle {
-	pub config_file: String,
-	pub expected_output_file: String,
+	pub config_file: PathBuf,
+	pub expected_output_file: PathBuf,
 }
 
 impl RollupHandle {
-	pub fn new(config_file: String, expected_output_file: String,) -> Self {
-		Self { config_file, expected_output_file }
+	pub fn new(cwd: &PathBuf, config_file: String, expected_output_file: String) -> Self {
+		let config_file = cwd.join(config_file);
+		let expected_output_file = cwd.join(expected_output_file);
+		println!("Config file: {:?},\n output file: {:?},\n cwd: {:?}", &config_file, &expected_output_file, &cwd);
+		Self {
+			config_file,
+			expected_output_file,
+		}
 	}
 
 	pub fn compile(&self) {
+		println!("Compiling with rollup config: {:?}", &self.config_file);
 		let output = std::process::Command::new("rollup")
 			.arg("-c")
 			.arg(&self.config_file)
 			.output()
 			.expect("Rollup didn't exit properly");
 		if !output.status.success() {
-			panic!("Rollup failed to compile");
+			panic!(
+				"Rollup failed to compile. Output: {}",
+				String::from_utf8_lossy(&output.stderr)
+			);
 		}
+
+		self.check_output();
 	}
 
-	fn check_output() {
-		// TODO: Check if output file has something in it
+	fn check_output(&self,) {
+		let output_path = &self.expected_output_file;
+		if !output_path.exists() {
+			panic!("Expected output file does not exist at path: {:?}", &output_path);
+		} else {
+			println!("Output file exists at {:?}", &output_path);
+		}
 	}
 }
 

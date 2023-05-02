@@ -16,11 +16,11 @@ pub struct Config {
 	pub modes: HashMap<String, Mode>,
 }
 
-#[derive(Debug, Hash, Clone, PartialEq, Eq, Deserialize, Serialize)]
-pub enum Target {
-	Web,
-	Node,
-}
+// #[derive(Debug, Hash, Clone, PartialEq, Eq, Deserialize, Serialize)]
+// pub enum Target {
+// 	Web,
+// 	Node,
+// }
 
 impl Config {
 	pub fn from_toml_config_str(string: &str) -> anyhow::Result<Self> {
@@ -59,6 +59,20 @@ pub struct Targets {
 	pub web: CodeGenOptionsWeb,
 }
 
+/// ```rust
+/// use js_bind_core::config::*;
+/// let string = r##"
+/// ts = true
+/// npm-driver = "custom"
+/// generic-bundle = "path/to/bundle.ts"
+/// "##;
+/// 
+/// let options: CodeGenOptions = toml::from_str(string).expect("to work");
+/// 
+/// assert_eq!(options.ts, true);
+/// assert_eq!(options.npm_driver, "custom");
+/// assert_eq!(options.generic_bundle, "path/to/bundle.ts");
+/// ```
 #[derive(Debug, Hash, SmartDefault, Clone, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(default)]
 pub struct CodeGenOptions {
@@ -77,14 +91,14 @@ pub struct CodeGenOptions {
 
 /// Represents the [build.codegen] part of the config
 #[derive(Debug, Hash, SmartDefault, Clone, PartialEq, Eq, Deserialize, Serialize)]
-#[serde(default)]
+// #[serde(default)]
 pub struct CodeGenOptionsNode {
 	#[serde(rename = "bundle-name")]
-	#[default("bundle-cjs.js")]
+	#[default("js/bundle-cjs.js")]
 	pub bundle_name: String,
 
 	#[serde(rename = "rollup-config")]
-	#[default("js/node.config.js")]
+	#[default("js/node.config.mjs")]
 	pub rollup_config: String,
 
 	#[serde(rename = "feature-flag")]
@@ -94,14 +108,14 @@ pub struct CodeGenOptionsNode {
 
 /// Represents the [build.codegen] part of the config
 #[derive(Debug, Hash, SmartDefault, Clone, PartialEq, Eq, Deserialize, Serialize)]
-#[serde(default)]
+// #[serde(default)]
 pub struct CodeGenOptionsWeb {
 	#[serde(rename = "bundle-name")]
-	#[default("bundle-esm.js")]
+	#[default("js/bundle-esm.js")]
 	pub bundle_name: String,
 
 	#[serde(rename = "rollup-config")]
-	#[default("js/web.config.js")]
+	#[default("js/web.config.mjs")]
 	pub rollup_config: String,
 
 	#[serde(rename = "feature-flag")]

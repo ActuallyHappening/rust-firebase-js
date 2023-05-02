@@ -1,4 +1,4 @@
-use firebase_js_sys_proc::js_bind;
+// use firebase_js_sys_proc::js_bind;
 use wasm_bindgen::prelude::*;
 
 // #[cfg_attr(
@@ -46,10 +46,10 @@ use wasm_bindgen::prelude::*;
 // 	_app::initialize_app(config, name)
 // }
 
-#[js_bind("app")]
-pub fn initialize_app(config: &JsValue, name: Option<String>) -> Result<JsValue, JsValue> {}
+// #[js_bind("app")]
+// pub fn initialize_app(config: &JsValue, name: Option<String>) -> Result<JsValue, JsValue> {}
 
-pub fn tt() {
-	_app::initialize_app(&JsValue::UNDEFINED, None);
-	initialize_app(&JsValue::UNDEFINED, None);
-}
+// pub fn tt() {
+// 	_app::initialize_app(&JsValue::UNDEFINED, None);
+// 	initialize_app(&JsValue::UNDEFINED, None);
+// }

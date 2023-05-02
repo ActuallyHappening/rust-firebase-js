@@ -10,14 +10,14 @@ generic-bundle = "js/bundle.ts"
 ts = true
 # feature-flag = "link-node" # Will prefer node over web NOT IMPLEMENTED
 bundle-name = "js/bundle-cjs.js"
-rollup-config = "js/node.config.js"
+rollup-config = "js/node.config.mjs"
 
 [build.target.web.codegen]
 # [CodeGenOptionsWeb]
 ts = true
 # feature-flag = "link-web" # NOT IMPLEMENTED
-bundle-name = "bundle-esm.js"
-rollup-config = "js/web.config.js"
+bundle-name = "js/bundle-esm.js"
+rollup-config = "js/web.config.mjs"
 
 [modes.top-level]
 type = "function"
