@@ -1,5 +1,6 @@
 use convert_case::{Case, Casing};
 use quote::*;
+use smart_default::SmartDefault;
 use syn::parse::*;
 use syn::*;
 
@@ -7,12 +8,22 @@ use crate::config::{Config, FromTOMLCwd};
 
 #[derive(Debug, Default)]
 struct JsBindAttrs {
+	/// If Some(_), implied that this macro is being used at the top level of an `extern` block
+	/// If None, implied that this macro is being used at the top level of a function
 	/// The module ref to import from
-	module: Option<String>,
+	module: BindVarient,
+
 	/// Whether to inject documentation regarding the function as imported from JS
 	doc: bool,
 	/// Whether to take the documentation tests marked with `# JS_BIND_TEST` and put then in tests dir
 	test: bool,
+}
+
+#[derive(Debug, SmartDefault)]
+enum BindVarient {
+	#[default]
+	TopLevel(String),
+	Function(String),
 }
 
 impl Parse for JsBindAttrs {
@@ -22,11 +33,26 @@ impl Parse for JsBindAttrs {
 		let maybe_mod: Ident = input.parse()?;
 		if maybe_mod.to_string().as_str() == "module" {
 			input.parse::<Token![=]>()?;
-			attrs.module = Some(input.parse::<LitStr>()?.value());
+			attrs.module = BindVarient::TopLevel(input.parse::<LitStr>()?.value());
+		} else if maybe_mod.to_string().as_str() == "_mod" {
+			input.parse::<Token![=]>()?;
+			attrs.module = BindVarient::Function(input.parse::<LitStr>()?.value());
+		} else {
+			// Throw error
+			return Err(Error::new(
+				maybe_mod.span(),
+				format!(
+					r##"Unknown option: "{}"; Expected either "module" or "_mod"
+					Have you forgotten to add `#[js_bind(module = "...")]` at the top level of your `extern "C" {{ ... }}` block?
+					If not, have you forgotten to add `#[js_bind(_mod = "foobar", ...)]` at the top level of your function instead of `#[js_bind(...)]`?
+					"##,
+					maybe_mod.to_string()
+				),
+			));
 		}
 
-		let mut option: Ident = maybe_mod;
 		while !input.is_empty() {
+			let option = input.parse::<Ident>()?;
 			match option.to_string().as_str() {
 				"doc" => attrs.doc = true,
 				"test" => attrs.test = true,
@@ -43,28 +69,9 @@ impl Parse for JsBindAttrs {
 			if !input.is_empty() {
 				input.parse::<Token![,]>()?;
 			}
-			option = input.parse::<Ident>()?;
 		}
 		Ok(attrs)
 	}
-
-	// /// Parse js_bind(test, doc, module)
-	// fn parse(input: ParseStream) -> Result<Self> {
-	// 	let mut attrs = JsBindAttrs::default();
-	// 	while !input.is_empty() {
-	// 		let attr: Ident = input.parse()?;
-	// 		match attr.to_string().as_str() {
-	// 			"doc" => attrs.doc = true,
-	// 			"test" => attrs.test = true,
-	// 			"module" => attrs.module = true,
-	// 			_ => return Err(Error::new(attr.span(), format!(r##"Unknown attribute: "{}"; Expected either "doc", "test", or "module""##, attr.to_string()))),
-	// 		}
-	// 		if !input.is_empty() {
-	// 			input.parse::<Token![,]>()?;
-	// 		}
-	// 	}
-	// 	Ok(attrs)
-	// }
 }
 
 fn convert_from_snake_case_to_camel_case(name: String) -> String {
@@ -91,9 +98,8 @@ fn extract_docs(attrs: &Vec<Attribute>) -> Vec<String> {
 	doc_comments
 }
 
-
-
 /// If passed `#[js_bind(module = "foobar")]` then assumes its input is a foreign block
+/// Else, assumes it is passed _mod = "foobar" and parses it as a function
 pub fn _js_bind_impl(
 	attrs: proc_macro2::TokenStream,
 	input: proc_macro2::TokenStream,
@@ -103,9 +109,12 @@ pub fn _js_bind_impl(
 		Err(err) => return proc_macro2::TokenStream::from(err.to_compile_error()),
 	};
 
-	if attrs.module.is_some() {
+	if let BindVarient::TopLevel(module) = attrs.module {
 		let input: ItemForeignMod = match syn::parse2(input) {
-			Ok(syntax_tree) => syntax_tree,
+			Ok(syntax_tree) => {
+				println!("Syntax tree: {:#?}", syntax_tree);
+				syntax_tree
+			}
 			Err(err) => return proc_macro2::TokenStream::from(err.to_compile_error()),
 		};
 

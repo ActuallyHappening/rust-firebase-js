@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::wasm_bindgen;
 extern "C" {
 	// #[wasm_bindgen]
 	/// Documentation!
-	// #[js_bind(test)]
+	#[js_bind(_mod = "foobar", doc, test)]
 	pub fn works() -> bool;
 
 }
@@ -16,9 +16,9 @@ fn main() {
 	// works();
 	// testing
 
-	/// Documentation!
+	// Documentation!
 	// #[js_bind]
-	pub fn test() {}
+	// pub fn test() {}
 
 	// #[js_bind(method = "top-level")]
 	// pub fn test() {}

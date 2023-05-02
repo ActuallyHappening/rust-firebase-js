@@ -21,7 +21,7 @@ pub fn build_script_execute() {
 	// eprintln!("Writing bundle: {:?}", &bundle);
 	bundle.write_at_file(&path);
 
-	config.module.into_iter().for_each(|module| {
+	config.bundles.into_iter().for_each(|module| {
 		let cmd_handle =
 			RollupHandle::new(&cwd, config.codegen.output.clone(), module.to_build_command);
 		cmd_handle.compile();

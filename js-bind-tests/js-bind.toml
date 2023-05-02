@@ -1,9 +1,9 @@
-[[module]]
+[[bundles]]
 if = "link-node"
 then = "js/bundle-cjs.js"
 to-build = "rollup -c js/node.config.mjs"
 
-[[module]]
+[[bundles]]
 if = "link-web"
 then = "js/bundle-esm.js"
 to-build = "rollup -c js/web.config.mjs"

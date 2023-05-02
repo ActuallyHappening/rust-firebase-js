@@ -10,7 +10,7 @@ use std::{path::PathBuf};
 /// ```
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Config {
-	pub module: Vec<Module>,
+	pub bundles: Vec<Bundles>,
 	pub codegen: CodeGen,
 
 	#[serde(skip)]
@@ -18,7 +18,7 @@ pub struct Config {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct Module {
+pub struct Bundles {
 	#[serde(rename = "if")]
 	pub if_feature: String,
 	#[serde(rename = "then")]
