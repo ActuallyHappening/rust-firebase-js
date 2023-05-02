@@ -1,10 +1,9 @@
 use convert_case::{Case, Casing};
 use quote::*;
 use syn::parse::*;
-use syn::spanned::Spanned;
 use syn::*;
 
-use crate::config::{Config, ConfigLock, Function, self};
+use crate::config::{Config, FromTOMLCwd};
 
 #[derive(Debug, Default)]
 struct JsBindAttrs {
@@ -110,8 +109,7 @@ pub fn _js_bind_impl(
 			Err(err) => return proc_macro2::TokenStream::from(err.to_compile_error()),
 		};
 
-		let cwd = std::env::current_dir().expect("Cannot get current working directory");
-		let config = Config::from_config_dir(&cwd).expect("Cannot parse config");
+		let config = Config::from_cwd().expect("Cannot parse config");
 
 		let expanded = quote! {
 			#input

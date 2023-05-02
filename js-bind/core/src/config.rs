@@ -8,10 +8,13 @@ use std::{path::PathBuf};
 /// let string = std::fs::read_to_string("../../../js-bind.toml".to_string()).expect("Couldn't read file");
 /// let config: Config = toml::from_str(string.as_str()).expect("to work");
 /// ```
-#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Config {
 	pub module: Vec<Module>,
-	pub codegen: Option<CodeGen>,
+	pub codegen: CodeGen,
+
+	#[serde(skip)]
+	full_path: PathBuf
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -59,7 +62,7 @@ const BEGINNING_LOCK_MSG: &str = r##"
 # Edit at your own risk!
 "##;
 
-pub trait FromTOMLCwd: Sized + serde::de::DeserializeOwned + serde::Serialize + Default {
+pub trait FromTOMLCwd: Sized + serde::de::DeserializeOwned + serde::Serialize {
 	fn from_cwd() -> anyhow::Result<Self> {
 		let cwd = std::env::current_dir().context("Couldn't get current working directory")?;
 		Self::from_config_dir(&cwd)
@@ -75,9 +78,10 @@ pub trait FromTOMLCwd: Sized + serde::de::DeserializeOwned + serde::Serialize + 
 			&path
 		))? {
 			// Make empty file
-			Self::default()
-				.write_at_file(&path)
-				.context("Couldn't write default empty file")?;
+			// Self::default()
+			// 	.write_at_file(&path)
+			// 	.context("Couldn't write default empty file")?;
+			// std::fs::write(&path, "");
 		}
 		let config_str = std::fs::read_to_string(&path).context(err_msg)?;
 		let mut data = Self::from_toml_config_str(&config_str)?;
@@ -85,7 +89,7 @@ pub trait FromTOMLCwd: Sized + serde::de::DeserializeOwned + serde::Serialize + 
 		Ok(data)
 	}
 
-	fn set_full_path(&self, path: PathBuf);
+	fn set_full_path(&mut self, path: PathBuf);
 
 	fn from_toml_config_str(string: &str) -> anyhow::Result<Self> {
 		toml::from_str(string).context("Couldn't parse config str")
@@ -106,7 +110,7 @@ pub trait FromTOMLCwd: Sized + serde::de::DeserializeOwned + serde::Serialize + 
 }
 
 impl FromTOMLCwd for ConfigLock {
-	fn set_full_path(&self, path: PathBuf) {
+	fn set_full_path(&mut self, path: PathBuf) {
 			self.full_path = Some(path);
 	}
 	fn from_dir_to_file(dir: &PathBuf) -> PathBuf {
@@ -134,8 +138,8 @@ impl ConfigLock {
 }
 
 impl FromTOMLCwd for Config {
-	fn set_full_path(&self, path: PathBuf) {
-		unimplemented!()
+	fn set_full_path(&mut self, path: PathBuf) {
+		self.full_path = path;
 	}
 	fn from_dir_to_file(dir: &PathBuf) -> PathBuf {
 		let mut path = dir.clone();
