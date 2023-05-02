@@ -9,6 +9,6 @@ rm -rf /tmp/book/* # this won't delete the .git directory
 cp -rp book/* /tmp/book/
 cd /tmp/book
 git add -A
-git commit -m 'deploy new book'
+git commit -m 'Manual new book deploy'
 git push origin gh-pages
 cd -
