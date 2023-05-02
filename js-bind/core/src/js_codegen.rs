@@ -1,22 +1,25 @@
 use std::path::PathBuf;
 
-use crate::config::{Config, ConfigLock, Function, Mode};
+use crate::config::{Config, ConfigLock, FromTOMLCwd, Template, LockTemplate};
 
 /// Is the only function you need to call in your build script to handle everything
 /// to do with `js-bind`!
 pub fn build_script_execute() {
+	println!("cargo:rerun-if-changed=js-bind.toml");
+	println!("cargo:rerun-if-changed=js-bind.lock");
+
 	let cwd = std::env::current_dir().expect("to work");
-	let config = Config::from_config_dir(&cwd).expect("Cannot parse config");
+	let config = Config::from_cwd().expect("Cannot parse config");
 
 	prepare(&config, &cwd);
 	// clear_lockfile(&cwd);
 
-	let lock = ConfigLock::from_config_dir(&cwd).expect("Cannot parse config lock");
+	let lock = ConfigLock::from_cwd().expect("Cannot parse config lock");
 
 	let mut bundle = JsCodegenFile::new();
-	lock.functions.into_iter().for_each(|func| {
+	lock.templates.into_iter().for_each(|func| {
 		// panic!("YES");
-		bundle.add_func(&config, func);
+		bundle.add_template(&config, func);
 	});
 	let path = cwd.join(config.build.codegen.generic_bundle);
 	// eprintln!("Writing bundle: {:?}", &bundle);
@@ -52,9 +55,9 @@ impl JsCodegenFile {
 
 // For linking
 impl JsCodegenFile {
-	/// Adds a function export to the file
-	pub fn add_func(&mut self, config: &Config, func: Function) {
-		let mode = config.modes.get(&func.mode_name).expect(
+	/// Adds an expanded template to the file
+	pub fn add_template(&mut self, config: &Config, func: LockTemplate) {
+		let tepmlate = config.codegen.templates.get(&func.mode_name).expect(
 			format!(
 				"Function uses mode {} that is not defined in config",
 				func.mode_name
@@ -62,15 +65,7 @@ impl JsCodegenFile {
 			.as_str(),
 		);
 
-		self.lines.push(format!(
-			"import {{ {name} as _{name} }} from \"{}\";",
-			mode.mod_name,
-			name = func.name
-		));
-		self.lines.push(format!(
-			r##"export const {name} = _{name}"##,
-			name = func.name
-		));
+		
 	}
 
 	pub fn write_at_file(&self, file_path: &PathBuf) {

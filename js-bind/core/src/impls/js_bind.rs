@@ -1,64 +1,167 @@
-use convert_case::{Casing, Case};
-use syn::*;
-use syn::parse::*;
+use convert_case::{Case, Casing};
 use quote::*;
+use syn::parse::*;
 use syn::spanned::Spanned;
+use syn::*;
 
-use crate::config::{Config, ConfigLock, Function};
+use crate::config::{Config, ConfigLock, Function, self};
 
-
-#[derive(Debug)]
+#[derive(Debug, Default)]
 struct JsBindAttrs {
-	mode: String,
+	/// The module ref to import from
+	module: Option<String>,
+	/// Whether to inject documentation regarding the function as imported from JS
+	doc: bool,
+	/// Whether to take the documentation tests marked with `# JS_BIND_TEST` and put then in tests dir
+	test: bool,
 }
 
 impl Parse for JsBindAttrs {
+	/// Parse js_bind(module = "test/app", doc, test)
 	fn parse(input: ParseStream) -> Result<Self> {
-		// Parse attribute like `mode = "web"`
-		let mode = input.parse::<Ident>()?.to_string();
-		input.parse::<Token![=]>()?;
-		let mode_value = input.parse::<LitStr>()?.value();
-		Ok(Self {
-			mode: mode_value,
-		})
-		// Ok(Self {
-		// 	js_mod_name: input.parse::<LitStr>()?.value(),
-		// 	js_method_name: input.parse::<LitStr>().ok().map(|s| s.value()),
-		// })
+		let mut attrs = JsBindAttrs::default();
+		let maybe_mod: Ident = input.parse()?;
+		if maybe_mod.to_string().as_str() == "module" {
+			input.parse::<Token![=]>()?;
+			attrs.module = Some(input.parse::<LitStr>()?.value());
+		}
+
+		let mut option: Ident = maybe_mod;
+		while !input.is_empty() {
+			match option.to_string().as_str() {
+				"doc" => attrs.doc = true,
+				"test" => attrs.test = true,
+				_ => {
+					return Err(Error::new(
+						option.span(),
+						format!(
+							r##"Unknown option: "{}"; Expected either "doc" or "test""##,
+							option.to_string()
+						),
+					))
+				}
+			}
+			if !input.is_empty() {
+				input.parse::<Token![,]>()?;
+			}
+			option = input.parse::<Ident>()?;
+		}
+		Ok(attrs)
 	}
+
+	// /// Parse js_bind(test, doc, module)
+	// fn parse(input: ParseStream) -> Result<Self> {
+	// 	let mut attrs = JsBindAttrs::default();
+	// 	while !input.is_empty() {
+	// 		let attr: Ident = input.parse()?;
+	// 		match attr.to_string().as_str() {
+	// 			"doc" => attrs.doc = true,
+	// 			"test" => attrs.test = true,
+	// 			"module" => attrs.module = true,
+	// 			_ => return Err(Error::new(attr.span(), format!(r##"Unknown attribute: "{}"; Expected either "doc", "test", or "module""##, attr.to_string()))),
+	// 		}
+	// 		if !input.is_empty() {
+	// 			input.parse::<Token![,]>()?;
+	// 		}
+	// 	}
+	// 	Ok(attrs)
+	// }
 }
 
 fn convert_from_snake_case_to_camel_case(name: String) -> String {
 	name.to_case(Case::Camel)
 }
 
-pub fn _js_bind_impl(_attr: proc_macro2::TokenStream, _input: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
-	let input: ItemFn = syn::parse2(_input).expect("Cannot parse input as a function");
-	let attr: JsBindAttrs = syn::parse2(_attr).expect(r##"Cannot parse attributes as `method = "something"`"##);
-
-	let cwd = std::env::current_dir().expect("Cannot get current working directory");
-	let config = Config::from_config_dir(&cwd).expect("Cannot parse config");
-	let mode = config.modes.get(&attr.mode).expect(&format!(r##"Cannot find mode "{}" in config"##, &attr.mode));
-	let mut lock = ConfigLock::from_config_dir(&cwd).expect("Cannot parse config lock");
-
-	let func_name = input.sig.ident.to_string();
-	let mode_name = attr.mode;
-	let func: Function = Function::new(func_name, mode_name);
-	lock.append_func(&cwd,	func).expect("Cannot add function to config lock");
-	
-	// quote!{pub fn works() -> i32 {42}}.into()
-	quote!{}.into()
+fn extract_docs(attrs: &Vec<Attribute>) -> Vec<String> {
+	let mut doc_comments = Vec::new();
+	(attrs.clone()).into_iter().for_each(|attr| {
+		// eprintln!("Attr: {:#?}", attr);
+		if let Meta::NameValue(meta_name_value) = attr.meta {
+			if meta_name_value.path.is_ident("doc") {
+				match meta_name_value.value {
+					Expr::Lit(ExprLit {
+						lit: Lit::Str(doc), ..
+					}) => {
+						doc_comments.push(doc.value());
+					}
+					_ => {}
+				}
+			}
+		}
+	});
+	doc_comments
 }
+
+
+
+/// If passed `#[js_bind(module = "foobar")]` then assumes its input is a foreign block
+pub fn _js_bind_impl(
+	attrs: proc_macro2::TokenStream,
+	input: proc_macro2::TokenStream,
+) -> proc_macro2::TokenStream {
+	let attrs: JsBindAttrs = match syn::parse2(attrs) {
+		Ok(syntax_tree) => syntax_tree,
+		Err(err) => return proc_macro2::TokenStream::from(err.to_compile_error()),
+	};
+
+	if attrs.module.is_some() {
+		let input: ItemForeignMod = match syn::parse2(input) {
+			Ok(syntax_tree) => syntax_tree,
+			Err(err) => return proc_macro2::TokenStream::from(err.to_compile_error()),
+		};
+
+		let cwd = std::env::current_dir().expect("Cannot get current working directory");
+		let config = Config::from_config_dir(&cwd).expect("Cannot parse config");
+
+		let expanded = quote! {
+			#input
+		};
+
+		expanded.into()
+	} else {
+		// Acting on a specific function / type inside wasm-bindgen
+		let input: ItemFn = match syn::parse2(input) {
+			Ok(syntax_tree) => syntax_tree,
+			Err(err) => return proc_macro2::TokenStream::from(err.to_compile_error()),
+		};
+
+		let expanded = quote! {
+			// #input
+		};
+
+		expanded.into()
+	}
+
+	// let docs = extract_docs(&input.attrs);
+	// eprintln!("Docs: {:#?}", docs);
+}
+
+// pub fn _js_bind_impl(_attr: proc_macro2::TokenStream, _input: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
+// 	let input: ItemFn = syn::parse2(_input).expect("Cannot parse input as a function");
+// 	let attr: JsBindAttrs = syn::parse2(_attr).expect(r##"Cannot parse attributes as `method = "something"`"##);
+
+// 	let cwd = std::env::current_dir().expect("Cannot get current working directory");
+// 	let config = Config::from_config_dir(&cwd).expect("Cannot parse config");
+// 	let mode = config.modes.get(&attr.mode).expect(&format!(r##"Cannot find mode "{}" in config"##, &attr.mode));
+// 	let mut lock = ConfigLock::from_config_dir(&cwd).expect("Cannot parse config lock");
+
+// 	let func_name = input.sig.ident.to_string();
+// 	let mode_name = attr.mode;
+// 	let func: Function = Function::new(func_name, mode_name);
+// 	lock.append_func(&cwd,	func).expect("Cannot add function to config lock");
+
+// 	// quote!{pub fn works() -> i32 {42}}.into()
+// 	quote!{}.into()
+// }
 
 // pub fn _js_bind_impl2(attr: proc_macro2::TokenStream, input: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
 // 	let item = syn::parse::<ItemFn>(input.into()).map_err(|e| e.to_compile_error()).expect("ItemFn to parse properly");
 // 	// eprintln!("Item: {:#?}", item);
-	
+
 // 	let sig = &item.sig;
 // 	let sig_str = quote!(#sig);
 // 	// eprintln!("Sig str: {:?}", sig_str.to_string());
 // 	let sig_name = &sig.ident;
-
 
 // 	// handle_doc_comments(&item);
 
@@ -70,7 +173,7 @@ pub fn _js_bind_impl(_attr: proc_macro2::TokenStream, _input: proc_macro2::Token
 
 // 	// let attrs = parse_macro_input!(attr as JsBindAttrs);
 // 	let attrs = syn::parse::<JsBindAttrs>(attr.into()).map_err(|e| e.to_compile_error()).expect("ItemFn to parse properly");
-	
+
 // 	// eprintln!("Attr: {:#?}", attrs);
 // 	let js_mod_name = Ident::new(&attrs.js_mod_name, sig.span());
 // 	let js_mod_name_str = format!(r"{}", js_mod_name.to_string());

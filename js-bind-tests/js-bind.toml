@@ -1,24 +1,44 @@
-[build.codegen] # Applied to all targets
-# [CodeGenOptions]
-ts = true
-npm-driver = "pnpm"
-# output-dir = "js"
-generic-bundle = "js/bundle.ts"
+[[module]]
+if = "link-node"
+then = "js/bundle-cjs.js"
+to-build = "rollup -c js/node.config.mjs"
 
-[build.target.node.codegen]
-# [CodeGenOptionsNode]
-ts = true
-# feature-flag = "link-node" # Will prefer node over web NOT IMPLEMENTED
-bundle-name = "js/bundle-cjs.js"
-rollup-config = "js/node.config.mjs"
+[[module]]
+if = "link-web"
+then = "js/bundle-esm.js"
+to-build = "rollup -c js/web.config.mjs"
 
-[build.target.web.codegen]
-# [CodeGenOptionsWeb]
-ts = true
-# feature-flag = "link-web" # NOT IMPLEMENTED
-bundle-name = "js/bundle-esm.js"
-rollup-config = "js/web.config.mjs"
+[codegen]
+output = "js/bundle.ts"
 
-[modes.top-level]
-type = "function"
-mod = "example/mod"
+[[codegen.templates]]
+name = "top level func"
+template = """
+import { #name as _#name } from '#mod';
+export const #name = _#name;
+"""
+
+# [build.codegen] # Applied to all targets
+# # [CodeGenOptions]
+# ts = true
+# npm-driver = "pnpm"
+# # output-dir = "js"
+# generic-bundle = "js/bundle.ts"
+
+# [build.target.node.codegen]
+# # [CodeGenOptionsNode]
+# ts = true
+# # feature-flag = "link-node" # Will prefer node over web NOT IMPLEMENTED
+# bundle-name = "js/bundle-cjs.js"
+# rollup-config = "js/node.config.mjs"
+
+# [build.target.web.codegen]
+# # [CodeGenOptionsWeb]
+# ts = true
+# # feature-flag = "link-web" # NOT IMPLEMENTED
+# bundle-name = "js/bundle-esm.js"
+# rollup-config = "js/web.config.mjs"
+
+# [modes.top-level]
+# type = "function"
+# mod = "example/mod"

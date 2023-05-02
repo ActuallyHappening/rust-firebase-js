@@ -1,7 +1,6 @@
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, path::PathBuf};
-use smart_default::SmartDefault;
+use std::{path::PathBuf};
 
 /// ```rust
 /// use js_bind_core::config::*;
@@ -10,141 +9,49 @@ use smart_default::SmartDefault;
 /// let config: Config = toml::from_str(string.as_str()).expect("to work");
 /// ```
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
-#[serde(default)]
 pub struct Config {
-	pub build: Build,
-	pub modes: HashMap<String, Mode>,
+	pub module: Vec<Module>,
+	pub codegen: Option<CodeGen>,
 }
 
-// #[derive(Debug, Hash, Clone, PartialEq, Eq, Deserialize, Serialize)]
-// pub enum Target {
-// 	Web,
-// 	Node,
-// }
-
-impl Config {
-	pub fn from_toml_config_str(string: &str) -> anyhow::Result<Self> {
-		toml::from_str(string).context("Couldn't parse config str")
-		// .expect(&format!("Failed to parse config string:\n {:?}", string))
-	}
-	pub fn from_config_dir(path: &PathBuf) -> anyhow::Result<Self> {
-		let mut path = path.clone();
-		path.push("js-bind");
-		path.set_extension("toml");
-		let err_msg = format!("Couldn't read file 'js-bind.toml' at path {:?}", &path);
-		let config_str = std::fs::read_to_string(&path).context(err_msg)?;
-		Ok(Self::from_toml_config_str(&config_str)?)
-	}
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Module {
+	#[serde(rename = "if")]
+	pub if_feature: String,
+	#[serde(rename = "then")]
+	pub then_path: String,
+	#[serde(rename = "to-build")]
+	pub to_build_command: String,	
 }
 
-/// Represents the [build] part of the config
-/// ```toml
-/// [build]
-/// output-dir = "js"
-/// 
-/// [build.codegen]
-/// # see CodeGenBuild
-/// ```
-/// [CodeGenBuild]
-#[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize, Serialize)]
-#[serde(default)]
-pub struct Build {
-	pub codegen: CodeGenOptions,
-	pub target: Targets,
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct CodeGen {
+	pub output: String,
+	pub templates: Vec<Template>,
 }
 
-#[derive(Debug, Hash, Default, Clone, PartialEq, Eq, Deserialize, Serialize)]
-pub struct Targets {
-	pub node: CodeGenOptionsNode,
-	pub web: CodeGenOptionsWeb,
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
+pub struct Template {
+	pub name: String,
+	pub template: String,
 }
 
-/// ```rust
-/// use js_bind_core::config::*;
-/// let string = r##"
-/// ts = true
-/// npm-driver = "custom"
-/// generic-bundle = "path/to/bundle.ts"
-/// "##;
-/// 
-/// let options: CodeGenOptions = toml::from_str(string).expect("to work");
-/// 
-/// assert_eq!(options.ts, true);
-/// assert_eq!(options.npm_driver, "custom");
-/// assert_eq!(options.generic_bundle, "path/to/bundle.ts");
-/// ```
-#[derive(Debug, Hash, SmartDefault, Clone, PartialEq, Eq, Deserialize, Serialize)]
-#[serde(default)]
-pub struct CodeGenOptions {
-	#[default(true)]
-	pub ts: bool,
-
-	#[serde(rename = "npm-driver")]
-	#[default("npm")]
-	pub npm_driver: String,
-
-	#[serde(rename = "generic-bundle")]
-	#[default("js/bundle.ts")]
-	pub generic_bundle: String,
-}
-
-
-/// Represents the [build.codegen] part of the config
-#[derive(Debug, Hash, SmartDefault, Clone, PartialEq, Eq, Deserialize, Serialize)]
-// #[serde(default)]
-pub struct CodeGenOptionsNode {
-	#[serde(rename = "bundle-name")]
-	#[default("js/bundle-cjs.js")]
-	pub bundle_name: String,
-
-	#[serde(rename = "rollup-config")]
-	#[default("js/node.config.mjs")]
-	pub rollup_config: String,
-
-	#[serde(rename = "feature-flag")]
-	#[default("link-node")]
-	pub feature_flag: String,
-}
-
-/// Represents the [build.codegen] part of the config
-#[derive(Debug, Hash, SmartDefault, Clone, PartialEq, Eq, Deserialize, Serialize)]
-// #[serde(default)]
-pub struct CodeGenOptionsWeb {
-	#[serde(rename = "bundle-name")]
-	#[default("js/bundle-esm.js")]
-	pub bundle_name: String,
-
-	#[serde(rename = "rollup-config")]
-	#[default("js/web.config.mjs")]
-	pub rollup_config: String,
-
-	#[serde(rename = "feature-flag")]
-	#[default("link-web")]
-	pub feature_flag: String,
-}
-
-#[derive(Debug, Hash, Clone, PartialEq, Eq, Deserialize, Serialize)]
-pub struct Mode {
-	#[serde(rename = "mod")]
-	pub mod_name: String,
-
-	#[serde(rename = "type")]
-	pub item_type: String,
-	
-	// #[serde(rename = "js-export-type")]
-	// js_casing: String,
-}
-
-#[derive(Debug, Hash, Clone, PartialEq, Eq, Deserialize, Serialize)]
-enum ItemType {
-	#[serde(rename = "function")]
-	Function
-}
-
-#[derive(Debug, Clone, Hash, PartialEq, Eq, Deserialize, Serialize, Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize, Default)]
 pub struct ConfigLock {
-	#[serde(default)]
-	pub functions: Vec<Function>,
+	#[serde(skip)]
+	full_path: Option<PathBuf>,
+
+	pub templates: Vec<LockTemplate>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
+pub struct LockTemplate {
+	#[serde(rename = "ref")]
+	pub template_name_ref: String,
+	#[serde(rename = "var-name")]
+	pub var_name: String,
+	#[serde(rename = "var-mod")]
+	pub var_module: String,
 }
 
 const BEGINNING_LOCK_MSG: &str = r##"
@@ -152,19 +59,19 @@ const BEGINNING_LOCK_MSG: &str = r##"
 # Edit at your own risk!
 "##;
 
-impl ConfigLock {
-	pub fn from_toml_config_str(string: &str) -> anyhow::Result<Self> {
-		toml::from_str(string).context("Couldn't parse config str")
-		// .expect(&format!("Failed to parse config string:\n {:?}", string))
+pub trait FromTOMLCwd: Sized + serde::de::DeserializeOwned + serde::Serialize + Default {
+	fn from_cwd() -> anyhow::Result<Self> {
+		let cwd = std::env::current_dir().context("Couldn't get current working directory")?;
+		Self::from_config_dir(&cwd)
 	}
 
-	pub fn from_config_dir(path: &PathBuf) -> anyhow::Result<Self> {
+	fn from_config_dir(path: &PathBuf) -> anyhow::Result<Self> {
 		let path = Self::from_dir_to_file(path);
 
-		let err_msg = format!("Couldn't read file 'js-bind.lock' at path {:?}", &path);
+		let err_msg = format!("Couldn't read file at path {:?}", &path);
 		// Check if exists
 		if !path.try_exists().context(format!(
-			"Can't tell if js-bind.lock file exists as path {:?}",
+			"Can't tell if file exists as path {:?}",
 			&path
 		))? {
 			// Make empty file
@@ -173,50 +80,67 @@ impl ConfigLock {
 				.context("Couldn't write default empty file")?;
 		}
 		let config_str = std::fs::read_to_string(&path).context(err_msg)?;
-		Ok(Self::from_toml_config_str(&config_str)?)
+		let mut data = Self::from_toml_config_str(&config_str)?;
+		data.set_full_path(path);
+		Ok(data)
+	}
+
+	fn set_full_path(&self, path: PathBuf);
+
+	fn from_toml_config_str(string: &str) -> anyhow::Result<Self> {
+		toml::from_str(string).context("Couldn't parse config str")
+		// .expect(&format!("Failed to parse config string:\n {:?}", string))
 	}
 
 	fn write_at_file(&self, file_path: &PathBuf) -> anyhow::Result<()> {
 		let config_str = toml::to_string_pretty(&self).context("Failed to serialize ConfigLock")?;
 		let data = format!("{}{}", BEGINNING_LOCK_MSG, config_str);
 		std::fs::write(file_path, data).context(format!(
-			"Failed to write to js-bind.lock file at path: {:?}",
+			"Failed to write to file at path: {:?}",
 			&file_path
 		))?;
 		Ok(())
 	}
 
+	fn from_dir_to_file(dir: &PathBuf) -> PathBuf;
+}
+
+impl FromTOMLCwd for ConfigLock {
+	fn set_full_path(&self, path: PathBuf) {
+			self.full_path = Some(path);
+	}
 	fn from_dir_to_file(dir: &PathBuf) -> PathBuf {
 		let mut path = dir.clone();
 		path.push("js-bind");
 		path.set_extension("lock");
 		path
 	}
+}
 
-	/// Appends the specified [Function] to the end of the [ConfigLock] file.
+impl ConfigLock {
+	/// Appends the specified [Template] to the end of the [ConfigLock] file.
 	/// The [bool] returned indicates if any changes were needed to be written to file.
-	pub fn append_func(&mut self, dir: &PathBuf, func: Function) -> anyhow::Result<bool> {
+	fn append_template(&mut self, dir: &PathBuf, template: LockTemplate) -> anyhow::Result<bool> {
 		// Check if duplicate exists, if it does return
-		if self.functions.iter().any(|f| f == &func) {
+		if self.templates.iter().any(|f| f == &template) {
 			return Ok(false);
 		}
-		self.functions.push(func);
+		self.templates.push(template);
 		self
 			.write_at_file(&Self::from_dir_to_file(dir))
-			.context("Couldn't write at dir when adding function")?;
+			.context("Couldn't write at dir when adding template")?;
 		Ok(true)
 	}
 }
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq, Deserialize, Serialize)]
-pub struct Function {
-	pub name: String,
-	#[serde(rename = "mode-name")]
-	pub mode_name: String,
-}
-
-impl Function {
-	pub fn new(name: String, mode_name: String) -> Self {
-		Self { name, mode_name }
+impl FromTOMLCwd for Config {
+	fn set_full_path(&self, path: PathBuf) {
+		unimplemented!()
+	}
+	fn from_dir_to_file(dir: &PathBuf) -> PathBuf {
+		let mut path = dir.clone();
+		path.push("js-bind");
+		path.set_extension("toml");
+		path
 	}
 }

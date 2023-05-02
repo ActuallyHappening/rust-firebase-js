@@ -1,19 +1,24 @@
 use js_bind::js_bind;
 use wasm_bindgen::prelude::wasm_bindgen;
 
-#[wasm_bindgen(module = "js/bundle-es.js")]
+#[js_bind(module = "test/app")]
 extern "C" {
 	// #[wasm_bindgen]
 	/// Documentation!
-	#[js_bind(method="doo")]
+	// #[js_bind(test)]
 	pub fn works() -> bool;
+
 }
 
 
 
 fn main() {
-	works();
+	// works();
 	// testing
+
+	/// Documentation!
+	// #[js_bind]
+	pub fn test() {}
 
 	// #[js_bind(method = "top-level")]
 	// pub fn test() {}

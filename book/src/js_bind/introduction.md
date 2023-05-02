@@ -92,7 +92,10 @@ The approach I take more often is to record the information necessary to generat
 This is the rationale behind the `#[js_bind(gen = "template name", mod = "mod_name")]` attribute proc-macro.
 
 ```toml
-[[codegen]]
+[codegen]
+output = "js/bundle.ts"
+
+[[codegen.templates]]
 name = "top level func"
 template = "
 import { #name as _#name } from '#mod';

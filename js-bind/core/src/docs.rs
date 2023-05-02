@@ -46,53 +46,53 @@ use syn::*;
 // 	}
 // }
 
-fn _handle_doc(doc: Vec<String>) {
-	// eprintln!("Doc: {:?}", doc);
+// fn _handle_doc(doc: Vec<String>) {
+// 	// eprintln!("Doc: {:?}", doc);
 
-	// Extract ```rs ``` code blocks
-	let mut code_blocks: Vec<Vec<String>> = Vec::new();
-	let mut in_code_block = false;
-	let mut code_block: Vec<String> = Vec::new();
-	for line in doc {
-		let line = line.trim();
-		if line.starts_with("```") {
-			if in_code_block {
-				// Exiting code block
-				code_block.push(line.to_owned());
-				code_blocks.push(code_block);
-				code_block = Vec::new();
-				in_code_block = false;
-			} else {
-				// Entering code block
-				code_block = Vec::new(); // Repetition of line 4 above
-				code_block.push(line.to_owned());
-				in_code_block = true;
-			}
-		} else if in_code_block {
-			// In code block, not boundary
-			code_block.push(line.to_owned());
-		}
-	}
+// 	// Extract ```rs ``` code blocks
+// 	let mut code_blocks: Vec<Vec<String>> = Vec::new();
+// 	let mut in_code_block = false;
+// 	let mut code_block: Vec<String> = Vec::new();
+// 	for line in doc {
+// 		let line = line.trim();
+// 		if line.starts_with("```") {
+// 			if in_code_block {
+// 				// Exiting code block
+// 				code_block.push(line.to_owned());
+// 				code_blocks.push(code_block);
+// 				code_block = Vec::new();
+// 				in_code_block = false;
+// 			} else {
+// 				// Entering code block
+// 				code_block = Vec::new(); // Repetition of line 4 above
+// 				code_block.push(line.to_owned());
+// 				in_code_block = true;
+// 			}
+// 		} else if in_code_block {
+// 			// In code block, not boundary
+// 			code_block.push(line.to_owned());
+// 		}
+// 	}
 
-	eprintln!("Code blocks: {:#?}", code_blocks);
-}
+// 	eprintln!("Code blocks: {:#?}", code_blocks);
+// }
 
-fn handle_doc_comments(func: &ItemFn) {
-	// TODO: Not clone? maybe expensive?
-	let mut doc_comments = Vec::new();
-	(func.attrs.clone()).into_iter().for_each(|attr| {
-		eprintln!("Attr: {:#?}", attr);
-		if let Meta::NameValue(meta_name_value) = attr.meta {
-			if meta_name_value.path.is_ident("doc") {
-				match meta_name_value.value {
-					Expr::Lit(ExprLit { lit: Lit::Str(doc), .. }) => {
-						doc_comments.push(doc.value());
-					},
-					_ => {}
-				}
-			}
-		}
-	});
-	_handle_doc(doc_comments);
-}
+// fn handle_doc_comments(func: &ItemFn) {
+// 	// TODO: Not clone? maybe expensive?
+// 	let mut doc_comments = Vec::new();
+// 	(func.attrs.clone()).into_iter().for_each(|attr| {
+// 		eprintln!("Attr: {:#?}", attr);
+// 		if let Meta::NameValue(meta_name_value) = attr.meta {
+// 			if meta_name_value.path.is_ident("doc") {
+// 				match meta_name_value.value {
+// 					Expr::Lit(ExprLit { lit: Lit::Str(doc), .. }) => {
+// 						doc_comments.push(doc.value());
+// 					},
+// 					_ => {}
+// 				}
+// 			}
+// 		}
+// 	});
+// 	_handle_doc(doc_comments);
+// }
 
