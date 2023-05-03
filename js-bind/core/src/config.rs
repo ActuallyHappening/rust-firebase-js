@@ -5,8 +5,13 @@ use std::{path::PathBuf};
 /// ```rust
 /// use js_bind_core::config::*;
 /// // let string = include_str!("../../js-bind.toml");
-/// let string = std::fs::read_to_string("../../../js-bind.toml".to_string()).expect("Couldn't read file");
-/// let config: Config = toml::from_str(string.as_str()).expect("to work");
+/// // print cwd
+/// println!("cwd: {}", std::env::current_dir().unwrap().to_str().unwrap());
+/// let string = std::fs::read_to_string("../../js-bind-tests/js-bind.toml".to_string()).expect("Couldn't read file");
+/// let config = toml::from_str::<Config>(string.as_str());
+/// if config.is_err() {
+/// 	panic!("Couldn't parse config: {:#?}", config);
+/// }
 /// ```
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Config {

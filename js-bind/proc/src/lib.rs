@@ -9,5 +9,5 @@ use js_bind_core::impls::{js_bind::_js_bind_impl, target_name::_target_name_impl
 /// Binds a regular function signature using wasm-bindgen
 #[proc_macro_attribute]
 pub fn js_bind(attr: TokenStream, input: TokenStream) -> TokenStream {
-	_js_bind_impl(attr.into(), input.into()).into()
+	_js_bind_impl(attr.into(), input.into()).map_or_else(|e| e.into(), |v| v.into())
 }

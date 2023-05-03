@@ -133,6 +133,7 @@ name = "js-bind-tests"
 version = "0.1.0"
 dependencies = [
  "js-bind",
+ "toml",
  "wasm-bindgen",
 ]
 

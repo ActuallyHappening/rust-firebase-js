@@ -12,11 +12,13 @@ to-build = "rollup -c js/web.config.mjs"
 output = "js/bundle.ts"
 
 [[codegen.templates]]
-name = "top level func"
+name = "global func"
+matches = [{empty = true}]
 template = """
 import { #name as _#name } from '#mod';
 export const #name = _#name;
 """
+
 
 # [build.codegen] # Applied to all targets
 # # [CodeGenOptions]
