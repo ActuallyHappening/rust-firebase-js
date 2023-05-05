@@ -271,8 +271,8 @@ pub fn _js_bind_impl(
 
 	let expanded = quote! {
 		#prelude
-		fn nothing() {};
-		// #input
+		// fn nothing() {};
+		#input
 	};
 
 	Ok(expanded)

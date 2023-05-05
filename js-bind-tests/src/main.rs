@@ -8,12 +8,12 @@ use js_bind::Config;
 extern "C" {
 	// #[wasm_bindgen]
 	/// Documentation!
-	// #[wasm_bindgen(js_namespace = console)]
+	#[wasm_bindgen(js_namespace = console)]
 	pub fn log(msg: String);
 }
 
 fn main() {
-	// log("123 yay!".to_string());
+	log("123 yay!".to_string());
 
 	// let string =
 	// 	std::fs::read_to_string("./js-bind.toml".to_string()).expect("Couldn't read file");
