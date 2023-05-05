@@ -45,7 +45,7 @@ fn gen_feature_restriction_prelude(config: &Vec<Bundles>) -> TokenStream {
 
 	// no features
 	expanded.extend(quote! {
-		#[cfg(not(any(#(#features),*)))]
+		#[cfg(not(any(#(feature = #features),*)))]
 		compile_error!(#msg);
 	});
 
@@ -56,11 +56,23 @@ fn gen_feature_restriction_prelude(config: &Vec<Bundles>) -> TokenStream {
 	// });
 
 	// All features
-	expanded.extend(quote! {
-		#[cfg(all(#(#features),*))]
-		eprintln!("All features enabled!");
-	});
+	// expanded.extend(quote! {
+	// 	#[cfg(all(#(#features),*))]
+	// 	eprintln!("All features enabled!");
+	// });
 
+	expanded
+}
+
+/// Generates all of the conditional compilation attributes
+fn gen_bindgen_attrs(config: &Vec<Bundles>) -> TokenStream {
+	let mut expanded = TokenStream::new();
+	config.into_iter().for_each(|bundle| {
+		expanded.extend(gen_wasm_bindgen_attr(
+			&bundle.if_feature,
+			&bundle.then_js_path,
+		));
+	});
 	expanded
 }
 
@@ -80,20 +92,158 @@ mod tests {
 		assert_eq!(str_repr1, expected);
 		assert_eq!(str_repr2, expected);
 	}
+
+	#[test]
+	fn test_gen_feature_restriction_prelude_generic() {
+		let config: Vec<Bundles> = vec![Bundles {
+			if_feature: "compile-web-pls".into(),
+			then_js_path: "maybe-js/foobar.js".into(),
+			to_build_command: "ignored".into(),
+		}];
+
+		let generated = gen_feature_restriction_prelude(&config);
+
+		let str_reprs = vec![generated.to_string(), quote! {#generated}.to_string()];
+		str_reprs
+			.into_iter()
+			// .map(|r| r.replace(" ", ""))
+			.for_each(|repr| {
+				// println!("Repr: {:?}", repr);
+				assert!(repr.contains(r#"No features enabled"#));
+				assert!(repr.contains("compile_error"));
+			});
+	}
+
+	#[test]
+	fn test_gen_feature_restriction_prelude_specific1() {
+		let config = vec![Bundles {
+			if_feature: "compile-web-pls".into(),
+			then_js_path: "maybe-js/foobar.js".into(),
+			to_build_command: "ignored".into(),
+		}];
+
+		let generated = gen_feature_restriction_prelude(&config);
+
+		let expected = quote! {
+			#[cfg(not(any(feature = "compile-web-pls")))]
+			compile_error!("No features enabled! Consider enabling one of these features: [\"compile-web-pls\"]");
+		};
+
+		assert_eq!(generated.to_string(), expected.to_string());
+	}
+
+	#[test]
+	fn test_bindgen_attrs_generic() {
+		let config = vec![Bundles {
+			if_feature: "compile-web-pls".into(),
+			then_js_path: "maybe-js/foobar.js".into(),
+			to_build_command: "ignored".into(),
+		}];
+
+		let generated = gen_bindgen_attrs(&config);
+
+		let str_reprs = vec![generated.to_string(), quote! {#generated}.to_string()];
+		str_reprs
+			.into_iter()
+			.map(|r| r.replace(" ", ""))
+			.for_each(|repr| {
+				// println!("Repr: {:?}", repr);
+				assert!(repr.contains(&r#"#[cfg_attr(feature = "compile-web-pls", wasm_bindgen(module = "maybe-js/foobar.js"))]"#.replace(" ", "")));
+			});
+	}
+
+	#[test]
+	fn test_bindgen_attrs_specific1() {
+		let config = vec![Bundles {
+			if_feature: "compile-web-pls".into(),
+			then_js_path: "maybe-js/foobar.js".into(),
+			to_build_command: "ignored".into(),
+		}];
+
+		let generated = gen_bindgen_attrs(&config);
+
+		let expected = quote! {
+			#[cfg_attr(feature = "compile-web-pls", wasm_bindgen(module = "maybe-js/foobar.js"))]
+		};
+
+		assert_eq!(generated.to_string(), expected.to_string());
+	}
+
+	#[test]
+	fn test_bindgen_attrs_specific2() {
+		let config = vec![Bundles {
+			if_feature: "compile-web-pls".into(),
+			then_js_path: "maybe-js/foobar.js".into(),
+			to_build_command: "ignored".into(),
+		}, Bundles {
+			if_feature: "compile-node-pls".into(),
+			then_js_path: "anything/baz.js".into(),
+			to_build_command: "ignoredagain".into(),
+		}];
+
+		let generated = gen_bindgen_attrs(&config);
+
+		let expected = quote! {
+			#[cfg_attr(feature = "compile-web-pls", wasm_bindgen(module = "maybe-js/foobar.js"))]
+			#[cfg_attr(feature = "compile-node-pls", wasm_bindgen(module = "anything/baz.js"))]
+		};
+
+		assert_eq!(generated.to_string(), expected.to_string());
+	}
+
+	#[test]
+	fn test_gen_bundle_prelude_specific1() {
+		let config = vec![Bundles {
+			if_feature: "compile-web-pls".into(),
+			then_js_path: "maybe-js/foobar.js".into(),
+			to_build_command: "ignored".into(),
+		}];
+
+		let generated = gen_bundle_prelude(&config);
+
+		let expected = quote! {
+			#[cfg(not(any(feature = "compile-web-pls")))]
+			compile_error!("No features enabled! Consider enabling one of these features: [\"compile-web-pls\"]");
+			#[cfg_attr(feature = "compile-web-pls", wasm_bindgen(module = "maybe-js/foobar.js"))]
+		};
+
+		assert_eq!(generated.to_string(), expected.to_string());
+	}
+
+	#[test]
+	fn test_gen_bundle_prelude_specific2() {
+		let config = vec![Bundles {
+			if_feature: "compile-web-pls".into(),
+			then_js_path: "maybe-js/foobar.js".into(),
+			to_build_command: "ignored".into(),
+		}, Bundles {
+			if_feature: "compile-node-pls".into(),
+			then_js_path: "anything/baz.js".into(),
+			to_build_command: "ignoredagain".into(),
+		}];
+
+		let generated = gen_bundle_prelude(&config);
+
+		let expected = quote! {
+			#[cfg(not(any(feature = "compile-web-pls", feature = "compile-node-pls")))]
+			compile_error!("No features enabled! Consider enabling one of these features: [\"compile-web-pls\", \"compile-node-pls\"]");
+			#[cfg_attr(feature = "compile-web-pls", wasm_bindgen(module = "maybe-js/foobar.js"))]
+			#[cfg_attr(feature = "compile-node-pls", wasm_bindgen(module = "anything/baz.js"))]
+		};
+
+		assert_eq!(generated.to_string(), expected.to_string());
+	}
 }
 
 /// Takes valid bundles and generates code that conditionally compiles the specified `then` clause,
 /// i.e. a path to a JS file.
 fn gen_bundle_prelude(config: &Vec<Bundles>) -> TokenStream {
-	fn gen_bindgen_attrs(config: &Vec<Bundles>) -> TokenStream {
-		let mut expanded = TokenStream::new();
-		config.into_iter().for_each(|bundle| {
-			expanded.extend(gen_wasm_bindgen_attr(
-				&bundle.if_feature,
-				&bundle.then_js_path,
-			));
-		});
-		expanded
+	if config.len() == 0 {
+		return Error::new(
+			Span::call_site(),
+			"Config does not contain any bundles. Add a bundle to conditionally compile.",
+		)
+		.into_compile_error();
 	}
 
 	let mut expanded = TokenStream::new();
@@ -121,7 +271,8 @@ pub fn _js_bind_impl(
 
 	let expanded = quote! {
 		#prelude
-		#input
+		fn nothing() {};
+		// #input
 	};
 
 	Ok(expanded)
