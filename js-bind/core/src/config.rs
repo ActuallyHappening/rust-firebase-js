@@ -24,10 +24,13 @@ pub struct Config {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Bundles {
+	/// Feature namej
 	#[serde(rename = "if")]
 	pub if_feature: String,
+	/// Path to js file
 	#[serde(rename = "then")]
-	pub then_path: String,
+	pub then_js_path: String,
+	/// Command to build the file (e.g. rollup -c web.config.mjs)
 	#[serde(rename = "to-build")]
 	pub to_build_command: String,	
 }
