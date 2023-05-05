@@ -41,7 +41,15 @@ pub struct CodeGen {
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub struct Template {
 	pub name: String,
+	pub matches: Vec<Match>,
 	pub template: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Default, Deserialize, Serialize)]
+#[serde(default)]
+pub struct Match {
+	pub empty: Option<bool>,
+	// pub attribute: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize, Default)]

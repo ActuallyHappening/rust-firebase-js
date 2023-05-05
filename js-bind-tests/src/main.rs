@@ -1,12 +1,15 @@
 use js_bind::js_bind;
-// use wasm_bindgen::prelude::wasm_bindgen;
+use wasm_bindgen::prelude::wasm_bindgen;
 use js_bind::Config;
 
-#[js_bind(js_module = "test/app")]
+// #[js_bind(js_module = "test/app")]
+// #[wasm_bindgen(module = "/js/bundle-cjs.js")]
+#[wasm_bindgen(module = "/js/bundle-es.js")]
 extern "C" {
 	// #[wasm_bindgen]
 	/// Documentation!
-	pub fn works() -> bool;
+	#[wasm_bindgen(js_namespace = console)]
+	pub fn log(msg: String);
 }
 
 fn main() {
@@ -24,7 +27,7 @@ fn main() {
 	// 	},
 	// }
 
-	// works();
+	log("123 yay!".to_string());
 	// testing
 
 	// Documentation!
