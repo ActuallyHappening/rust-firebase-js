@@ -59,7 +59,19 @@ pub struct Docs {
 }
 
 impl Docs {
-	fn new(attrs: Vec<Attribute>) -> Self {
+	/// Creates a new doc's struct, filtering out all non-doc attributes
+	pub fn new(attrs: Vec<Attribute>) -> Self {
+		let attrs = attrs
+			.into_iter()
+			.filter(|attr| {
+				if let Meta::NameValue(meta_name_value) = &attr.meta {
+					if meta_name_value.path.is_ident("doc") {
+						return true;
+					}
+				}
+				false
+			})
+			.collect::<Vec<_>>();
 		Self { attrs }
 	}
 
@@ -99,6 +111,39 @@ impl Docs {
 			// eprintln!("Code block: {:#?}", code_block);
 		});
 		parsed_blocks
+	}
+
+	pub fn append_lines(self, lines: Vec<String>) -> Self {
+		use quote::*;
+		let mut attrs = self.attrs;
+
+		lines.into_iter().for_each(|line| {
+			let func = parse2::<ItemFn>(quote! {
+				#[doc = #line]
+				fn f() {}
+			}).expect("Couldn't parse line into function");
+			attrs.push(func.attrs.get(0).unwrap().clone());
+		});
+		
+		Docs { attrs }
+	}
+
+	/// Removes existing documentation attrs and replaces them with [self] attrs
+	pub fn overwrite_over(&self, target: &mut Vec<Attribute>) {
+		// remove existing doc attrs
+		target.retain(|attr| {
+			if let Meta::NameValue(meta_name_value) = &attr.meta {
+				if meta_name_value.path.is_ident("doc") {
+					return false;
+				}
+			}
+			true
+		});
+
+		// add new doc attrs
+		self.attrs.iter().for_each(|attr| {
+			target.push(attr.clone());
+		});
 	}
 }
 

@@ -1,6 +1,7 @@
 use proc_macro2::{Span, TokenStream};
 use quote::*;
 use serde::{Deserialize, Serialize};
+use std::result::Result;
 use syn::parse::*;
 use syn::*;
 
@@ -15,7 +16,7 @@ struct Attrs {
 }
 
 impl Parse for Attrs {
-	fn parse(input: ParseStream) -> Result<Self> {
+	fn parse(input: ParseStream) -> syn::Result<Self> {
 		let name = input.parse::<Ident>()?;
 		if name.to_string() != "js_module" {
 			Err(Error::new(name.span(), "Expected `js_module = \"...\"`"))?
@@ -270,32 +271,76 @@ mod prelude {
 }
 
 mod input {
+	use std::str::FromStr;
+	use crate::{config::Template, docs::Docs};
 	use super::*;
 	use syn::visit_mut::VisitMut;
 
-	struct DocumentationMutVistor;
+	struct DocumentationMutVistor<'config> {
+		pub templates: &'config Vec<Template>,
+	}
 
-	impl VisitMut for DocumentationMutVistor {
-		fn visit_foreign_item_fn_mut(&mut self, i: &mut ForeignItemFn) {
-			println!("Found foreign item fn: {:?}", i);
+	impl<'config> VisitMut for DocumentationMutVistor<'_> {
+		fn visit_foreign_item_fn_mut(&mut self, func: &mut ForeignItemFn) {
+			self.handle_fn(func);
 
 			// continues recursive search, not really required but eh
-			visit_mut::visit_foreign_item_fn_mut(self, i);
+			// visit_mut::visit_foreign_item_fn_mut(self, i);
 		}
 	}
+
+	impl<'config> DocumentationMutVistor<'config> {
+		fn new(templates: &'config Vec<Template>) -> Self {
+			Self { templates }
+		}
+
+		// Must mutate the function to add docs as desired
+		fn handle_fn(&mut self, func: &mut ForeignItemFn) {
+			println!("Found foreign item fn: {:?}", func);
+
+			let docs = Docs::new(func.attrs.clone());
+			let new_docs = docs.append_lines(vec!["Hello".to_owned(), "World".to_owned()]);
+			new_docs.overwrite_over(&mut func.attrs);
+		}
+	}
+
+	struct WasmBindgenOptions {
+		pub options: Vec<WasmBindgenOption>,
+	}
+
+	impl WasmBindgenOptions {
+		fn parse_from_attr(attr: &Attribute) -> Result<WasmBindgenOptions, TokenStream> {
+			unimplemented!()
+		}
+	}
+
+	enum WasmBindgenOption {
+		Catch,
+	}
+
+	impl FromStr for WasmBindgenOption {
+		type Err = ();
+
+		fn from_str(s: &str) -> Result<Self, Self::Err> {
+			match s {
+				"catch" => Ok(Self::Catch),
+				_ => Err(()),
+			}
+		}
+	}
+
+	
 
 	/// Takes the input of the `js_bind` macro and mutates the documentation comments (according to config)
 	pub fn process_js_bind_input(
 		input: &ItemForeignMod,
 		config: &Config,
-	) -> std::result::Result<ItemForeignMod, TokenStream> {
-		// let code_blocks = CodeBlock::get_parsed_code_blocks(input)?;
-
+	) -> Result<ItemForeignMod, TokenStream> {
 		let mut mutable_input = input.clone();
 
-		let mut visitor = DocumentationMutVistor;
+		let mut visitor = DocumentationMutVistor::new(&config.codegen.templates);
 		visitor.visit_item_foreign_mod_mut(&mut mutable_input);
-		
+
 		Ok(mutable_input)
 	}
 }
@@ -303,7 +348,7 @@ mod input {
 pub fn _js_bind_impl(
 	attrs: proc_macro2::TokenStream,
 	input: proc_macro2::TokenStream,
-) -> std::result::Result<proc_macro2::TokenStream, proc_macro2::TokenStream> {
+) -> Result<proc_macro2::TokenStream, proc_macro2::TokenStream> {
 	let attrs = syn::parse2::<Attrs>(attrs).map_err(Error::into_compile_error)?;
 	let input = syn::parse2::<ItemForeignMod>(input).map_err(Error::into_compile_error)?;
 	let config = Config::from_cwd().map_err(|e| {
