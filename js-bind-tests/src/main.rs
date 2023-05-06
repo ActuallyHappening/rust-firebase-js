@@ -4,16 +4,17 @@ use js_bind::Config;
 
 #[js_bind(js_module = "test/app")]
 // #[wasm_bindgen(module = "/js/bundle-cjs.js")]
-// #[wasm_bindgen(module = "/js/bundle-es.js")]
+// #[wasm_bindgen(module = "/js/bundle-esm.js")]
+// #[wasm_bindgen]
 extern "C" {
-	// #[wasm_bindgen]
+	// #[wasm_bindgen(js_name = "log")]
 	// #[wasm_bindgen(js_namespace = console)]
 	/// Documentation!
-	pub fn log(msg: String);
+	pub fn log_rs(msg: String);
 }
 
 fn main() {
-	log("123 yay!".to_string());
+	log_rs("123 yay!".to_string());
 
 	// let string =
 	// 	std::fs::read_to_string("./js-bind.toml".to_string()).expect("Couldn't read file");

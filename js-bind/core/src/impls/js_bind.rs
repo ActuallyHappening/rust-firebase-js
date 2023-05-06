@@ -330,33 +330,59 @@ mod input {
 	}
 
 	impl WasmBindgenOptions {
-		fn parse_from_attr(attr: &Attribute) -> Result<WasmBindgenOptions, TokenStream> {
+		/// Tries to parse the first `wasm_bindgen` attribute from a list of attributes
+		/// Returns [None] if none found
+		/// Common use cases involve parsing the attributes of a function, because this ignores non-wasm_bindgen attributes
+		/// Combines options, as this is the behaviour of wasm_bindgen
+		fn get_from_attrs(attrs: &Vec<Attribute>) -> Option<Result<Self, TokenStream>> {
+			let mut found_wasm_bindgen = false;
+			let mut options = Vec::new();
+			for attr in attrs {
+				println!("attr: {:?}", attr);
+				let parsed: WasmBindgenOptions = match Self::parse_from_attr(attr) {
+					Some(parsed) => {
+						// Is wasm-bindgen attr
+						match parsed {
+							Ok(parsed) => parsed,
+							Err(e) => return Some(Err(e)),
+						}
+					}
+					None => continue, // Not a wasm_bindgen attribute
+				};
+				found_wasm_bindgen = true;
+				options.extend(parsed.options);
+			}
+			if !found_wasm_bindgen {
+				None
+			} else {
+				Some(Ok(Self { options }))
+			}
+		}
+
+		/// Parses a single attribute as a wasm_bindgen attribute
+		/// Returns [None] if the attribute is not wasm_bindgen
+		fn parse_from_attr(attr: &Attribute) -> Option<Result<WasmBindgenOptions, TokenStream>> {
 			// check attr is actually wasm_bindgen
 			let path = &attr.path();
 			let ident = path.get_ident().expect("attr to have ident");
 			if ident.to_string() != "wasm_bindgen" {
-				return Err(
-					Error::new(
-						ident.span(),
-						format!(
-							"Expected `wasm_bindgen` attribute, found `{}`",
-							ident.to_string()
-						),
-					)
-					.into_compile_error(),
-				);
+				return None;
 			}
 
 			// Check if no args present
 			if let Meta::Path(_) = attr.meta {
-				return Ok(WasmBindgenOptions { options: vec![] });
+				return Some(Ok(WasmBindgenOptions { options: vec![] }));
 			}
 
-			let args = attr
+			let args = match attr
 				.parse_args()
-				.map_err(|e| Error::new(e.span(), e.to_string()).into_compile_error())?;
+				.map_err(|e| Error::new(e.span(), e.to_string()).into_compile_error())
+			{
+				Ok(args) => args,
+				Err(e) => return Some(Err(e)),
+			};
 
-			Ok(args)
+			Some(Ok(args))
 		}
 	}
 
@@ -381,29 +407,68 @@ mod input {
 		use super::*;
 
 		#[test]
-		fn test_wasmbindgen_parse_from_attr_specific1() {
+		fn test_wasmbindgen_parse_from_attrs_specific1() -> Result<(), TokenStream> {
+			let func: ItemFn = parse_quote! {
+				/// Some documentation
+				/// more
+				#[wasm_bindgen]
+				fn foo() {}
+			};
+			let attrs = func.attrs;
+
+			let parsed = WasmBindgenOptions::get_from_attrs(&attrs);
+
+			let parsed = parsed.expect("parsed to be ok")?;
+			assert_eq!(parsed.options.len(), 0);
+
+			Ok(())
+		}
+
+		#[test]
+		fn test_wasmbindgen_parse_from_attrs_specific2() -> Result<(), TokenStream> {
+			let func: ItemFn = parse_quote! {
+				/// Some documentation
+				/// more
+				#[wasm_bindgen(catch)]
+				fn foo() {}
+			};
+			let attrs = func.attrs;
+
+			let parsed = WasmBindgenOptions::get_from_attrs(&attrs);
+
+			let parsed = parsed.expect("parsed to be ok")?;
+			assert_eq!(parsed.options.len(), 1);
+
+			Ok(())
+		}
+
+		#[test]
+		fn test_wasmbindgen_parse_from_attr_specific1() -> Result<(), TokenStream> {
 			let attr: Attribute = parse_quote! {
 				#[wasm_bindgen]
 			};
 
 			let parsed = WasmBindgenOptions::parse_from_attr(&attr);
 
-
-			let parsed = parsed.expect("parsed to be ok");
+			let parsed = parsed.expect("parsed to be ok")?;
 			assert_eq!(parsed.options.len(), 0);
+
+			Ok(())
 		}
 
 		#[test]
-		fn test_wasmbindgen_parse_from_attr_specific2() {
+		fn test_wasmbindgen_parse_from_attr_specific2() -> Result<(), TokenStream> {
 			let attr: Attribute = parse_quote! {
 				#[wasm_bindgen(catch)]
 			};
 
 			let parsed = WasmBindgenOptions::parse_from_attr(&attr);
 
-			let parsed = parsed.expect("parsed to be ok");
+			let parsed = parsed.expect("parsed to be ok")?;
 			assert_eq!(parsed.options.len(), 1);
 			assert_eq!(parsed.options.first().unwrap(), &WasmBindgenOption::Catch);
+
+			Ok(())
 		}
 	}
 
