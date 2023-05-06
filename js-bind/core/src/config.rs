@@ -38,18 +38,30 @@ pub struct Bundles {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct CodeGen {
 	pub output: String,
+	pub templates: Templates,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Templates {
 	pub templates: Vec<Template>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub struct Template {
 	pub name: String,
+
 	#[serde(rename = "matches-wasmbindgen-import-signature")]
-	pub matches_signature: Vec<Match>,
+	pub matches_signature: Matches,
+
 	#[serde(rename = "codegen-template")]
 	pub codegen_template: String,
 	#[serde(rename = "documentation-template")]
 	pub documentation_template: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
+pub struct Matches {
+	pub matches: Vec<Match>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Default, Deserialize, Serialize)]

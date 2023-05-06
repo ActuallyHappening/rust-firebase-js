@@ -272,12 +272,15 @@ mod prelude {
 
 mod input {
 	use super::*;
-	use crate::{config::Template, docs::Docs};
+	use crate::{
+		config::{Match, Matches, Template, Templates},
+		docs::Docs,
+	};
 	use std::str::FromStr;
 	use syn::visit_mut::VisitMut;
 
 	struct DocumentationMutVistor<'config> {
-		pub templates: &'config Vec<Template>,
+		pub templates: &'config Templates,
 	}
 
 	impl<'config> VisitMut for DocumentationMutVistor<'_> {
@@ -290,20 +293,44 @@ mod input {
 	}
 
 	impl<'config> DocumentationMutVistor<'config> {
-		fn new(templates: &'config Vec<Template>) -> Self {
+		fn new(templates: &'config Templates) -> Self {
 			Self { templates }
 		}
 
 		// Must mutate the function to add docs as desired
 		fn handle_fn(&mut self, func: &mut ForeignItemFn) {
-			println!("Found foreign item fn: {:?}", func);
+			// println!("Found foreign item fn: {:?}", func);
 
 			let docs = Docs::new(func.attrs.clone());
 			// let new_docs = docs.append_lines(vec!["Hello".to_owned(), "World".to_owned()]);
 			// new_docs.overwrite_over(&mut func.attrs);
+			let templates = self.templates;
+
+			let options = match WasmBindgenOptions::get_from_attrs_or_empty(&func.attrs) {
+				Ok(options) => options,
+				Err(e) => {
+					// e.to_compile_error().to_tokens(&mut func.attrs);
+					// return;
+					panic!("Error parsing wasm_bindgen options: {:?}", e);
+				}
+			};
+			// find match
+			let template = templates.find_matching_template(&options);
+			match template {
+				Some(template) => {
+					println!("Found template: {:?}", template);
+					// let docs = docs.append_lines(template.docs.clone());
+					// docs.overwrite_over(&mut func.attrs);
+				}
+				None => {
+					// println!("No template found for options: {:?}", options);
+				}
+			}
 		}
 	}
 
+	/// Represents the options passed to `#[wasm_bindgen]` procmacro.
+	/// An empty [options] field means no options were passed, OR no attribute was found.
 	#[derive(Debug, PartialEq)]
 	struct WasmBindgenOptions {
 		pub options: Vec<WasmBindgenOption>,
@@ -331,10 +358,12 @@ mod input {
 
 	impl WasmBindgenOptions {
 		/// Tries to parse the first `wasm_bindgen` attribute from a list of attributes
+		///
 		/// Returns [None] if none found
-		/// Common use cases involve parsing the attributes of a function, because this ignores non-wasm_bindgen attributes
+		///
+		/// Common use cases involve parsing the attributes of a function, because this ignores non-wasm_bindgen attributes.
 		/// Combines options, as this is the behaviour of wasm_bindgen
-		fn get_from_attrs(attrs: &Vec<Attribute>) -> Option<Result<Self, TokenStream>> {
+		fn get_from_attrs(attrs: &Vec<Attribute>) -> Option<Result<Self, syn::Error>> {
 			let mut found_wasm_bindgen = false;
 			let mut options = Vec::new();
 			for attr in attrs {
@@ -359,9 +388,14 @@ mod input {
 			}
 		}
 
+		/// Tries to parse for `wasm_bindgen` attrs, or returns an empty [Self] if none found
+		fn get_from_attrs_or_empty(attrs: &Vec<Attribute>) -> Result<Self, syn::Error> {
+			Self::get_from_attrs(attrs).unwrap_or(Ok(Self { options: vec![] }))
+		}
+
 		/// Parses a single attribute as a wasm_bindgen attribute
 		/// Returns [None] if the attribute is not wasm_bindgen
-		fn parse_from_attr(attr: &Attribute) -> Option<Result<WasmBindgenOptions, TokenStream>> {
+		fn parse_from_attr(attr: &Attribute) -> Option<Result<WasmBindgenOptions, syn::Error>> {
 			// check attr is actually wasm_bindgen
 			let path = &attr.path();
 			let ident = path.get_ident().expect("attr to have ident");
@@ -376,13 +410,52 @@ mod input {
 
 			let args = match attr
 				.parse_args()
-				.map_err(|e| Error::new(e.span(), e.to_string()).into_compile_error())
+				.map_err(|e| Error::new(e.span(), e.to_string()))
 			{
 				Ok(args) => args,
 				Err(e) => return Some(Err(e)),
 			};
 
 			Some(Ok(args))
+		}
+	}
+
+	impl Match {
+		/// Checks if the wasm-bindgen attribute options [WasmBindgenOptions] match what the config file wants
+		fn does_options_match(&self, options: &WasmBindgenOptions) -> bool {
+			let options = &options.options;
+
+			if options.is_empty() && self.empty.unwrap_or(false) {
+				return true;
+			}
+
+			false
+		}
+	}
+
+	impl Matches {
+		fn does_options_match(&self, options: &WasmBindgenOptions) -> bool {
+			self.matches.iter().any(|m| m.does_options_match(&options))
+		}
+	}
+
+	impl Template {
+		fn does_template_match(&self, options: &WasmBindgenOptions) -> Option<&Self> {
+			if self.matches_signature.does_options_match(&options) {
+				Some(self)
+			} else {
+				None
+			}
+		}
+	}
+
+	impl Templates {
+		/// Tries to find a matching template given a concrete [WasmBindgenOptions], of [None] if not found
+		fn find_matching_template(&self, options: &WasmBindgenOptions) -> Option<&Template> {
+			self
+				.templates
+				.iter()
+				.find_map(|t| t.does_template_match(&options))
 		}
 	}
 
