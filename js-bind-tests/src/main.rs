@@ -8,7 +8,7 @@ use js_bind::Config;
 extern "C" {
 	// #[wasm_bindgen]
 	/// Documentation!
-	#[wasm_bindgen(js_namespace = console)]
+	// #[wasm_bindgen(js_namespace = console)]
 	pub fn log(msg: String);
 }
 

@@ -25,9 +25,11 @@ impl Parse for Attrs {
 }
 
 /// Generates a conditional wasm_bindgen attribute to comple in `module = "foobar"`
-fn gen_wasm_bindgen_attr(feature_predicate: &str, js_module: &str) -> TokenStream {
+fn gen_wasm_bindgen_attr(feature_predicate: &str, js_file_path: &str) -> TokenStream {
+	assert_ne!(js_file_path.chars().nth(0).unwrap(), '/', "js_file_path must be relative to the project root, not the filesystem root. The implied '/' is added");
+	let js_file_path = format!("/{}", js_file_path);
 	return quote! {
-		#[cfg_attr(feature = #feature_predicate, wasm_bindgen(module = #js_module))]
+		#[cfg_attr(feature = #feature_predicate, wasm_bindgen(module = #js_file_path))]
 	};
 }
 

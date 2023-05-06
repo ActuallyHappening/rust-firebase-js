@@ -24,6 +24,7 @@ impl FromStr for Lang {
 	fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
 		match s {
 			"rust" => Ok(Self::Rust("rust".to_owned())),
+			// "rs" => Ok(Self::Rust("rs".to_owned())), // TODO: Test
 			_ => Ok(Self::Other(s.to_owned())),
 		}
 	}
