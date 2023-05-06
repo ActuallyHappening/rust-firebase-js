@@ -54,11 +54,20 @@ impl FromStr for Options {
 	}
 }
 
-impl CodeBlock {
+pub struct Docs {
+	pub attrs: Vec<Attribute>,
+}
+
+impl Docs {
+	fn new(attrs: Vec<Attribute>) -> Self {
+		Self { attrs }
+	}
+
 	/// Gets the documentation comments from a function
 	///
 	/// TODO: Not clone all of [attrs]? maybe expensive?
-	fn get_docs(attrs: &Vec<Attribute>) -> Vec<String> {
+	fn get_string_from_docs(&self) -> Vec<String> {
+		let attrs = &self.attrs;
 		let mut doc_comments = Vec::new();
 		attrs.clone().into_iter().for_each(|attr| {
 			if let Meta::NameValue(meta_name_value) = attr.meta {
@@ -77,6 +86,23 @@ impl CodeBlock {
 		doc_comments
 	}
 
+	pub fn from_docs_to_parsed_code_blocks(self) -> Vec<CodeBlock> {
+		let attrs = self.attrs;
+		let docs = Docs::new(attrs).get_string_from_docs();
+		let code_blocks = CodeBlock::get_code_blocks(&docs);
+
+		let mut parsed_blocks = Vec::new();
+		code_blocks.into_iter().for_each(|block| {
+			let code_block = CodeBlock::parse_code_block(block);
+
+			parsed_blocks.push(code_block);
+			// eprintln!("Code block: {:#?}", code_block);
+		});
+		parsed_blocks
+	}
+}
+
+impl CodeBlock {
 	fn get_code_blocks(docs: &Vec<String>) -> Vec<Vec<String>> {
 		let mut code_blocks = Vec::new();
 		let mut in_code_block = false;
@@ -163,20 +189,6 @@ impl CodeBlock {
 		// 	}
 		// }
 	}
-
-	pub fn get_parsed_code_blocks(attrs: &Vec<Attribute>) -> Vec<CodeBlock> {
-		let docs = Self::get_docs(attrs);
-		let code_blocks = Self::get_code_blocks(&docs);
-
-		let mut parsed_blocks = Vec::new();
-		code_blocks.into_iter().for_each(|block| {
-			let code_block = Self::parse_code_block(block);
-
-			parsed_blocks.push(code_block);
-			// eprintln!("Code block: {:#?}", code_block);
-		});
-		parsed_blocks
-	}
 }
 
 /// Expands a documentation template with the given variables
@@ -218,7 +230,7 @@ mod tests {
 		.unwrap();
 		let attrs = func.attrs;
 
-		let docs = CodeBlock::get_docs(&attrs);
+		let docs = Docs::new(attrs).get_string_from_docs();
 		assert_eq!(docs.len(), 18);
 		assert_eq!(docs.get(0).unwrap().trim(), "Documentation");
 
@@ -257,8 +269,7 @@ mod tests {
 
 	#[test]
 	fn test_expand_with_template() {
-		let template = 
-r##"
+		let template = r##"
 ## Documentation template:
 Maybe show an example of how to import the function
 ```js
@@ -272,7 +283,7 @@ import { #name } from "#mod";
 
 		assert_eq!(
 			expanded,
-r##"
+			r##"
 ## Documentation template:
 Maybe show an example of how to import the function
 ```js
@@ -308,7 +319,7 @@ import { test_func } from "test_mod";
 		.unwrap();
 		let attrs = func.attrs;
 
-		let docs = CodeBlock::get_docs(&attrs);
+		let docs = Docs::new(attrs).get_string_from_docs();
 		assert_eq!(docs.len(), 18);
 		assert_eq!(docs.get(0).unwrap().trim(), "Documentation");
 
@@ -353,7 +364,7 @@ import { test_func } from "test_mod";
 		let func = parse2::<ItemFn>(func).unwrap();
 		let attrs = func.attrs;
 
-		let docs = CodeBlock::get_docs(&attrs);
+		let docs = Docs::new(attrs).get_string_from_docs();
 
 		assert_eq!(docs.len(), 0);
 	}
@@ -373,7 +384,7 @@ import { test_func } from "test_mod";
 		let func = parse2::<ItemFn>(func).unwrap();
 		let attrs = func.attrs;
 
-		let docs = CodeBlock::get_docs(&attrs);
+		let docs = Docs::new(attrs).get_string_from_docs();
 
 		assert_eq!(docs.len(), 7);
 		assert_eq!(docs.get(0).unwrap().trim(), "Some documentation");

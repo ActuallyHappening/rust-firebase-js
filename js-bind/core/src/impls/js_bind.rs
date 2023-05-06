@@ -113,7 +113,7 @@ mod prelude {
 			let str_repr1 = attr.to_string().replace(" ", "");
 			let str_repr2 = quote! {#attr}.to_string().replace(" ", "");
 			let expected =
-				r##"#[cfg_attr(feature = "compile-node-pls", wasm_bindgen(module = "my/js-module yes"))]"##
+				r##"#[cfg_attr(feature = "compile-node-pls", wasm_bindgen(module = "/my/js-module yes"))]"##
 					.replace(" ", "");
 
 			assert_eq!(str_repr1, expected);
@@ -175,7 +175,7 @@ mod prelude {
 			.map(|r| r.replace(" ", ""))
 			.for_each(|repr| {
 				// println!("Repr: {:?}", repr);
-				assert!(repr.contains(&r#"#[cfg_attr(feature = "compile-web-pls", wasm_bindgen(module = "maybe-js/foobar.js"))]"#.replace(" ", "")));
+				assert!(repr.contains(&r#"#[cfg_attr(feature = "compile-web-pls", wasm_bindgen(module = "/maybe-js/foobar.js"))]"#.replace(" ", "")));
 			});
 		}
 
@@ -190,7 +190,7 @@ mod prelude {
 			let generated = gen_bindgen_attrs(&config);
 
 			let expected = quote! {
-				#[cfg_attr(feature = "compile-web-pls", wasm_bindgen(module = "maybe-js/foobar.js"))]
+				#[cfg_attr(feature = "compile-web-pls", wasm_bindgen(module = "/maybe-js/foobar.js"))]
 			};
 
 			assert_eq!(generated.to_string(), expected.to_string());
@@ -214,8 +214,8 @@ mod prelude {
 			let generated = gen_bindgen_attrs(&config);
 
 			let expected = quote! {
-				#[cfg_attr(feature = "compile-web-pls", wasm_bindgen(module = "maybe-js/foobar.js"))]
-				#[cfg_attr(feature = "compile-node-pls", wasm_bindgen(module = "anything/baz.js"))]
+				#[cfg_attr(feature = "compile-web-pls", wasm_bindgen(module = "/maybe-js/foobar.js"))]
+				#[cfg_attr(feature = "compile-node-pls", wasm_bindgen(module = "/anything/baz.js"))]
 			};
 
 			assert_eq!(generated.to_string(), expected.to_string());
@@ -234,7 +234,7 @@ mod prelude {
 			let expected = quote! {
 				#[cfg(not(any(feature = "compile-web-pls")))]
 				compile_error!("No features enabled! Consider enabling one of these features: [\"compile-web-pls\"]");
-				#[cfg_attr(feature = "compile-web-pls", wasm_bindgen(module = "maybe-js/foobar.js"))]
+				#[cfg_attr(feature = "compile-web-pls", wasm_bindgen(module = "/maybe-js/foobar.js"))]
 			};
 
 			assert_eq!(generated.to_string(), expected.to_string());
@@ -260,8 +260,8 @@ mod prelude {
 			let expected = quote! {
 				#[cfg(not(any(feature = "compile-web-pls", feature = "compile-node-pls")))]
 				compile_error!("No features enabled! Consider enabling one of these features: [\"compile-web-pls\", \"compile-node-pls\"]");
-				#[cfg_attr(feature = "compile-web-pls", wasm_bindgen(module = "maybe-js/foobar.js"))]
-				#[cfg_attr(feature = "compile-node-pls", wasm_bindgen(module = "anything/baz.js"))]
+				#[cfg_attr(feature = "compile-web-pls", wasm_bindgen(module = "/maybe-js/foobar.js"))]
+				#[cfg_attr(feature = "compile-node-pls", wasm_bindgen(module = "/anything/baz.js"))]
 			};
 
 			assert_eq!(generated.to_string(), expected.to_string());
