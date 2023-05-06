@@ -114,14 +114,15 @@ impl Docs {
 	}
 
 	pub fn append_lines(self, lines: Vec<String>) -> Self {
-		use quote::*;
+		use quote::quote;
 		let mut attrs = self.attrs;
 
 		lines.into_iter().for_each(|line| {
+			// TODO: Improve this, performance and readability. Manually construct Attribute?
 			let func = parse2::<ItemFn>(quote! {
 				#[doc = #line]
 				fn f() {}
-			}).expect("Couldn't parse line into function");
+			}).unwrap();
 			attrs.push(func.attrs.get(0).unwrap().clone());
 		});
 		

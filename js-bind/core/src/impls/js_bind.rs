@@ -271,9 +271,9 @@ mod prelude {
 }
 
 mod input {
-	use std::str::FromStr;
-	use crate::{config::Template, docs::Docs};
 	use super::*;
+	use crate::{config::Template, docs::Docs};
+	use std::str::FromStr;
 	use syn::visit_mut::VisitMut;
 
 	struct DocumentationMutVistor<'config> {
@@ -299,21 +299,68 @@ mod input {
 			println!("Found foreign item fn: {:?}", func);
 
 			let docs = Docs::new(func.attrs.clone());
-			let new_docs = docs.append_lines(vec!["Hello".to_owned(), "World".to_owned()]);
-			new_docs.overwrite_over(&mut func.attrs);
+			// let new_docs = docs.append_lines(vec!["Hello".to_owned(), "World".to_owned()]);
+			// new_docs.overwrite_over(&mut func.attrs);
 		}
 	}
 
+	#[derive(Debug, PartialEq)]
 	struct WasmBindgenOptions {
 		pub options: Vec<WasmBindgenOption>,
 	}
 
-	impl WasmBindgenOptions {
-		fn parse_from_attr(attr: &Attribute) -> Result<WasmBindgenOptions, TokenStream> {
-			unimplemented!()
+	impl Parse for WasmBindgenOptions {
+		/// Parses the arguments of the `wasm_bindgen` attribute
+		/// e.g. `#[wasm_bindgen(catch)]`
+		fn parse(content: ParseStream) -> Result<Self, Error> {
+			let mut options = Vec::new();
+			let option = content.parse::<Ident>()?;
+			let option = WasmBindgenOption::from_str(&option.to_string()).map_err(|_| {
+				Error::new(
+					option.span(),
+					format!("Unknown option `{}`", option.to_string()),
+				)
+			})?;
+			options.push(option);
+			if !content.is_empty() {
+				content.parse::<Token![,]>()?;
+			}
+			Ok(Self { options })
 		}
 	}
 
+	impl WasmBindgenOptions {
+		fn parse_from_attr(attr: &Attribute) -> Result<WasmBindgenOptions, TokenStream> {
+			// check attr is actually wasm_bindgen
+			let path = &attr.path();
+			let ident = path.get_ident().expect("attr to have ident");
+			if ident.to_string() != "wasm_bindgen" {
+				return Err(
+					Error::new(
+						ident.span(),
+						format!(
+							"Expected `wasm_bindgen` attribute, found `{}`",
+							ident.to_string()
+						),
+					)
+					.into_compile_error(),
+				);
+			}
+
+			// Check if no args present
+			if let Meta::Path(_) = attr.meta {
+				return Ok(WasmBindgenOptions { options: vec![] });
+			}
+
+			let args = attr
+				.parse_args()
+				.map_err(|e| Error::new(e.span(), e.to_string()).into_compile_error())?;
+
+			Ok(args)
+		}
+	}
+
+	#[derive(Debug, PartialEq)]
 	enum WasmBindgenOption {
 		Catch,
 	}
@@ -329,7 +376,36 @@ mod input {
 		}
 	}
 
-	
+	#[cfg(test)]
+	mod tests {
+		use super::*;
+
+		#[test]
+		fn test_wasmbindgen_parse_from_attr_specific1() {
+			let attr: Attribute = parse_quote! {
+				#[wasm_bindgen]
+			};
+
+			let parsed = WasmBindgenOptions::parse_from_attr(&attr);
+
+
+			let parsed = parsed.expect("parsed to be ok");
+			assert_eq!(parsed.options.len(), 0);
+		}
+
+		#[test]
+		fn test_wasmbindgen_parse_from_attr_specific2() {
+			let attr: Attribute = parse_quote! {
+				#[wasm_bindgen(catch)]
+			};
+
+			let parsed = WasmBindgenOptions::parse_from_attr(&attr);
+
+			let parsed = parsed.expect("parsed to be ok");
+			assert_eq!(parsed.options.len(), 1);
+			assert_eq!(parsed.options.first().unwrap(), &WasmBindgenOption::Catch);
+		}
+	}
 
 	/// Takes the input of the `js_bind` macro and mutates the documentation comments (according to config)
 	pub fn process_js_bind_input(
