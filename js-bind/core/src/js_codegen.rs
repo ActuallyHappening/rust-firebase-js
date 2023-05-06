@@ -44,7 +44,7 @@ impl JsCodegenFile {
 
 impl Template {
 	pub fn expand(&self, lock_template: &LockTemplate) -> String {
-		let mut template = self.template.clone();
+		let mut template = self.codegen_template.clone();
 		template = template.replace("{{#name}}", lock_template.var_name.as_str());
 		template = template.replace("{{#mod}}", lock_template.var_module.as_str());
 		template

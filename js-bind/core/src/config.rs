@@ -44,8 +44,12 @@ pub struct CodeGen {
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub struct Template {
 	pub name: String,
-	pub matches: Vec<Match>,
-	pub template: String,
+	#[serde(rename = "matches-wasmbindgen-import-signature")]
+	pub matches_signature: Vec<Match>,
+	#[serde(rename = "codegen-template")]
+	pub codegen_template: String,
+	#[serde(rename = "documentation-template")]
+	pub documentation_template: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Default, Deserialize, Serialize)]

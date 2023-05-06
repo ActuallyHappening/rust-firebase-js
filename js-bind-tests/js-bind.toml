@@ -13,10 +13,16 @@ output = "js/bundle.ts"
 
 [[codegen.templates]]
 name = "global func"
-matches = [{empty = true}]
-template = """
+matches-wasmbindgen-import-signature = [{empty = true}]
+codegen-template = """
 import { #name as _#name } from '#mod';
 export const #name = _#name;
+"""
+documentation-template = """
+## Importing from JS
+```js
+import { #name } from '#mod';
+```
 """
 
 

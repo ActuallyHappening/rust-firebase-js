@@ -223,6 +223,56 @@ mod tests {
 	}
 
 	#[test]
+	fn test_getting_codeblocks_from_extern_fn() {
+		let func = syn::parse2::<ForeignItemFn>(quote!{
+			/// Documentation
+			/// ## Example
+			/// ```rust
+			/// fn main() {
+			/// println!("First example");
+			/// }
+			/// ```
+			/// ```rust,ignore
+			/// fn main() {
+			/// println!("Second example");
+			/// }
+			/// ```
+			/// ```
+			/// fn main() {
+			/// println!("Hello, world!");
+			/// }
+			/// ```
+			/// Finally, the 18th line
+			pub fn test_func(input: String) -> bool;
+		}).unwrap();
+		let attrs = func.attrs;
+
+		let docs = CodeBlock::get_docs(&attrs);
+		assert_eq!(docs.len(), 18);
+		assert_eq!(docs.get(0).unwrap().trim(), "Documentation");
+
+		let code_blocks = CodeBlock::get_code_blocks(&docs);
+		assert_eq!(code_blocks.len(), 3);
+		assert_eq!(code_blocks.get(0).unwrap().len(), 5);
+		assert_eq!(code_blocks.get(1).unwrap().get(2).unwrap().trim(), r#"println!("Second example");"#);
+
+		let mut parsed_blocks = Vec::new();
+		code_blocks.into_iter().for_each(|block| {
+			let code_block = CodeBlock::parse_code_block(block);
+
+			parsed_blocks.push(code_block);
+			// eprintln!("Code block: {:#?}", code_block);
+		});
+		assert_eq!(parsed_blocks.len(), 3);
+		assert_eq!(parsed_blocks.get(0).unwrap().lang, Lang::Rust("rust".to_owned()));
+		assert_eq!(parsed_blocks.get(0).unwrap().options, Options::None);
+		assert_eq!(parsed_blocks.get(1).unwrap().lang, Lang::Rust("rust".to_owned()));
+		assert_eq!(parsed_blocks.get(1).unwrap().options, Options::None); // TODO: implement ignore
+		assert_eq!(parsed_blocks.get(2).unwrap().lang, Lang::Rust("".to_owned()));
+		assert_eq!(parsed_blocks.get(2).unwrap().options, Options::None); // here too
+	}
+
+	#[test]
 	fn test_get_docs_specific_empty() {
 		let func = quote!{
 			pub fn test_func(input: String) -> bool { true }
