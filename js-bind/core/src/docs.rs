@@ -6,13 +6,13 @@ use syn::parse::*;
 use syn::*;
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq, Deserialize)]
-struct CodeBlock {
-	lang: Lang,
-	options: Options,
+pub struct CodeBlock {
+	pub lang: Lang,
+	pub options: Options,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq, Deserialize)]
-enum Lang {
+pub enum Lang {
 	Rust(String),
 	// TODO: Add JS testing support?
 	Other(String),
@@ -31,7 +31,7 @@ impl FromStr for Lang {
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq, Deserialize, SmartDefault)]
-enum Options {
+pub enum Options {
 	#[default]
 	None,
 	// Ignore,
@@ -58,7 +58,7 @@ impl CodeBlock {
 	/// Gets the documentation comments from a function
 	///
 	/// TODO: Not clone all of [attrs]? maybe expensive?
-	pub fn get_docs(attrs: &Vec<Attribute>) -> Vec<String> {
+	fn get_docs(attrs: &Vec<Attribute>) -> Vec<String> {
 		let mut doc_comments = Vec::new();
 		attrs.clone().into_iter().for_each(|attr| {
 			if let Meta::NameValue(meta_name_value) = attr.meta {
@@ -77,7 +77,7 @@ impl CodeBlock {
 		doc_comments
 	}
 
-	pub fn get_code_blocks(docs: &Vec<String>) -> Vec<Vec<String>> {
+	fn get_code_blocks(docs: &Vec<String>) -> Vec<Vec<String>> {
 		let mut code_blocks = Vec::new();
 		let mut in_code_block = false;
 		let mut code_block = Vec::new();
@@ -104,7 +104,7 @@ impl CodeBlock {
 		code_blocks
 	}
 
-	pub fn parse_code_block(block: Vec<String>) -> CodeBlock {
+	fn parse_code_block(block: Vec<String>) -> CodeBlock {
 		let first_line = block.get(0).expect("Code block has no lines");
 		let last_line = block.get(block.len() - 1).expect("Code block has no lines");
 
@@ -163,18 +163,38 @@ impl CodeBlock {
 		// 	}
 		// }
 	}
+
+	pub fn get_parsed_code_blocks(attrs: &Vec<Attribute>) -> Vec<CodeBlock> {
+		let docs = Self::get_docs(attrs);
+		let code_blocks = Self::get_code_blocks(&docs);
+
+		let mut parsed_blocks = Vec::new();
+		code_blocks.into_iter().for_each(|block| {
+			let code_block = Self::parse_code_block(block);
+
+			parsed_blocks.push(code_block);
+			// eprintln!("Code block: {:#?}", code_block);
+		});
+		parsed_blocks
+	}
+}
+
+/// Expands a documentation template with the given variables
+fn expand_with_template(template: &str, var_name: &str, var_mod: &str) -> String {
+	let mut template = template.to_owned();
+	template = template.replace("#name", var_name);
+	template = template.replace("#mod", var_mod);
+	template
 }
 
 #[cfg(test)]
 mod tests {
 	use super::*;
 	use quote::*;
-	use syn::*;
-	use syn::parse::*;
 
 	#[test]
 	fn test_getting_codeblocks_from_fn() {
-		let func = syn::parse2::<ItemFn>(quote!{
+		let func = syn::parse2::<ItemFn>(quote! {
 			/// Documentation
 			/// ## Example
 			/// ```rust
@@ -194,7 +214,8 @@ mod tests {
 			/// ```
 			/// Finally, the 18th line
 			pub fn test_func(input: String) -> bool { true }
-		}).unwrap();
+		})
+		.unwrap();
 		let attrs = func.attrs;
 
 		let docs = CodeBlock::get_docs(&attrs);
@@ -204,7 +225,10 @@ mod tests {
 		let code_blocks = CodeBlock::get_code_blocks(&docs);
 		assert_eq!(code_blocks.len(), 3);
 		assert_eq!(code_blocks.get(0).unwrap().len(), 5);
-		assert_eq!(code_blocks.get(1).unwrap().get(2).unwrap().trim(), r#"println!("Second example");"#);
+		assert_eq!(
+			code_blocks.get(1).unwrap().get(2).unwrap().trim(),
+			r#"println!("Second example");"#
+		);
 
 		let mut parsed_blocks = Vec::new();
 		code_blocks.into_iter().for_each(|block| {
@@ -214,17 +238,53 @@ mod tests {
 			// eprintln!("Code block: {:#?}", code_block);
 		});
 		assert_eq!(parsed_blocks.len(), 3);
-		assert_eq!(parsed_blocks.get(0).unwrap().lang, Lang::Rust("rust".to_owned()));
+		assert_eq!(
+			parsed_blocks.get(0).unwrap().lang,
+			Lang::Rust("rust".to_owned())
+		);
 		assert_eq!(parsed_blocks.get(0).unwrap().options, Options::None);
-		assert_eq!(parsed_blocks.get(1).unwrap().lang, Lang::Rust("rust".to_owned()));
+		assert_eq!(
+			parsed_blocks.get(1).unwrap().lang,
+			Lang::Rust("rust".to_owned())
+		);
 		assert_eq!(parsed_blocks.get(1).unwrap().options, Options::None); // TODO: implement ignore
-		assert_eq!(parsed_blocks.get(2).unwrap().lang, Lang::Rust("".to_owned()));
+		assert_eq!(
+			parsed_blocks.get(2).unwrap().lang,
+			Lang::Rust("".to_owned())
+		);
 		assert_eq!(parsed_blocks.get(2).unwrap().options, Options::None); // here too
 	}
 
 	#[test]
+	fn test_expand_with_template() {
+		let template = 
+r##"
+## Documentation template:
+Maybe show an example of how to import the function
+```js
+import { #name } from "#mod";
+```
+"##;
+		let var_name = "test_func";
+		let var_mod = "test_mod";
+
+		let expanded = expand_with_template(template, var_name, var_mod);
+
+		assert_eq!(
+			expanded,
+r##"
+## Documentation template:
+Maybe show an example of how to import the function
+```js
+import { test_func } from "test_mod";
+```
+"##
+		);
+	}
+
+	#[test]
 	fn test_getting_codeblocks_from_extern_fn() {
-		let func = syn::parse2::<ForeignItemFn>(quote!{
+		let func = syn::parse2::<ForeignItemFn>(quote! {
 			/// Documentation
 			/// ## Example
 			/// ```rust
@@ -244,7 +304,8 @@ mod tests {
 			/// ```
 			/// Finally, the 18th line
 			pub fn test_func(input: String) -> bool;
-		}).unwrap();
+		})
+		.unwrap();
 		let attrs = func.attrs;
 
 		let docs = CodeBlock::get_docs(&attrs);
@@ -254,7 +315,10 @@ mod tests {
 		let code_blocks = CodeBlock::get_code_blocks(&docs);
 		assert_eq!(code_blocks.len(), 3);
 		assert_eq!(code_blocks.get(0).unwrap().len(), 5);
-		assert_eq!(code_blocks.get(1).unwrap().get(2).unwrap().trim(), r#"println!("Second example");"#);
+		assert_eq!(
+			code_blocks.get(1).unwrap().get(2).unwrap().trim(),
+			r#"println!("Second example");"#
+		);
 
 		let mut parsed_blocks = Vec::new();
 		code_blocks.into_iter().for_each(|block| {
@@ -264,17 +328,26 @@ mod tests {
 			// eprintln!("Code block: {:#?}", code_block);
 		});
 		assert_eq!(parsed_blocks.len(), 3);
-		assert_eq!(parsed_blocks.get(0).unwrap().lang, Lang::Rust("rust".to_owned()));
+		assert_eq!(
+			parsed_blocks.get(0).unwrap().lang,
+			Lang::Rust("rust".to_owned())
+		);
 		assert_eq!(parsed_blocks.get(0).unwrap().options, Options::None);
-		assert_eq!(parsed_blocks.get(1).unwrap().lang, Lang::Rust("rust".to_owned()));
+		assert_eq!(
+			parsed_blocks.get(1).unwrap().lang,
+			Lang::Rust("rust".to_owned())
+		);
 		assert_eq!(parsed_blocks.get(1).unwrap().options, Options::None); // TODO: implement ignore
-		assert_eq!(parsed_blocks.get(2).unwrap().lang, Lang::Rust("".to_owned()));
+		assert_eq!(
+			parsed_blocks.get(2).unwrap().lang,
+			Lang::Rust("".to_owned())
+		);
 		assert_eq!(parsed_blocks.get(2).unwrap().options, Options::None); // here too
 	}
 
 	#[test]
 	fn test_get_docs_specific_empty() {
-		let func = quote!{
+		let func = quote! {
 			pub fn test_func(input: String) -> bool { true }
 		};
 		let func = parse2::<ItemFn>(func).unwrap();
@@ -287,7 +360,7 @@ mod tests {
 
 	#[test]
 	fn test_get_docs_specific1() {
-		let func = quote!{
+		let func = quote! {
 			/// Some documentation
 			/// ## Example
 			/// ```rust
@@ -323,28 +396,37 @@ mod tests {
 			"}",
 			"// More lines",
 			"```",
-		].into_iter().map(|s| s.to_owned()).collect::<Vec<_>>();
+		]
+		.into_iter()
+		.map(|s| s.to_owned())
+		.collect::<Vec<_>>();
 
 		let code_blocks = CodeBlock::get_code_blocks(&lines);
 
 		assert_eq!(code_blocks.len(), 2);
 		assert_eq!(code_blocks.get(0).unwrap().len(), 5);
 		assert_eq!(code_blocks.get(1).unwrap().len(), 6);
-		assert_eq!(code_blocks[0], vec![
-			"```rust".to_owned(),
-			"fn main() {".to_owned(),
-			"println!(\"Hello, world!\");".to_owned(),
-			"}".to_owned(),
-			"```".to_owned(),
-		]);
-		assert_eq!(code_blocks[1], vec![
-			"```".to_owned(),
-			"fn main() {".to_owned(),
-			"println!(\"Hello, world!\");".to_owned(),
-			"}".to_owned(),
-			"// More lines".to_owned(),
-			"```".to_owned(),
-		]);
+		assert_eq!(
+			code_blocks[0],
+			vec![
+				"```rust".to_owned(),
+				"fn main() {".to_owned(),
+				"println!(\"Hello, world!\");".to_owned(),
+				"}".to_owned(),
+				"```".to_owned(),
+			]
+		);
+		assert_eq!(
+			code_blocks[1],
+			vec![
+				"```".to_owned(),
+				"fn main() {".to_owned(),
+				"println!(\"Hello, world!\");".to_owned(),
+				"}".to_owned(),
+				"// More lines".to_owned(),
+				"```".to_owned(),
+			]
+		);
 	}
 
 	#[test]

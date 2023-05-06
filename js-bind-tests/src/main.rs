@@ -7,8 +7,8 @@ use js_bind::Config;
 // #[wasm_bindgen(module = "/js/bundle-es.js")]
 extern "C" {
 	// #[wasm_bindgen]
-	/// Documentation!
 	// #[wasm_bindgen(js_namespace = console)]
+	/// Documentation!
 	pub fn log(msg: String);
 }
 
