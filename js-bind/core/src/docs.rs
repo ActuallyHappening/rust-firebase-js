@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use smart_default::SmartDefault;
 use syn::parse::*;
 use syn::*;
+use std::result::Result;
 
 use crate::config::LockTemplate;
 
@@ -11,13 +12,43 @@ use crate::config::LockTemplate;
 pub struct CodeBlock {
 	pub lang: Lang,
 	pub options: Options,
+	pub code_lines: Vec<String>,
 
-	// pub js_bind_info: TestInfo,
+	pub js_bind_info: Option<TestInfo>,
 }
 
+/// Represents the variables needed for js_bind macro to output test files
+/// Takes the form in a [CodeBlock] as:
+/// JSBIND-TEST=path/subdirs/name
 #[derive(Debug, Clone, Serialize, PartialEq, Eq, Deserialize)]
 pub struct TestInfo {
-	pub relative_path: String
+	pub relative_path: String,
+	pub test_name: String,
+}
+
+impl FromStr for TestInfo {
+	type Err = String;
+
+	fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+		// Skip until reached string 'JSBIND-TEST='
+		let s = s
+			.split("JSBIND-TEST=")
+			.skip(1)
+			.next().ok_or(format!("No JSBIND-TEST found in {}", &s))?;
+
+		let mut split = s.split("/");
+		let relative_path = split.next().unwrap().to_owned();
+		let test_name = split
+			.next().ok_or(format!("Must provide path AND name, instead found: {}", &s))?
+			.to_owned();
+
+		assert!(!test_name.ends_with(".rs"));
+
+		Ok(Self {
+			relative_path,
+			test_name,
+		})
+	}
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq, Deserialize)]
@@ -114,10 +145,7 @@ impl Docs {
 
 		let mut parsed_blocks = Vec::new();
 		code_blocks.into_iter().for_each(|block| {
-			let code_block = CodeBlock::parse_code_block(block);
-
-			parsed_blocks.push(code_block);
-			// eprintln!("Code block: {:#?}", code_block);
+			parsed_blocks.push(CodeBlock::parse_code_block(block))
 		});
 		parsed_blocks
 	}
@@ -200,6 +228,12 @@ impl CodeBlock {
 
 		assert!(first_line.starts_with("```"));
 		assert!(last_line.starts_with("```"));
+		let code_lines = block
+			.iter()
+			.skip(1)
+			.take(&block.len() - 2)
+			.map(|s| s.to_owned())
+			.collect::<Vec<String>>();
 
 		// Find all words, seperated by commans, like 'rust,ignore'
 		let words = first_line
@@ -225,33 +259,18 @@ impl CodeBlock {
 			}
 		}
 
-		CodeBlock { lang, options }
+		// parse first line for JSBIND-TEST=path/subdir/name
+		let first_code_line = code_lines.get(0).expect("Code block has no lines");
+		let js_bind_info = first_code_line
+			.parse()
+			.ok();
 
-		// unimplemented!()
-
-		// let lang = first_line
-		// 	.trim_start_matches("```")
-		// 	.trim()
-		// 	.parse::<Lang>()
-		// 	.expect("Couldn't parse language identifier");
-
-		// let mut options = Options::default();
-		// if let Lang::Rust(_) = lang {
-		// 	// parse extra option, seperated by comma
-		// 	if let Some(option) = first_line
-		// 		.trim_start_matches("```")
-		// 		.trim()
-		// 		.split(",")
-		// 		.skip(1)
-		// 		.map(|s| s.trim())
-		// 		.filter(|s| !s.is_empty())
-		// 		// get only first
-		// 		.next()
-		// 		.map(|s| s.parse::<Options>().expect("Couldn't parse options"))
-		// 	{
-		// 		options = option;
-		// 	}
-		// }
+		CodeBlock {
+			lang,
+			options,
+			code_lines,
+			js_bind_info,
+		}
 	}
 }
 
@@ -269,6 +288,13 @@ impl LockTemplate {
 mod tests {
 	use super::*;
 	use quote::*;
+
+	#[test]
+	fn test_parsing_js_bind_info() {
+		let js_bind_info = "JSBIND-TEST=tests/name".parse::<TestInfo>().unwrap();
+		assert_eq!(js_bind_info.relative_path, "tests");
+		assert_eq!(js_bind_info.test_name, "name");
+	}
 
 	#[test]
 	fn test_getting_codeblocks_from_fn() {

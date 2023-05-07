@@ -534,6 +534,7 @@ this_should_error();
 				#[doc = #docs]
 			}]);
 			let temp_dir = tempfile::tempdir().expect("to create temp dir");
+			let dir_path = temp_dir.path().to_path_buf();
 			let lock_template = LockTemplate {
 				template_name_ref: "NA".into(),
 				var_codegen_template: "NA".into(),
@@ -542,7 +543,7 @@ this_should_error();
 				var_name: "example_func".into(),
 			};
 
-			// process_func_tests(&docs, &lock_template);
+			process_func_tests(&docs, &lock_template, &dir_path);
 		}
 
 		/// Tests if matching documentation template expands at all
