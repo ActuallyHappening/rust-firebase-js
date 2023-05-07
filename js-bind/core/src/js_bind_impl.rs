@@ -306,68 +306,29 @@ mod prelude {
 	}
 }
 
-mod input {
+mod utils {
+	use super::*;
+
+	/// Gets all the functions from a `#[wasm_bindgen] extern "C" { ... }` block
+	pub fn get_functions_mut<'a>(
+		input: &'a mut ItemForeignMod,
+	) -> impl Iterator<Item = &'a mut ForeignItemFn> {
+		input.items.iter_mut().filter_map(|item| match item {
+			ForeignItem::Fn(func) => Some(func),
+			_ => None,
+		})
+	}
+}
+
+mod documentation_comments {
 	use super::*;
 	use crate::{
 		config::{LockTemplate, Match, Matches, Template, Templates},
-		docs::Docs,
+		docs::{CodeBlock, Docs},
 	};
 	use derive_new::new;
-	use std::{str::FromStr, path::PathBuf};
+	use std::{path::PathBuf, str::FromStr};
 	use syn::visit_mut::VisitMut;
-
-	#[derive(new)]
-	struct DocumentationMutVistor<'config> {
-		pub templates: &'config Templates,
-		pub attrs: &'config Attrs,
-	}
-
-	impl<'config> VisitMut for DocumentationMutVistor<'_> {
-		fn visit_foreign_item_fn_mut(&mut self, func: &mut ForeignItemFn) {
-			self.handle_fn(func);
-
-			// continues recursive search, not really required but eh
-			// visit_mut::visit_foreign_item_fn_mut(self, i);
-		}
-	}
-
-	impl<'config> DocumentationMutVistor<'config> {
-		// fn new(templates: &'config Templates) -> Self {
-		// 	Self { templates }
-		// }
-
-		/// Must mutate the function to add docs as desired
-		/// Uses templates to add correct docs
-		fn handle_fn(&mut self, func: &mut ForeignItemFn) {
-			let func_name = func.sig.ident.to_string();
-			let templates = self.templates;
-
-			let signature = match WasmBindgenOptions::get_from_attrs_or_empty(&func.attrs) {
-				Ok(options) => options,
-				Err(e) => {
-					panic!("Error parsing wasm_bindgen options: {:?}", e);
-				}
-			};
-			// find match
-			let template = templates.find_matching_template(&signature);
-			match template {
-				Some(template) => {
-					println!(
-						"Found matching template {:?} for func name '{}'",
-						template, &func_name
-					);
-
-					process_func(func, template, &self.attrs);
-				}
-				None => {
-					println!(
-						"No templates matched for wasmbindgen signature {:?} on func name'{}'",
-						signature, &func_name
-					);
-				}
-			}
-		}
-	}
 
 	/// Represents the options passed to `#[wasm_bindgen]` procmacro.
 	/// An empty [options] field means no options were passed, OR no attribute was found.
@@ -523,14 +484,13 @@ mod input {
 
 		#[test]
 		fn test_documentation_tests_expand() {
-			let docs = 
-r##"
+			let docs = r##"
 ```rust
 // JSBIND-TEST=test/subdir/example
 this_should_error();
 ```
 "##;
-			let docs = Docs::new(vec![parse_quote!{
+			let docs = Docs::new(vec![parse_quote! {
 				#[doc = #docs]
 			}]);
 			let temp_dir = tempfile::tempdir().expect("to create temp dir");
@@ -541,7 +501,7 @@ this_should_error();
 				..Default::default()
 			};
 
-			process_func_tests(&docs, &lock_template, &dir_path);
+			// process_func_tests(&docs, &lock_template, &dir_path);
 		}
 
 		/// Tests if matching documentation template expands at all
@@ -577,7 +537,7 @@ this_should_error();
 				docs: true,
 			};
 
-			let output = process_js_bind_input(&input, &config, &attrs).expect("to work");
+			let output = mutated_js_bind_input(&input, &config, &attrs).expect("to work");
 
 			let expected_output: ItemForeignMod = parse_quote!(
 				extern "C" {
@@ -627,7 +587,7 @@ this_should_error();
 				docs: true,
 			};
 
-			let output = process_js_bind_input(&input, &config, &attrs).expect("to work");
+			let output = mutated_js_bind_input(&input, &config, &attrs).expect("to work");
 
 			let expected_output: ItemForeignMod = parse_quote!(
 				extern "C" {
@@ -677,7 +637,7 @@ this_should_error();
 				docs: false,
 			};
 
-			let output = process_js_bind_input(&input, &config, &attrs).expect("to work");
+			let output = mutated_js_bind_input(&input, &config, &attrs).expect("to work");
 
 			let expected_output: ItemForeignMod = parse_quote!(
 				extern "C" {
@@ -773,43 +733,54 @@ this_should_error();
 		Docs::append_strings_over(new_docs, &mut func.attrs);
 	}
 
-	/// Parses the given docs into [CodeBlock]s and outputs them (using the [LockTemplate]) to the output directory
-	fn process_func_tests(docs: &Docs, lock_template: &LockTemplate, output_dir: &PathBuf) {
-		
-	}
-
-	/// Takes the input of the `js_bind` macro and mutates the documentation comments (according to config)
-	pub fn process_js_bind_input(
+	/// Takes the input of the `js_bind` macro and mutates the **documentation comments** (according to config).
+	pub fn mutated_js_bind_input(
 		input: &ItemForeignMod,
 		config: &Config,
 		attrs: &Attrs,
 	) -> syn::Result<ItemForeignMod> {
-		let mut mutable_input = input.clone();
-
-		let mut visitor = DocumentationMutVistor::new(&config.codegen.templates, attrs);
-		visitor.visit_item_foreign_mod_mut(&mut mutable_input);
-
 		Ok(mutable_input)
+	}
+}
+
+mod testgen {
+	use super::*;
+	use crate::config::{LockTests, Template, Testgen};
+
+	/// Processes a function given a matching template and returns [LockTests],
+	/// ready to be expanded into test files.
+	pub fn process_func_tests(func: &ForeignItemFn, matching_template: &Testgen) -> syn::Result<LockTests> {
+		unimplemented!()
+	}
+}
+
+mod codegen {
+	use super::*;
+
+	/// Processes a function given a matching template and returns code
+	/// ready to be expanded into `bundle.ts` (or config.codegen.output)
+	pub fn process_func_codegen(func: &ForeignItemFn, matching_template: String) -> syn::Result<String> {
+		unimplemented!()
 	}
 }
 
 pub fn _js_bind_impl(
 	attrs: proc_macro2::TokenStream,
 	input: proc_macro2::TokenStream,
-) -> Result<proc_macro2::TokenStream, proc_macro2::TokenStream> {
-	let attrs = syn::parse2::<Attrs>(attrs).map_err(Error::into_compile_error)?;
-	let input = syn::parse2::<ItemForeignMod>(input).map_err(Error::into_compile_error)?;
+) -> Result<proc_macro2::TokenStream, syn::Error> {
+	let attrs = syn::parse2::<Attrs>(attrs)?;
+	let input = syn::parse2::<ItemForeignMod>(input)?;
 	let config = Config::from_cwd().map_err(|e| {
 		Error::new(
 			Span::call_site(),
 			format!("Couldn't parse config: {:#?}", e),
 		)
-		.into_compile_error()
 	})?;
 
 	let prelude = prelude::gen_bundle_prelude(&config.bundles);
 	let mutated_input =
-		input::process_js_bind_input(&input, &config, &attrs).map_err(Error::into_compile_error)?;
+		documentation_comments::mutated_js_bind_input(&input, &config, &attrs)?;
+	
 
 	let expanded = quote! {
 		#prelude

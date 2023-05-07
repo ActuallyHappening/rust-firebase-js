@@ -14,7 +14,7 @@ output = "js/bundle.ts"
 [[codegen.templates]]
 name = "global func"
 # Matches are negatively biased, as in they prefer not to match than too match
-matches-wasmbindgen-import-signature = [{ empty = true }]
+matches-wasmbindgen-signature = [{ empty = true }]
 codegen-template = """
 import { #name as _#name } from '#mod';
 export const #name = _#name;
@@ -37,7 +37,7 @@ fn auto_generated_name() {
 	#code
 }
 """, specifics = [
-	{ name-suffix = "_node", specific-value = "" },
+	{ name-suffix = "_node" },
 	{ name-suffix = "_web", specific-value = "wasm_bindgen_test_configure!(run_in_browser);" },
 ] }
 

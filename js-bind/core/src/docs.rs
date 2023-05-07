@@ -46,8 +46,6 @@ impl FromStr for TestInfo {
 			.join("/");
 
 		let test_name = split
-			// .next()
-			// take last
 			.last()
 			.ok_or(format!("Must provide path AND name, instead found: {}", &s))?
 			.to_owned();
@@ -287,7 +285,7 @@ impl CodeBlock {
 impl LockTemplate {
 	/// Expands a documentation template with the given variables
 	pub fn expand_documentation_template(&self) -> String {
-		let mut template = self.var_documentation_template.to_owned();
+		let mut template = self.documentation.to_owned();
 		template = template.replace("#name", &self.var_name);
 		template = template.replace("#mod", &self.var_module);
 		template
@@ -388,11 +386,11 @@ import { #name } from "#mod";
 		let var_name = "test_func";
 		let var_mod = "test_mod";
 		let lock_template = LockTemplate {
-			template_name_ref: "test".to_owned(),
+			// debug_name_ref: "test".to_owned(),
 			var_name: var_name.to_owned(),
 			var_module: var_mod.to_owned(),
-			var_codegen_template: "".to_owned(),
-			var_documentation_template: template.to_owned(),
+			codegen: "".to_owned(),
+			documentation: template.to_owned(),
 		};
 
 		let expanded = lock_template.expand_documentation_template();

@@ -4,6 +4,8 @@ use serde::{Deserialize, Serialize};
 use smart_default::SmartDefault;
 use std::path::PathBuf;
 
+use crate::docs::Docs;
+
 /// ```rust
 /// use js_bind_core::config::*;
 /// // let string = include_str!("../../js-bind.toml");
@@ -74,6 +76,7 @@ pub struct Template {
 	pub name: String,
 
 	#[serde(flatten)]
+	#[serde(rename = "matches-wasmbindgen-signature")]
 	pub matches_signature: Matches,
 
 	#[serde(rename = "codegen-template")]
@@ -82,7 +85,7 @@ pub struct Template {
 	pub documentation_template: String,
 
 	#[serde(rename = "testgen-tempalte")]
-	pub testgen_template: Option<Testgen>,
+	pub testgen_template: Testgen,
 }
 
 impl Template {
@@ -94,24 +97,28 @@ impl Template {
 	}
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
+/// Information which, when paired with func namd and mod name,
+/// can create [LockTests].
+#[derive(Debug, Clone, SmartDefault, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub struct Testgen {
+	#[default("NA")]
 	template: String,
 	#[serde(flatten)]
 	pub specifics: TestgenSpecifics,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub struct TestgenSpecifics {
-	#[serde(rename = "testgen-template-specifics")]
-	pub specific: Vec<TestgenSpecific>,
+	// #[serde(rename = "testgen-template-specifics")]
+	pub specifics: Vec<TestgenSpecific>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub struct TestgenSpecific {
-	#[serde(rename = "name-suffix	")]
+	#[serde(rename = "name-suffix")]
 	pub name_suffix: String,
 	#[serde(rename = "specific-value")]
+	#[serde(default)]
 	pub var_specific_value: String,
 }
 
@@ -136,41 +143,60 @@ pub struct ConfigLock {
 	pub templates: Vec<LockTemplate>,
 }
 
-/// Represents a template that is ready to expand, suitable to put into lockfile or
-/// passed into function that expands it.
+/// Represents a template for a single function that is ready to expand, suitable to put into lockfile or
+/// pass into function that expands it at build time
 #[derive(Debug, Clone, SmartDefault, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub struct LockTemplate {
 	#[default("NA")]
-	#[serde(rename = "ref")]
-	pub template_name_ref: String,
+	#[serde(rename = "codegen")]
+	pub codegen: String,
 
 	#[default("NA")]
-	#[serde(rename = "var-name")]
-	pub var_name: String,
+	#[serde(rename = "documentation")]
+	pub documentation: String,
 
-	#[default("NA")]
-	#[serde(rename = "var-mod")]
-	pub var_module: String,
-
-	#[default("NA")]
-	#[serde(rename = "codegen-template")]
-	pub var_codegen_template: String,
-
-	#[default("NA")]
-	#[serde(rename = "documentation-template")]
-	pub var_documentation_template: String,
+	#[serde(flatten)]
+	pub testgen: LockTests,
 }
 
 impl LockTemplate {
-	pub fn new_from_template(template: Template, var_name: String, var_module: String) -> Self {
+	pub fn new_from_template(template: Template, tests: LockTests, var_name: String, var_module: String) -> Self {
 		Self {
-			template_name_ref: template.name,
-			var_name,
-			var_module,
-			var_codegen_template: template.codegen_template,
-			var_documentation_template: template.documentation_template,
+			codegen: template.codegen_template,
+			documentation: template.documentation_template,
+			testgen: tests,
 		}
 	}
+}
+
+#[derive(Debug, Default, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
+pub struct LockTests {
+	pub tests: Vec<LockTest>,
+}
+
+impl LockTests {
+	/// Expands a [Testgen] template into [LockTests]
+	pub fn new_from_template(matching_template: Testgen, docs: Docs, var_name: String, var_mod: String) -> LockTests {
+		let template = matching_template;
+		template.specifics.iter().map(|specific| {
+			let mut test = LockTest::default();
+			test.relative_file_name = format!("{}.test.ts", var_name);
+			test.code = template.template.clone();
+			test.code = test.code.replace("{{#name}}", var_name.as_str());
+			test.code = test.code.replace("{{#mod}}", var_mod.as_str());
+			test.code = test.code.replace("{{#specific}}", specific.var_specific_value.as_str());
+			test
+		}).collect()
+
+		unimplemented!()
+	}
+}
+
+#[derive(Debug, Default, Clone, PartialEq, Eq, Hash, Deserialize, Serialize, new)]
+pub struct LockTest {
+	#[serde(rename = "path")]
+	pub relative_file_name: String,
+	pub code: String,
 }
 
 const BEGINNING_LOCK_MSG: &str = r##"
@@ -236,7 +262,7 @@ impl FromTOMLCwd for ConfigLock {
 }
 
 impl ConfigLock {
-	/// Appends the specified [Template] to the end of the [ConfigLock] file.
+	/// Appends the specified [LockTemplate] to the end of the [ConfigLock] file.
 	/// The [bool] returned indicates if any changes were needed to be written to file.
 	fn append_template(&mut self, dir: &PathBuf, template: LockTemplate) -> anyhow::Result<bool> {
 		// Check if duplicate exists, if it does return
