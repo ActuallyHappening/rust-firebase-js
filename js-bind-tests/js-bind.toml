@@ -13,9 +13,8 @@ output = "js/bundle.ts"
 
 [[codegen.templates]]
 name = "global func"
-matches-wasmbindgen-import-signature = [
-	{ empty = true },
-] # Matches are negatively biased, as in they prefer not to match than too match
+# Matches are negatively biased, as in they prefer not to match than too match
+matches-wasmbindgen-import-signature = [{ empty = true }]
 codegen-template = """
 import { #name as _#name } from '#mod';
 export const #name = _#name;
@@ -26,28 +25,21 @@ documentation-template = """
 import { #name } from '#mod';
 ```
 """
-testgen-template = [{ name-suffix = "_web", template = """
+testgen-template = { template = """
 use wasm_bindgen::prelude::*;
 #[allow(unused_imports)]
 use wasm_bindgen_test::{wasm_bindgen_test as test, wasm_bindgen_test_configure};
 
-wasm_bindgen_test_configure!(run_in_browser);
+#specific
 
 #[test]
 fn auto_generated_name() {
 	#code
 }
-""" }, { name-suffix = "_node", template = """
-use wasm_bindgen::prelude::*;
-#[allow(unused_imports)]
-use wasm_bindgen_test::{wasm_bindgen_test as test, wasm_bindgen_test_configure};
-
-#[test]
-fn auto_generated_name() {
-	#code
-}
-""" }]
-
+""", specifics = [
+	{ name-suffix = "_node", specific-value = "" },
+	{ name-suffix = "_web", specific-value = "wasm_bindgen_test_configure!(run_in_browser);" },
+] }
 
 # [build.codegen] # Applied to all targets
 # # [CodeGenOptions]

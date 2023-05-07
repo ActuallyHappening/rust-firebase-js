@@ -554,15 +554,14 @@ this_should_error();
 					output: "NA".into(),
 					templates: Templates {
 						templates: vec![Template {
-							name: "test func".into(),
 							matches_signature: Matches {
 								matches: vec![Match {
 									empty: Some(true),
 									..Default::default()
 								}],
 							},
-							codegen_template: "NA".into(),
 							documentation_template: r##"Hello world!"##.into(),
+							..Default::default()
 						}],
 					},
 				},
@@ -605,15 +604,14 @@ this_should_error();
 					output: "NA".into(),
 					templates: Templates {
 						templates: vec![Template {
-							name: "test func".into(),
 							matches_signature: Matches {
 								matches: vec![Match {
 									empty: Some(true),
 									..Default::default()
 								}],
 							},
-							codegen_template: "NA".into(),
 							documentation_template: r##"Function name: '#name', from js mod: '#mod'."##.into(),
+							..Default::default()
 						}],
 					},
 				},
@@ -656,15 +654,14 @@ this_should_error();
 					output: "NA".into(),
 					templates: Templates {
 						templates: vec![Template {
-							name: "test func".into(),
 							matches_signature: Matches {
 								matches: vec![Match {
 									empty: Some(true),
 									..Default::default()
 								}],
 							},
-							codegen_template: "NA".into(),
 							documentation_template: r##"Function name: '#name', from js mod: '#mod'."##.into(),
+							..Default::default()
 						}],
 					},
 				},

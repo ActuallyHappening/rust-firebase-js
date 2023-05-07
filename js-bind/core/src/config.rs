@@ -1,7 +1,8 @@
 use anyhow::Context;
 use derive_new::new;
 use serde::{Deserialize, Serialize};
-use std::{path::PathBuf};
+use smart_default::SmartDefault;
+use std::path::PathBuf;
 
 /// ```rust
 /// use js_bind_core::config::*;
@@ -20,7 +21,7 @@ pub struct Config {
 	pub codegen: CodeGen,
 
 	#[serde(skip)]
-	full_path: PathBuf
+	full_path: PathBuf,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -33,19 +34,19 @@ pub struct Bundle {
 	pub then_js_path: String,
 	/// Command to build the file (e.g. rollup -c web.config.mjs)
 	#[serde(rename = "to-build")]
-	pub to_build_command: String,	
+	pub to_build_command: String,
 }
 
 /// Represents the codegen side of the config, e.g. documentation + test generation
-/// 
+///
 /// ```rust
 /// use js_bind_core::config::CodeGen;
-/// 
+///
 /// let toml_str = r#"
 /// output = "js-bind.lock"
-/// 
+///
 /// #templates = []
-/// 
+///
 /// [[templates]]
 /// name = "js_bind"
 /// matches-wasmbindgen-import-signature = [{ empty = true }]
@@ -67,18 +68,21 @@ pub struct Templates {
 	pub templates: Vec<Template>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
+#[derive(Debug, Clone, SmartDefault, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub struct Template {
+	#[default("NA")]
 	pub name: String,
 
 	#[serde(flatten)]
-	// #[serde(rename = "matches-wasmbindgen-import-signature")]
 	pub matches_signature: Matches,
 
 	#[serde(rename = "codegen-template")]
 	pub codegen_template: String,
 	#[serde(rename = "documentation-template")]
 	pub documentation_template: String,
+
+	#[serde(rename = "testgen-tempalte")]
+	pub testgen_template: Option<Testgen>,
 }
 
 impl Template {
@@ -91,6 +95,27 @@ impl Template {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
+pub struct Testgen {
+	template: String,
+	#[serde(flatten)]
+	pub specifics: TestgenSpecifics,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
+pub struct TestgenSpecifics {
+	#[serde(rename = "testgen-template-specifics")]
+	pub specific: Vec<TestgenSpecific>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
+pub struct TestgenSpecific {
+	#[serde(rename = "name-suffix	")]
+	pub name_suffix: String,
+	#[serde(rename = "specific-value")]
+	pub var_specific_value: String,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub struct Matches {
 	#[serde(rename = "matches-wasmbindgen-import-signature")]
 	pub matches: Vec<Match>,
@@ -156,10 +181,10 @@ pub trait FromTOMLCwd: Sized + serde::de::DeserializeOwned + serde::Serialize {
 
 		let err_msg = format!("Couldn't read file at path {:?}", &path);
 		// Check if exists
-		if !path.try_exists().context(format!(
-			"Can't tell if file exists as path {:?}",
-			&path
-		))? {
+		if !path
+			.try_exists()
+			.context(format!("Can't tell if file exists as path {:?}", &path))?
+		{
 			// Make empty file
 			// Self::default()
 			// 	.write_at_file(&path)
@@ -182,10 +207,8 @@ pub trait FromTOMLCwd: Sized + serde::de::DeserializeOwned + serde::Serialize {
 	fn write_at_file(&self, file_path: &PathBuf) -> anyhow::Result<()> {
 		let config_str = toml::to_string_pretty(&self).context("Failed to serialize ConfigLock")?;
 		let data = format!("{}{}", BEGINNING_LOCK_MSG, config_str);
-		std::fs::write(file_path, data).context(format!(
-			"Failed to write to file at path: {:?}",
-			&file_path
-		))?;
+		std::fs::write(file_path, data)
+			.context(format!("Failed to write to file at path: {:?}", &file_path))?;
 		Ok(())
 	}
 
@@ -194,7 +217,7 @@ pub trait FromTOMLCwd: Sized + serde::de::DeserializeOwned + serde::Serialize {
 
 impl FromTOMLCwd for ConfigLock {
 	fn set_full_path(&mut self, path: PathBuf) {
-			self.full_path = Some(path);
+		self.full_path = Some(path);
 	}
 	fn from_dir_to_file(dir: &PathBuf) -> PathBuf {
 		let mut path = dir.clone();
