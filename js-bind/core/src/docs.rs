@@ -11,6 +11,13 @@ use crate::config::LockTemplate;
 pub struct CodeBlock {
 	pub lang: Lang,
 	pub options: Options,
+
+	// pub js_bind_info: TestInfo,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq, Deserialize)]
+pub struct TestInfo {
+	pub relative_path: String
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq, Deserialize)]
@@ -100,7 +107,7 @@ impl Docs {
 		doc_comments
 	}
 
-	pub fn from_docs_to_parsed_code_blocks(self) -> Vec<CodeBlock> {
+	fn from_docs_to_parsed_code_blocks(self) -> Vec<CodeBlock> {
 		let attrs = self.attrs;
 		let docs = Docs::new(attrs).get_string_from_docs();
 		let code_blocks = CodeBlock::get_code_blocks(&docs);
@@ -115,7 +122,7 @@ impl Docs {
 		parsed_blocks
 	}
 
-	pub fn append_lines(self, lines: Vec<String>) -> Self {
+	fn append_lines(self, lines: Vec<String>) -> Self {
 		use quote::quote;
 		let mut attrs = self.attrs;
 

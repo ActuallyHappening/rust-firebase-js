@@ -521,15 +521,35 @@ mod input {
 
 		use super::*;
 
+		#[test]
+		fn test_documentation_tests_expand() {
+			let docs = 
+r##"
+```rust
+// JSBIND-TEST=test/subdir/example
+this_should_error();
+```
+"##;
+			let docs = Docs::new(vec![parse_quote!{
+				#[doc = #docs]
+			}]);
+			let temp_dir = tempfile::tempdir().expect("to create temp dir");
+			let lock_template = LockTemplate {
+				template_name_ref: "NA".into(),
+				var_codegen_template: "NA".into(),
+				var_documentation_template: "NA".into(),
+				var_module: "foo/bar".into(),
+				var_name: "example_func".into(),
+			};
+
+			// process_func_tests(&docs, &lock_template);
+		}
+
 		/// Tests if matching documentation template expands at all
 		#[test]
 		fn test_process_documentation_comments_specific1() {
 			let config = Config::new(
-				vec![Bundle {
-					if_feature: "compile-web-pls".into(),
-					then_js_path: "maybe-js/foobar.js".into(),
-					to_build_command: "ignored".into(),
-				}],
+				vec![],
 				CodeGen {
 					output: "NA".into(),
 					templates: Templates {
@@ -580,11 +600,7 @@ mod input {
 		#[test]
 		fn test_process_documentation_comments_specific2() {
 			let config = Config::new(
-				vec![Bundle {
-					if_feature: "compile-web-pls".into(),
-					then_js_path: "maybe-js/foobar.js".into(),
-					to_build_command: "ignored".into(),
-				}],
+				vec![],
 				CodeGen {
 					output: "NA".into(),
 					templates: Templates {
@@ -635,11 +651,7 @@ mod input {
 		#[test]
 		fn test_process_documentation_comments_specific3() {
 			let config = Config::new(
-				vec![Bundle {
-					if_feature: "compile-web-pls".into(),
-					then_js_path: "maybe-js/foobar.js".into(),
-					to_build_command: "ignored".into(),
-				}],
+				vec![],
 				CodeGen {
 					output: "NA".into(),
 					templates: Templates {
@@ -758,6 +770,7 @@ mod input {
 		}
 	}
 
+	/// Adds the desired documentation using a [LockTemplate] onto the function
 	fn process_func_docs(func: &mut ForeignItemFn, lock_template: &LockTemplate) {
 		// Append new docs
 		let new_docs = vec![lock_template.expand_documentation_template()];
