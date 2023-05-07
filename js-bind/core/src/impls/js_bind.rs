@@ -273,7 +273,7 @@ mod prelude {
 mod input {
 	use super::*;
 	use crate::{
-		config::{Match, Matches, Template, Templates},
+		config::{Match, Matches, Template, Templates, LockTemplate},
 		docs::Docs,
 	};
 	use std::str::FromStr;
@@ -297,7 +297,8 @@ mod input {
 			Self { templates }
 		}
 
-		// Must mutate the function to add docs as desired
+		/// Must mutate the function to add docs as desired
+		/// Uses templates to add correct docs
 		fn handle_fn(&mut self, func: &mut ForeignItemFn) {
 			// println!("Found foreign item fn: {:?}", func);
 
@@ -327,6 +328,11 @@ mod input {
 				}
 			}
 		}
+	}
+
+	/// Mutates [func] to add docs as specified in the template
+	fn add_docs_to_func(func: &mut ForeignItemFn, matching_template: &LockTemplate) {
+		unimplemented!()
 	}
 
 	/// Represents the options passed to `#[wasm_bindgen]` procmacro.
@@ -501,7 +507,7 @@ mod input {
 								}],
 							},
 							codegen_template: "NA".into(),
-							documentation_template: r##""##.into(),
+							documentation_template: r##"Hello world!"##.into(),
 						}],
 					},
 				},
@@ -515,7 +521,14 @@ mod input {
 
 			let output = process_js_bind_input(&input, &config).expect("to work");
 
-			
+			let expected_output = parse_quote!(
+				extern "C" {
+					/// Hello world!
+					fn foo();
+				}
+			);
+
+			assert_eq!(output, expected_output);
 		}
 
 		#[test]

@@ -102,6 +102,8 @@ pub struct ConfigLock {
 	pub templates: Vec<LockTemplate>,
 }
 
+/// Represents a template that is ready to expand, suitable to put into lockfile or
+/// passed into function that expands it.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub struct LockTemplate {
 	#[serde(rename = "ref")]
@@ -110,6 +112,11 @@ pub struct LockTemplate {
 	pub var_name: String,
 	#[serde(rename = "var-mod")]
 	pub var_module: String,
+
+	#[serde(rename = "codegen-template")]
+	pub var_codegen_template: String,
+	#[serde(rename = "documentation-template")]
+	pub var_documentation_template: String,
 }
 
 const BEGINNING_LOCK_MSG: &str = r##"

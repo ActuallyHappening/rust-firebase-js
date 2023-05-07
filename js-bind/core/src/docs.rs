@@ -5,6 +5,8 @@ use smart_default::SmartDefault;
 use syn::parse::*;
 use syn::*;
 
+use crate::config::LockTemplate;
+
 #[derive(Debug, Clone, Serialize, PartialEq, Eq, Deserialize)]
 pub struct CodeBlock {
 	pub lang: Lang,
@@ -122,10 +124,11 @@ impl Docs {
 			let func = parse2::<ItemFn>(quote! {
 				#[doc = #line]
 				fn f() {}
-			}).unwrap();
+			})
+			.unwrap();
 			attrs.push(func.attrs.get(0).unwrap().clone());
 		});
-		
+
 		Docs { attrs }
 	}
 
@@ -237,12 +240,14 @@ impl CodeBlock {
 	}
 }
 
-/// Expands a documentation template with the given variables
-fn expand_with_template(template: &str, var_name: &str, var_mod: &str) -> String {
-	let mut template = template.to_owned();
-	template = template.replace("#name", var_name);
-	template = template.replace("#mod", var_mod);
-	template
+impl LockTemplate {
+	/// Expands a documentation template with the given variables
+	fn expand_with_template(&self) -> String {
+		let mut template = self.var_documentation_template.to_owned();
+		template = template.replace("#name", &self.var_name);
+		template = template.replace("#mod", &self.var_module);
+		template
+	}
 }
 
 #[cfg(test)]
@@ -324,8 +329,15 @@ import { #name } from "#mod";
 "##;
 		let var_name = "test_func";
 		let var_mod = "test_mod";
+		let lock_template = LockTemplate {
+			template_name_ref: "test".to_owned(),
+			var_name: var_name.to_owned(),
+			var_module: var_mod.to_owned(),
+			var_codegen_template: "".to_owned(),
+			var_documentation_template: template.to_owned(),
+		};
 
-		let expanded = expand_with_template(template, var_name, var_mod);
+		let expanded = lock_template.expand_with_template();
 
 		assert_eq!(
 			expanded,
