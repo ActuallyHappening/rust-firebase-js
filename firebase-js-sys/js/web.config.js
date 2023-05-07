@@ -7,9 +7,9 @@ export default {
 	watch: true,
 	output: {
 		// file: 'firebase-interop/bundle-es.js',
-		file: 'js/bundle-es.js',
+		file: 'js/bundle-esm.js',
 		sourcemap: 'inline',
-		format: 'es'
+		format: 'esm'
 	},
 	plugins: [nodeResolve(), json(), typescript()]
 };
