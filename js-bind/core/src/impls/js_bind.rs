@@ -11,7 +11,7 @@ use crate::{
 };
 
 #[derive(Serialize, Deserialize, Debug)]
-struct Attrs {
+pub struct Attrs {
 	js_module: String,
 }
 
@@ -277,10 +277,13 @@ mod input {
 		docs::Docs,
 	};
 	use std::str::FromStr;
-	use syn::visit_mut::VisitMut;
+	use derive_new::new;
+use syn::visit_mut::VisitMut;
 
+	#[derive(new)]
 	struct DocumentationMutVistor<'config> {
 		pub templates: &'config Templates,
+		pub attrs: &'config Attrs,
 	}
 
 	impl<'config> VisitMut for DocumentationMutVistor<'_> {
@@ -293,46 +296,35 @@ mod input {
 	}
 
 	impl<'config> DocumentationMutVistor<'config> {
-		fn new(templates: &'config Templates) -> Self {
-			Self { templates }
-		}
+		// fn new(templates: &'config Templates) -> Self {
+		// 	Self { templates }
+		// }
 
 		/// Must mutate the function to add docs as desired
 		/// Uses templates to add correct docs
 		fn handle_fn(&mut self, func: &mut ForeignItemFn) {
-			// println!("Found foreign item fn: {:?}", func);
-
-			let docs = Docs::new(func.attrs.clone());
-			// let new_docs = docs.append_lines(vec!["Hello".to_owned(), "World".to_owned()]);
-			// new_docs.overwrite_over(&mut func.attrs);
+			let func_name = func.sig.ident.to_string();
 			let templates = self.templates;
 
-			let options = match WasmBindgenOptions::get_from_attrs_or_empty(&func.attrs) {
+			let signature = match WasmBindgenOptions::get_from_attrs_or_empty(&func.attrs) {
 				Ok(options) => options,
 				Err(e) => {
-					// e.to_compile_error().to_tokens(&mut func.attrs);
-					// return;
 					panic!("Error parsing wasm_bindgen options: {:?}", e);
 				}
 			};
 			// find match
-			let template = templates.find_matching_template(&options);
+			let template = templates.find_matching_template(&signature);
 			match template {
 				Some(template) => {
-					println!("Found template: {:?}", template);
-					// let docs = docs.append_lines(template.docs.clone());
-					// docs.overwrite_over(&mut func.attrs);
+					println!("Found matching template {:?} for func name '{}'", template, &func_name);
+
+					process_func(func, template, &self.attrs);
 				}
 				None => {
-					// println!("No template found for options: {:?}", options);
+					println!("No templates matched for wasmbindgen signature {:?} on func name'{}'", signature, &func_name);
 				}
 			}
 		}
-	}
-
-	/// Mutates [func] to add docs as specified in the template
-	fn add_docs_to_func(func: &mut ForeignItemFn, matching_template: &LockTemplate) {
-		unimplemented!()
 	}
 
 	/// Represents the options passed to `#[wasm_bindgen]` procmacro.
@@ -518,8 +510,11 @@ mod input {
 					fn foo();
 				}
 			);
+			let attrs = Attrs {
+				js_module: "test/app".into(),
+			};
 
-			let output = process_js_bind_input(&input, &config).expect("to work");
+			let output = process_js_bind_input(&input, &config, &attrs).expect("to work");
 
 			let expected_output = parse_quote!(
 				extern "C" {
@@ -589,14 +584,25 @@ mod input {
 		}
 	}
 
+	/// Does the actualy mutation of a function, given a matching template
+	fn process_func(func: &mut ForeignItemFn, matching_template: &Template, attrs: &Attrs) {
+		let template = matching_template.clone();
+
+		let func_name = func.sig.ident.to_string();
+		let var_name = template.resolve_js_name(&func_name);
+		
+		let lock_template = LockTemplate::new_from_template(template, var_name, attrs.js_module.clone());
+	}
+	
 	/// Takes the input of the `js_bind` macro and mutates the documentation comments (according to config)
 	pub fn process_js_bind_input(
 		input: &ItemForeignMod,
 		config: &Config,
+		attrs: &Attrs,
 	) -> syn::Result<ItemForeignMod> {
 		let mut mutable_input = input.clone();
 
-		let mut visitor = DocumentationMutVistor::new(&config.codegen.templates);
+		let mut visitor = DocumentationMutVistor::new(&config.codegen.templates, attrs);
 		visitor.visit_item_foreign_mod_mut(&mut mutable_input);
 
 		Ok(mutable_input)
@@ -619,7 +625,7 @@ pub fn _js_bind_impl(
 
 	let prelude = prelude::gen_bundle_prelude(&config.bundles);
 	let mutated_input =
-		input::process_js_bind_input(&input, &config).map_err(Error::into_compile_error)?;
+		input::process_js_bind_input(&input, &config, &attrs).map_err(Error::into_compile_error)?;
 
 	let expanded = quote! {
 		#prelude

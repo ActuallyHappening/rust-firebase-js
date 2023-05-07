@@ -81,6 +81,15 @@ pub struct Template {
 	pub documentation_template: String,
 }
 
+impl Template {
+	/// Takes a rust function name and returns the js name,
+	/// typically this changes the case of the name
+	pub fn resolve_js_name(&self, rust_name: &str) -> String {
+		// TODO: Implement case changing
+		rust_name.to_string()
+	}
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub struct Matches {
 	#[serde(rename = "matches-wasmbindgen-import-signature")]
@@ -117,6 +126,18 @@ pub struct LockTemplate {
 	pub var_codegen_template: String,
 	#[serde(rename = "documentation-template")]
 	pub var_documentation_template: String,
+}
+
+impl LockTemplate {
+	pub fn new_from_template(template: Template, var_name: String, var_module: String) -> Self {
+		Self {
+			template_name_ref: template.name,
+			var_name,
+			var_module,
+			var_codegen_template: template.codegen_template,
+			var_documentation_template: template.documentation_template,
+		}
+	}
 }
 
 const BEGINNING_LOCK_MSG: &str = r##"

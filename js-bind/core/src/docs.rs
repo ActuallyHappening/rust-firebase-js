@@ -120,13 +120,8 @@ impl Docs {
 		let mut attrs = self.attrs;
 
 		lines.into_iter().for_each(|line| {
-			// TODO: Improve this, performance and readability. Manually construct Attribute?
-			let func = parse2::<ItemFn>(quote! {
-				#[doc = #line]
-				fn f() {}
-			})
-			.unwrap();
-			attrs.push(func.attrs.get(0).unwrap().clone());
+			let attr: Attribute = parse_quote!(#[doc = #line]);
+			attrs.push(attr);
 		});
 
 		Docs { attrs }
@@ -144,6 +139,13 @@ impl Docs {
 			true
 		});
 
+		// add new doc attrs
+		self.attrs.iter().for_each(|attr| {
+			target.push(attr.clone());
+		});
+	}
+
+	pub fn append_over(&self, target: &mut Vec<Attribute>) {
 		// add new doc attrs
 		self.attrs.iter().for_each(|attr| {
 			target.push(attr.clone());
