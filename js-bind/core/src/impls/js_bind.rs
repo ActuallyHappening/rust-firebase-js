@@ -479,6 +479,7 @@ use syn::visit_mut::VisitMut;
 
 		use super::*;
 
+		/// Tests if matching documentation template expands at all
 		#[test]
 		fn test_process_everything_specific1() {
 			let config = Config::new(
@@ -516,12 +517,66 @@ use syn::visit_mut::VisitMut;
 
 			let output = process_js_bind_input(&input, &config, &attrs).expect("to work");
 
-			let expected_output = parse_quote!(
+			let expected_output: ItemForeignMod = parse_quote!(
 				extern "C" {
-					/// Hello world!
+					#[doc = "Hello world!"]
 					fn foo();
 				}
 			);
+
+			// Note: this assert SHOULD FAIL, because debugging semantics differ
+			assert_eq!(quote!{#output}.to_string(), quote!{#expected_output}.to_string());
+
+			assert_eq!(output, expected_output);
+		}
+
+		/// Tests if matching documentation template expands at all
+		#[test]
+		fn test_process_everything_specific2() {
+			let config = Config::new(
+				vec![Bundle {
+					if_feature: "compile-web-pls".into(),
+					then_js_path: "maybe-js/foobar.js".into(),
+					to_build_command: "ignored".into(),
+				}],
+				CodeGen {
+					output: "NA".into(),
+					templates: Templates {
+						templates: vec![Template {
+							name: "test func".into(),
+							matches_signature: Matches {
+								matches: vec![Match {
+									empty: Some(true),
+									..Default::default()
+								}],
+							},
+							codegen_template: "NA".into(),
+							documentation_template: r##"Function name: '#name', from js mod: '#mod'."##.into(),
+						}],
+					},
+				},
+				"NA".into(),
+			);
+			let input: ItemForeignMod = parse_quote!(
+				extern "C" {
+					fn foo();
+				}
+			);
+			let attrs = Attrs {
+				js_module: "test/app".into(),
+			};
+
+			let output = process_js_bind_input(&input, &config, &attrs).expect("to work");
+
+			let expected_output: ItemForeignMod = parse_quote!(
+				extern "C" {
+					#[doc = "Function name: 'foo', from js mod: 'test/app'."]
+					fn foo();
+				}
+			);
+
+			// Note: this assert SHOULD FAIL, because debugging semantics differ
+			assert_eq!(quote!{#output}.to_string(), quote!{#expected_output}.to_string());
 
 			assert_eq!(output, expected_output);
 		}
@@ -592,6 +647,10 @@ use syn::visit_mut::VisitMut;
 		let var_name = template.resolve_js_name(&func_name);
 		
 		let lock_template = LockTemplate::new_from_template(template, var_name, attrs.js_module.clone());
+
+		// Append new docs
+		let new_docs = lock_template.expand_documentation_template().split("\n").map(|s| s.to_string()).collect::<Vec<_>>();
+		Docs::append_strings_over(new_docs, &mut func.attrs);
 	}
 	
 	/// Takes the input of the `js_bind` macro and mutates the documentation comments (according to config)

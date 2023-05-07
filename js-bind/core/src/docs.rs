@@ -151,6 +151,12 @@ impl Docs {
 			target.push(attr.clone());
 		});
 	}
+
+	/// Appends documentation lines to the target attribute list
+	pub fn append_strings_over(strings: Vec<String>, target: &mut Vec<Attribute>) {
+		let docs = Docs::new(vec![]).append_lines(strings);
+		docs.append_over(target);
+	}
 }
 
 impl CodeBlock {
@@ -244,7 +250,7 @@ impl CodeBlock {
 
 impl LockTemplate {
 	/// Expands a documentation template with the given variables
-	fn expand_with_template(&self) -> String {
+	pub fn expand_documentation_template(&self) -> String {
 		let mut template = self.var_documentation_template.to_owned();
 		template = template.replace("#name", &self.var_name);
 		template = template.replace("#mod", &self.var_module);
@@ -339,7 +345,7 @@ import { #name } from "#mod";
 			var_documentation_template: template.to_owned(),
 		};
 
-		let expanded = lock_template.expand_with_template();
+		let expanded = lock_template.expand_documentation_template();
 
 		assert_eq!(
 			expanded,
