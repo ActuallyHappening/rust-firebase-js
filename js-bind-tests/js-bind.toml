@@ -13,10 +13,7 @@ output = "js/bundle.ts"
 
 [[codegen.templates]]
 name = "global func"
-
-# Matches are negatively biased, as in they prefer not to match than too match
-matches-wasmbindgen-import-signature = [{empty = true}]
-
+matches-wasmbindgen-import-signature = [{empty = true}] # Matches are negatively biased, as in they prefer not to match than too match
 codegen-template = """
 import { #name as _#name } from '#mod';
 export const #name = _#name;

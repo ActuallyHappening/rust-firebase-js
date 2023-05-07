@@ -1,4 +1,5 @@
 use anyhow::Context;
+use derive_new::new;
 use serde::{Deserialize, Serialize};
 use std::{path::PathBuf};
 
@@ -13,9 +14,9 @@ use std::{path::PathBuf};
 /// 	panic!("Couldn't parse config: {:#?}", config);
 /// }
 /// ```
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, new)]
 pub struct Config {
-	pub bundles: Vec<Bundles>,
+	pub bundles: Vec<Bundle>,
 	pub codegen: CodeGen,
 
 	#[serde(skip)]
@@ -23,7 +24,7 @@ pub struct Config {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct Bundles {
+pub struct Bundle {
 	/// Feature namej
 	#[serde(rename = "if")]
 	pub if_feature: String,
@@ -35,9 +36,29 @@ pub struct Bundles {
 	pub to_build_command: String,	
 }
 
+/// Represents the codegen side of the config, e.g. documentation + test generation
+/// 
+/// ```rust
+/// use js_bind_core::config::CodeGen;
+/// 
+/// let toml_str = r#"
+/// output = "js-bind.lock"
+/// 
+/// #templates = []
+/// 
+/// [[templates]]
+/// name = "js_bind"
+/// matches-wasmbindgen-import-signature = [{ empty = true }]
+/// codegen-template = "NA"
+/// documentation-template = "NA"
+/// "#;
+/// let config = toml::from_str::<CodeGen>(toml_str);
+/// config.expect("to parse");
+/// ```
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct CodeGen {
 	pub output: String,
+	#[serde(flatten)]
 	pub templates: Templates,
 }
 
@@ -50,7 +71,8 @@ pub struct Templates {
 pub struct Template {
 	pub name: String,
 
-	#[serde(rename = "matches-wasmbindgen-import-signature")]
+	#[serde(flatten)]
+	// #[serde(rename = "matches-wasmbindgen-import-signature")]
 	pub matches_signature: Matches,
 
 	#[serde(rename = "codegen-template")]
@@ -61,6 +83,7 @@ pub struct Template {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub struct Matches {
+	#[serde(rename = "matches-wasmbindgen-import-signature")]
 	pub matches: Vec<Match>,
 }
 

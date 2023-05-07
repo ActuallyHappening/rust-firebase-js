@@ -6,7 +6,7 @@ use syn::parse::*;
 use syn::*;
 
 use crate::{
-	config::{Bundles, Config, FromTOMLCwd},
+	config::{Bundle, Config, FromTOMLCwd},
 	docs::CodeBlock,
 };
 
@@ -43,7 +43,7 @@ mod prelude {
 	/// Gives warning if no features are enabled,
 	/// TODO: more than one feature is enabled,
 	/// or all features are enabled
-	fn gen_feature_restriction_prelude(config: &Vec<Bundles>) -> TokenStream {
+	fn gen_feature_restriction_prelude(config: &Vec<Bundle>) -> TokenStream {
 		let mut expanded = TokenStream::new();
 		let features: Vec<_> = config.into_iter().map(|b| &b.if_feature).collect();
 
@@ -74,7 +74,7 @@ mod prelude {
 	}
 
 	/// Generates all of the conditional compilation attributes
-	fn gen_bindgen_attrs(config: &Vec<Bundles>) -> TokenStream {
+	fn gen_bindgen_attrs(config: &Vec<Bundle>) -> TokenStream {
 		let mut expanded = TokenStream::new();
 		config.into_iter().for_each(|bundle| {
 			expanded.extend(gen_wasm_bindgen_attr(
@@ -87,7 +87,7 @@ mod prelude {
 
 	/// Takes valid bundles and generates code that conditionally compiles the specified `then` clause,
 	/// i.e. a path to a JS file.
-	pub fn gen_bundle_prelude(config: &Vec<Bundles>) -> TokenStream {
+	pub fn gen_bundle_prelude(config: &Vec<Bundle>) -> TokenStream {
 		if config.len() == 0 {
 			return Error::new(
 				Span::call_site(),
@@ -123,7 +123,7 @@ mod prelude {
 
 		#[test]
 		fn test_gen_feature_restriction_prelude_generic() {
-			let config: Vec<Bundles> = vec![Bundles {
+			let config: Vec<Bundle> = vec![Bundle {
 				if_feature: "compile-web-pls".into(),
 				then_js_path: "maybe-js/foobar.js".into(),
 				to_build_command: "ignored".into(),
@@ -144,7 +144,7 @@ mod prelude {
 
 		#[test]
 		fn test_gen_feature_restriction_prelude_specific1() {
-			let config = vec![Bundles {
+			let config = vec![Bundle {
 				if_feature: "compile-web-pls".into(),
 				then_js_path: "maybe-js/foobar.js".into(),
 				to_build_command: "ignored".into(),
@@ -162,7 +162,7 @@ mod prelude {
 
 		#[test]
 		fn test_bindgen_attrs_generic() {
-			let config = vec![Bundles {
+			let config = vec![Bundle {
 				if_feature: "compile-web-pls".into(),
 				then_js_path: "maybe-js/foobar.js".into(),
 				to_build_command: "ignored".into(),
@@ -182,7 +182,7 @@ mod prelude {
 
 		#[test]
 		fn test_bindgen_attrs_specific1() {
-			let config = vec![Bundles {
+			let config = vec![Bundle {
 				if_feature: "compile-web-pls".into(),
 				then_js_path: "maybe-js/foobar.js".into(),
 				to_build_command: "ignored".into(),
@@ -200,12 +200,12 @@ mod prelude {
 		#[test]
 		fn test_bindgen_attrs_specific2() {
 			let config = vec![
-				Bundles {
+				Bundle {
 					if_feature: "compile-web-pls".into(),
 					then_js_path: "maybe-js/foobar.js".into(),
 					to_build_command: "ignored".into(),
 				},
-				Bundles {
+				Bundle {
 					if_feature: "compile-node-pls".into(),
 					then_js_path: "anything/baz.js".into(),
 					to_build_command: "ignoredagain".into(),
@@ -224,7 +224,7 @@ mod prelude {
 
 		#[test]
 		fn test_gen_bundle_prelude_specific1() {
-			let config = vec![Bundles {
+			let config = vec![Bundle {
 				if_feature: "compile-web-pls".into(),
 				then_js_path: "maybe-js/foobar.js".into(),
 				to_build_command: "ignored".into(),
@@ -244,12 +244,12 @@ mod prelude {
 		#[test]
 		fn test_gen_bundle_prelude_specific2() {
 			let config = vec![
-				Bundles {
+				Bundle {
 					if_feature: "compile-web-pls".into(),
 					then_js_path: "maybe-js/foobar.js".into(),
 					to_build_command: "ignored".into(),
 				},
-				Bundles {
+				Bundle {
 					if_feature: "compile-node-pls".into(),
 					then_js_path: "anything/baz.js".into(),
 					to_build_command: "ignoredagain".into(),
@@ -477,10 +477,49 @@ mod input {
 
 	#[cfg(test)]
 	mod tests {
+		use crate::config::CodeGen;
+
 		use super::*;
 
 		#[test]
-		fn test_wasmbindgen_parse_from_attrs_specific1() -> Result<(), TokenStream> {
+		fn test_process_everything_specific1() {
+			let config = Config::new(
+				vec![Bundle {
+					if_feature: "compile-web-pls".into(),
+					then_js_path: "maybe-js/foobar.js".into(),
+					to_build_command: "ignored".into(),
+				}],
+				CodeGen {
+					output: "NA".into(),
+					templates: Templates {
+						templates: vec![Template {
+							name: "test func".into(),
+							matches_signature: Matches {
+								matches: vec![Match {
+									empty: Some(true),
+									..Default::default()
+								}],
+							},
+							codegen_template: "NA".into(),
+							documentation_template: r##""##.into(),
+						}],
+					},
+				},
+				"NA".into(),
+			);
+			let input: ItemForeignMod = parse_quote!(
+				extern "C" {
+					fn foo();
+				}
+			);
+
+			let output = process_js_bind_input(&input, &config).expect("to work");
+
+			
+		}
+
+		#[test]
+		fn test_wasmbindgen_parse_from_attrs_specific1() {
 			let func: ItemFn = parse_quote! {
 				/// Some documentation
 				/// more
@@ -491,14 +530,12 @@ mod input {
 
 			let parsed = WasmBindgenOptions::get_from_attrs(&attrs);
 
-			let parsed = parsed.expect("parsed to be ok")?;
+			let parsed = parsed.expect("parsed to be ok").expect("no errors");
 			assert_eq!(parsed.options.len(), 0);
-
-			Ok(())
 		}
 
 		#[test]
-		fn test_wasmbindgen_parse_from_attrs_specific2() -> Result<(), TokenStream> {
+		fn test_wasmbindgen_parse_from_attrs_specific2() {
 			let func: ItemFn = parse_quote! {
 				/// Some documentation
 				/// more
@@ -509,39 +546,33 @@ mod input {
 
 			let parsed = WasmBindgenOptions::get_from_attrs(&attrs);
 
-			let parsed = parsed.expect("parsed to be ok")?;
+			let parsed = parsed.expect("parsed to be ok").expect("no errors");
 			assert_eq!(parsed.options.len(), 1);
-
-			Ok(())
 		}
 
 		#[test]
-		fn test_wasmbindgen_parse_from_attr_specific1() -> Result<(), TokenStream> {
+		fn test_wasmbindgen_parse_from_attr_specific1() {
 			let attr: Attribute = parse_quote! {
 				#[wasm_bindgen]
 			};
 
 			let parsed = WasmBindgenOptions::parse_from_attr(&attr);
 
-			let parsed = parsed.expect("parsed to be ok")?;
+			let parsed = parsed.expect("parsed to be ok").expect("no errors");
 			assert_eq!(parsed.options.len(), 0);
-
-			Ok(())
 		}
 
 		#[test]
-		fn test_wasmbindgen_parse_from_attr_specific2() -> Result<(), TokenStream> {
+		fn test_wasmbindgen_parse_from_attr_specific2() {
 			let attr: Attribute = parse_quote! {
 				#[wasm_bindgen(catch)]
 			};
 
 			let parsed = WasmBindgenOptions::parse_from_attr(&attr);
 
-			let parsed = parsed.expect("parsed to be ok")?;
+			let parsed = parsed.expect("parsed to be ok").expect("no errors");
 			assert_eq!(parsed.options.len(), 1);
 			assert_eq!(parsed.options.first().unwrap(), &WasmBindgenOption::Catch);
-
-			Ok(())
 		}
 	}
 
@@ -549,7 +580,7 @@ mod input {
 	pub fn process_js_bind_input(
 		input: &ItemForeignMod,
 		config: &Config,
-	) -> Result<ItemForeignMod, TokenStream> {
+	) -> syn::Result<ItemForeignMod> {
 		let mut mutable_input = input.clone();
 
 		let mut visitor = DocumentationMutVistor::new(&config.codegen.templates);
@@ -574,7 +605,8 @@ pub fn _js_bind_impl(
 	})?;
 
 	let prelude = prelude::gen_bundle_prelude(&config.bundles);
-	let mutated_input = input::process_js_bind_input(&input, &config)?;
+	let mutated_input =
+		input::process_js_bind_input(&input, &config).map_err(Error::into_compile_error)?;
 
 	let expanded = quote! {
 		#prelude

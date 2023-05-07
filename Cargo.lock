@@ -266,6 +266,7 @@ dependencies = [
  "anyhow",
  "cfg-if",
  "convert_case",
+ "derive-new",
  "log",
  "proc-macro2",
  "quote",
