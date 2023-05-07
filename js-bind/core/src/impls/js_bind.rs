@@ -313,7 +313,7 @@ mod input {
 		docs::Docs,
 	};
 	use derive_new::new;
-	use std::str::FromStr;
+	use std::{str::FromStr, path::PathBuf};
 	use syn::visit_mut::VisitMut;
 
 	#[derive(new)]
@@ -760,12 +760,13 @@ mod input {
 
 	fn process_func_docs(func: &mut ForeignItemFn, lock_template: &LockTemplate) {
 		// Append new docs
-		let new_docs = lock_template
-			.expand_documentation_template()
-			.split("\n")
-			.map(|s| s.to_string())
-			.collect::<Vec<_>>();
+		let new_docs = vec![lock_template.expand_documentation_template()];
 		Docs::append_strings_over(new_docs, &mut func.attrs);
+	}
+
+	/// Parses the given docs into [CodeBlock]s and outputs them (using the [LockTemplate]) to the output directory
+	fn process_func_tests(docs: &Docs, lock_template: &LockTemplate, output_dir: &PathBuf) {
+		
 	}
 
 	/// Takes the input of the `js_bind` macro and mutates the documentation comments (according to config)
