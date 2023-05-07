@@ -5,25 +5,61 @@ use std::result::Result;
 use syn::parse::*;
 use syn::*;
 
-use crate::{
-	config::{Bundle, Config, FromTOMLCwd},
-	docs::CodeBlock,
-};
+use crate::config::{Bundle, Config, FromTOMLCwd};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Attrs {
 	js_module: String,
+	docs: bool,
+	tests: bool,
 }
 
 impl Parse for Attrs {
 	fn parse(input: ParseStream) -> syn::Result<Self> {
 		let name = input.parse::<Ident>()?;
 		if name.to_string() != "js_module" {
-			Err(Error::new(name.span(), "Expected `js_module = \"...\"`"))?
+			Err(Error::new(
+				name.span(),
+				"Expected `js_module = \"...\"` at the start of your `#[js_bind(js_module = ...)]`",
+			))?
 		}
 		input.parse::<Token![=]>()?;
+		let js_module = input.parse::<LitStr>()?.value();
+
+		// loop until empty, try to parse optional docs = true and tests = true
+		let mut docs = false;
+		let mut tests = false;
+		while !input.is_empty() {
+			input.parse::<Token![,]>()?;
+			let name = input.parse::<Ident>()?;
+			match name.to_string().as_str() {
+				"docs" => {
+					input.parse::<Token![=]>()?;
+					docs = input.parse::<LitBool>()?.value();
+				}
+				"tests" => {
+					input.parse::<Token![=]>()?;
+					tests = input.parse::<LitBool>()?.value();
+				}
+				_ => Err(Error::new(
+					name.span(),
+					format!(
+						r##"Unknown option: "{}"; Expected either "docs" or "tests"
+							Have you forgotten to add `#[js_bind(js_module = "...")]` at the top level of your `extern "C" {{ ... }}` block?
+							"##,
+						name.to_string()
+					),
+				))?,
+			}
+			if !input.is_empty() {
+				input.parse::<Token![,]>()?;
+			}
+		}
+
 		Ok(Self {
-			js_module: input.parse::<LitStr>()?.value(),
+			js_module,
+			tests,
+			docs,
 		})
 	}
 }
@@ -273,12 +309,12 @@ mod prelude {
 mod input {
 	use super::*;
 	use crate::{
-		config::{Match, Matches, Template, Templates, LockTemplate},
+		config::{LockTemplate, Match, Matches, Template, Templates},
 		docs::Docs,
 	};
-	use std::str::FromStr;
 	use derive_new::new;
-use syn::visit_mut::VisitMut;
+	use std::str::FromStr;
+	use syn::visit_mut::VisitMut;
 
 	#[derive(new)]
 	struct DocumentationMutVistor<'config> {
@@ -316,12 +352,18 @@ use syn::visit_mut::VisitMut;
 			let template = templates.find_matching_template(&signature);
 			match template {
 				Some(template) => {
-					println!("Found matching template {:?} for func name '{}'", template, &func_name);
+					println!(
+						"Found matching template {:?} for func name '{}'",
+						template, &func_name
+					);
 
 					process_func(func, template, &self.attrs);
 				}
 				None => {
-					println!("No templates matched for wasmbindgen signature {:?} on func name'{}'", signature, &func_name);
+					println!(
+						"No templates matched for wasmbindgen signature {:?} on func name'{}'",
+						signature, &func_name
+					);
 				}
 			}
 		}
@@ -481,7 +523,7 @@ use syn::visit_mut::VisitMut;
 
 		/// Tests if matching documentation template expands at all
 		#[test]
-		fn test_process_everything_specific1() {
+		fn test_process_documentation_comments_specific1() {
 			let config = Config::new(
 				vec![Bundle {
 					if_feature: "compile-web-pls".into(),
@@ -513,6 +555,8 @@ use syn::visit_mut::VisitMut;
 			);
 			let attrs = Attrs {
 				js_module: "test/app".into(),
+				tests: false,
+				docs: true,
 			};
 
 			let output = process_js_bind_input(&input, &config, &attrs).expect("to work");
@@ -524,15 +568,17 @@ use syn::visit_mut::VisitMut;
 				}
 			);
 
-			// Note: this assert SHOULD FAIL, because debugging semantics differ
-			assert_eq!(quote!{#output}.to_string(), quote!{#expected_output}.to_string());
+			assert_eq!(
+				quote! {#output}.to_string(),
+				quote! {#expected_output}.to_string()
+			);
 
 			assert_eq!(output, expected_output);
 		}
 
-		/// Tests if matching documentation template expands at all
+		/// Tests if matching documentation template expands with correct variables
 		#[test]
-		fn test_process_everything_specific2() {
+		fn test_process_documentation_comments_specific2() {
 			let config = Config::new(
 				vec![Bundle {
 					if_feature: "compile-web-pls".into(),
@@ -564,6 +610,8 @@ use syn::visit_mut::VisitMut;
 			);
 			let attrs = Attrs {
 				js_module: "test/app".into(),
+				tests: false,
+				docs: true,
 			};
 
 			let output = process_js_bind_input(&input, &config, &attrs).expect("to work");
@@ -575,8 +623,64 @@ use syn::visit_mut::VisitMut;
 				}
 			);
 
-			// Note: this assert SHOULD FAIL, because debugging semantics differ
-			assert_eq!(quote!{#output}.to_string(), quote!{#expected_output}.to_string());
+			assert_eq!(
+				quote! {#output}.to_string(),
+				quote! {#expected_output}.to_string()
+			);
+
+			assert_eq!(output, expected_output);
+		}
+
+		/// Tests if matching documentation template DOESN'T expand if test = false
+		#[test]
+		fn test_process_documentation_comments_specific3() {
+			let config = Config::new(
+				vec![Bundle {
+					if_feature: "compile-web-pls".into(),
+					then_js_path: "maybe-js/foobar.js".into(),
+					to_build_command: "ignored".into(),
+				}],
+				CodeGen {
+					output: "NA".into(),
+					templates: Templates {
+						templates: vec![Template {
+							name: "test func".into(),
+							matches_signature: Matches {
+								matches: vec![Match {
+									empty: Some(true),
+									..Default::default()
+								}],
+							},
+							codegen_template: "NA".into(),
+							documentation_template: r##"Function name: '#name', from js mod: '#mod'."##.into(),
+						}],
+					},
+				},
+				"NA".into(),
+			);
+			let input: ItemForeignMod = parse_quote!(
+				extern "C" {
+					fn foo();
+				}
+			);
+			let attrs = Attrs {
+				js_module: "test/app".into(),
+				tests: false,
+				docs: false,
+			};
+
+			let output = process_js_bind_input(&input, &config, &attrs).expect("to work");
+
+			let expected_output: ItemForeignMod = parse_quote!(
+				extern "C" {
+					fn foo();
+				}
+			);
+
+			assert_eq!(
+				quote! {#output}.to_string(),
+				quote! {#expected_output}.to_string()
+			);
 
 			assert_eq!(output, expected_output);
 		}
@@ -645,14 +749,25 @@ use syn::visit_mut::VisitMut;
 
 		let func_name = func.sig.ident.to_string();
 		let var_name = template.resolve_js_name(&func_name);
-		
-		let lock_template = LockTemplate::new_from_template(template, var_name, attrs.js_module.clone());
 
+		let lock_template =
+			LockTemplate::new_from_template(template, var_name, attrs.js_module.clone());
+
+		if attrs.docs {
+			process_func_docs(func, &lock_template);
+		}
+	}
+
+	fn process_func_docs(func: &mut ForeignItemFn, lock_template: &LockTemplate) {
 		// Append new docs
-		let new_docs = lock_template.expand_documentation_template().split("\n").map(|s| s.to_string()).collect::<Vec<_>>();
+		let new_docs = lock_template
+			.expand_documentation_template()
+			.split("\n")
+			.map(|s| s.to_string())
+			.collect::<Vec<_>>();
 		Docs::append_strings_over(new_docs, &mut func.attrs);
 	}
-	
+
 	/// Takes the input of the `js_bind` macro and mutates the documentation comments (according to config)
 	pub fn process_js_bind_input(
 		input: &ItemForeignMod,
