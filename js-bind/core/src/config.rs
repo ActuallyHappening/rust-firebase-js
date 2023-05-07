@@ -138,17 +138,25 @@ pub struct ConfigLock {
 
 /// Represents a template that is ready to expand, suitable to put into lockfile or
 /// passed into function that expands it.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
+#[derive(Debug, Clone, SmartDefault, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub struct LockTemplate {
+	#[default("NA")]
 	#[serde(rename = "ref")]
 	pub template_name_ref: String,
+
+	#[default("NA")]
 	#[serde(rename = "var-name")]
 	pub var_name: String,
+
+	#[default("NA")]
 	#[serde(rename = "var-mod")]
 	pub var_module: String,
 
+	#[default("NA")]
 	#[serde(rename = "codegen-template")]
 	pub var_codegen_template: String,
+
+	#[default("NA")]
 	#[serde(rename = "documentation-template")]
 	pub var_documentation_template: String,
 }

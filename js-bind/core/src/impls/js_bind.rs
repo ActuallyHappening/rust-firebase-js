@@ -536,11 +536,9 @@ this_should_error();
 			let temp_dir = tempfile::tempdir().expect("to create temp dir");
 			let dir_path = temp_dir.path().to_path_buf();
 			let lock_template = LockTemplate {
-				template_name_ref: "NA".into(),
-				var_codegen_template: "NA".into(),
-				var_documentation_template: "NA".into(),
 				var_module: "foo/bar".into(),
 				var_name: "example_func".into(),
+				..Default::default()
 			};
 
 			process_func_tests(&docs, &lock_template, &dir_path);
