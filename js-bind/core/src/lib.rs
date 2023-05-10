@@ -1,3 +1,4 @@
 pub use macros::js_bind_impl;
 
-mod macros;
+pub mod macros;
+pub mod config;

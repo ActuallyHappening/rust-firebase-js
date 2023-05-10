@@ -1,0 +1,67 @@
+[[bundles]]
+if = "link-node"
+then = "js/bundle-cjs.js"
+to-build = "rollup -c js/node.config.mjs"
+
+[[bundles]]
+if = "link-web"
+then = "js/bundle-esm.js"
+to-build = "rollup -c js/web.config.mjs"
+
+[codegen]
+output = "js/bundle.ts"
+
+[[codegen.templates]]
+name = "global func"
+# Matches are negatively biased, as in they prefer not to match than too match
+matches-wasmbindgen-signature = [{ empty = true }]
+codegen-template = """
+import { #name as _#name } from '#mod';
+export const #name = _#name;
+"""
+documentation-template = """
+## Importing from JS
+```js
+import { #name } from '#mod';
+```
+"""
+testgen-template = { template = """
+use wasm_bindgen::prelude::*;
+#[allow(unused_imports)]
+use wasm_bindgen_test::{wasm_bindgen_test as test, wasm_bindgen_test_configure};
+
+#specific
+
+#[test]
+fn auto_generated_name() {
+	#code
+}
+""", specifics = [
+	{ name-suffix = "_node" },
+	{ name-suffix = "_web", specific-value = "wasm_bindgen_test_configure!(run_in_browser);" },
+] }
+
+# [build.codegen] # Applied to all targets
+# # [CodeGenOptions]
+# ts = true
+# npm-driver = "pnpm"
+# # output-dir = "js"
+# generic-bundle = "js/bundle.ts"
+
+# [build.target.node.codegen]
+# # [CodeGenOptionsNode]
+# ts = true
+# # feature-flag = "link-node" # Will prefer node over web NOT IMPLEMENTED
+# bundle-name = "js/bundle-cjs.js"
+# rollup-config = "js/node.config.mjs"
+
+# [build.target.web.codegen]
+# # [CodeGenOptionsWeb]
+# ts = true
+# # feature-flag = "link-web" # NOT IMPLEMENTED
+# bundle-name = "js/bundle-esm.js"
+# rollup-config = "js/web.config.mjs"
+
+# [modes.top-level]
+# type = "function"
+# mod = "example/mod"
