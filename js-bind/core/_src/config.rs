@@ -186,7 +186,7 @@ impl LockTests {
 			test.code = test.code.replace("{{#mod}}", var_mod.as_str());
 			test.code = test.code.replace("{{#specific}}", specific.var_specific_value.as_str());
 			test
-		}).collect()
+		}).collect();
 
 		unimplemented!()
 	}
