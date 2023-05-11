@@ -10,8 +10,8 @@ use serde::{Deserialize, Serialize};
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub struct Config {
-	bundles: Vec<Bundle>,
-	codegen: CodeGen,
+	pub bundles: Vec<Bundle>,
+	pub codegen: CodeGen,
 }
 
 /// ```rust
@@ -30,13 +30,13 @@ pub struct Config {
 pub struct Bundle {
 	/// Feature name
 	#[serde(rename = "if")]
-	if_feature: String,
+	pub if_feature: String,
 	/// Path to js file
 	#[serde(rename = "then")]
-	then_js_path: String,
+	pub then_js_path: String,
 	/// Command to build the file (e.g. rollup -c web.config.mjs)
 	#[serde(rename = "to-build")]
-	to_build_command: String,
+	pub to_build_command: String,
 }
 
 /// Represents the codegen side of the config, e.g. documentation + test generation
@@ -54,6 +54,6 @@ pub struct Bundle {
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub struct CodeGen {
-	output: String,
-	template: String,
+	pub output: String,
+	pub template: String,
 }

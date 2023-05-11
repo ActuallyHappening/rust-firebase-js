@@ -2,7 +2,7 @@ use js_bind::js_bind;
 use wasm_bindgen::prelude::wasm_bindgen;
 use js_bind::Config;
 
-#[js_bind(js_module = "test/app")]
+#[js_bind(conditional_attrs, js_module = "test/app", inject_docs, extract_tests)]
 // #[wasm_bindgen(module = "/js/bundle-cjs.js")]
 // #[wasm_bindgen(module = "/js/bundle-esm.js")]
 // #[wasm_bindgen]
