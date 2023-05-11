@@ -1,6 +1,6 @@
 use js_bind::js_bind;
 use wasm_bindgen::prelude::wasm_bindgen;
-use js_bind::Config;
+// use js_bind::Config;
 
 #[js_bind(conditional_attrs, js_module = "test/app", inject_docs, extract_tests)]
 // #[wasm_bindgen(module = "/js/bundle-cjs.js")]

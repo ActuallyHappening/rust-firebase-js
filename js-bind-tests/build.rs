@@ -1,4 +1,4 @@
-use js_bind::*;
+// use js_bind::*;
 
 fn main() {
 	// build_script_execute();
@@ -7,7 +7,7 @@ fn main() {
 
 	// run command rollup -c js/web.config.mjs
 	let command = "rollup -c js/web.config.mjs";
-	let output = std::process::Command::new("sh")
+	let _output = std::process::Command::new("sh")
 		.arg("-c")
 		.arg(command)
 		.output()

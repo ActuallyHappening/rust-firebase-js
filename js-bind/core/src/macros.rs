@@ -12,13 +12,26 @@ fn assert_eq_tokens(left: TokenStream, right: TokenStream) {
 /// Generates conditional compilation attributes changing the wasm_bindgen module path,
 /// depending on the feature name.
 /// 
-/// Example config:
+/// ## Examples
+/// ### Example config:
 /// ```toml
 /// [[bundles]]
 /// if = "feature-name"
 /// then = "js/file/path.here"
 /// to-build = "echo 'not used'"
 /// ```
+/// ### Example with 0 bundles
+/// ```rust
+/// use js_bind_core::config::Bundle;
+/// let bundles = vec![];
+/// 
+/// use quote::quote;
+/// let attrs = js_bind_core::macros::gen_prelude_attrs(bundles).unwrap();
+/// let expected = quote!{ #[wasm_bindgen] };
+/// assert_eq!(attrs.to_string(), expected.to_string());
+/// ```
+/// 
+/// ### Example with 1 bundle
 /// ```rust
 /// use js_bind_core::config::Bundle;
 /// let bundles = vec![Bundle {
@@ -29,7 +42,33 @@ fn assert_eq_tokens(left: TokenStream, right: TokenStream) {
 /// 
 /// use quote::quote;
 /// let attrs = js_bind_core::macros::gen_prelude_attrs(bundles).unwrap();
-/// let expected = quote!{ #[cfg_attr(feature = "feature-name", wasm_bindgen(module = "js/file/path.here"))] };
+/// let expected = quote!{ #[cfg_attr(feature = "feature-name", wasm_bindgen(module = "js/file/path.here"))] #[wasm_bindgen] };
+/// assert_eq!(attrs.to_string(), expected.to_string());
+/// ```
+/// 
+/// ### Example with 2 bundles
+/// ```rust
+/// use js_bind_core::config::Bundle;
+/// let bundles = vec![
+/// 	Bundle {
+/// 		if_feature: "feature-name".to_string(),
+/// 		then_js_path: "js/file/path.here".to_string(),
+/// 		to_build_command: "echo 'not used'".to_string(),
+/// 	},
+/// 	Bundle {
+/// 		if_feature: "feature-name2".to_string(),
+/// 		then_js_path: "js/file/path.here2".to_string(),
+/// 		to_build_command: "echo 'not used'".to_string(),
+/// 	},
+/// ];
+/// 
+/// use quote::quote;
+/// let attrs = js_bind_core::macros::gen_prelude_attrs(bundles).unwrap();
+/// let expected = quote!{
+/// #[cfg_attr(feature = "feature-name", wasm_bindgen(module = "js/file/path.here"))]
+/// #[cfg_attr(feature = "feature-name2", wasm_bindgen(module = "js/file/path.here2"))]
+/// #[wasm_bindgen]
+/// };
 /// assert_eq!(attrs.to_string(), expected.to_string());
 /// ```
 pub fn gen_prelude_attrs(bundles: Vec<Bundle>) -> syn::Result<TokenStream> {
@@ -49,6 +88,8 @@ pub fn gen_prelude_attrs(bundles: Vec<Bundle>) -> syn::Result<TokenStream> {
 			let attr = bundle.into_conditional_attr();
 			Ok(quote! {#attr})
 		})
+		// Adds #[wasm_bindgen] attribute as a fallback
+		.chain(std::iter::once(Ok(quote! {#[wasm_bindgen]})))
 		.collect()
 }
 
@@ -58,11 +99,12 @@ mod prelude_tests {
 
 	#[test]
 	fn test_prelude_attrs() {
-		let attrs_empty = quote! {};
+		let attrs_empty = quote! { #[wasm_bindgen] };
 		assert_eq_tokens(attrs_empty, gen_prelude_attrs(vec![]).unwrap());
 
 		let attrs1 = quote! {
 			#[cfg_attr(feature = "web-not-node", wasm_bindgen(module = "/target/js/bundle-es.js"))]
+			#[wasm_bindgen]
 		};
 		let bundles1 = vec![Bundle {
 			if_feature: "web-not-node".to_string(),
@@ -74,6 +116,7 @@ mod prelude_tests {
 		let attrs2 = quote! {
 			#[cfg_attr(feature = "web-not-node", wasm_bindgen(module = "/target/js/bundle-es.js"))]
 			#[cfg_attr(feature = "node-not-web", wasm_bindgen(module = "/target/js/bundle-cjs.js"))]
+			#[wasm_bindgen]
 		};
 		let bundles2 = vec![
 			Bundle {
@@ -205,6 +248,7 @@ pub fn js_bind_impl(attrs: TokenStream, input: TokenStream) -> syn::Result<Token
 	let attrs = parse_attr(attrs)?;
 
 	let prelude = gen_prelude_attrs(vec![])?;
+
 	Ok(quote! {
 		#prelude
 		#input
