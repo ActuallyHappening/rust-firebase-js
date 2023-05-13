@@ -1,23 +1,15 @@
 #![allow(dead_code, improper_ctypes)]
 
 use js_bind_proc::js_bind;
-use wasm_bindgen::prelude::*;
 
 // WARNING: THIS DOES NOT USE WASMBINDGEN
-#[js_bind(config_path = "123")]
-extern "C" {
-	// #[wasm_bindgen] // Adding this should error
-	fn alert_bad1(s: &str);
-}
-
-// WARNING: THIS DOES NOT USE WASMBINDGEN
-#[js_bind()]
+#[js_bind(config_path = "examples/testing-configs/js-bind.toml")]
 extern "C" {
 	fn alert_bad2(s: &str);
 }
 
 // This uses wasm bindgen!
-#[js_bind(conditional_attrs)]
+#[js_bind(config_path = "examples/testing-configs/js-bind.toml", conditional_attrs)]
 // #[wasm_bindgen]
 extern "C" {
 	fn alert(s: &str);

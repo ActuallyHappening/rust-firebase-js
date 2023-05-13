@@ -64,8 +64,6 @@ pub struct CodeGen {
 
 // Impls
 
-const CONFIG_FILE_NAME: &str = "js-bind.toml";
-
 impl Config {
 	/// Gets the config from the current working directory,
 	/// using the relative path provided.
@@ -75,7 +73,7 @@ impl Config {
 	/// use js_bind_core::config::Config;
 	/// 
 	/// # // Change dir to directory for doctests
-	/// # std::env::set_current_dir("../examples/doctest").expect("to change dir");
+	/// # std::env::set_current_dir("../examples/testing-configs").expect("to change dir");
 	/// // create file
 	/// // std::fs::write("js-bind.toml", r#"
 	/// // [[bundles]]
@@ -93,9 +91,9 @@ impl Config {
 	/// ```
 	pub fn from_cwd(relative_path: &str) -> Result<Self, toml::de::Error> {
 		let cwd = std::env::current_dir().expect("Cannot locate cwd");
-		let full_path = cwd.join(CONFIG_FILE_NAME);
+		let full_path = cwd.join(relative_path);
 
-		let string = std::fs::read_to_string(full_path.clone()).expect(format!("Couldn't read file: {:?}", full_path).as_str());
+		let string = std::fs::read_to_string(full_path.clone()).expect(format!("Couldn't read file (relative: {:?}): {:?}", relative_path, full_path).as_str());
 
 		let mut config = toml::from_str::<Config>(string.as_str())?;
 		config.full_path = Some(full_path);
