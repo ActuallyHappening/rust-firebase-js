@@ -1,5 +1,7 @@
 use proc_macro2::TokenStream;
-use quote::{quote, ToTokens};
+#[allow(unused_imports)]
+use quote::ToTokens;
+use quote::quote;
 use smart_default::SmartDefault;
 use syn::{parse::Parse, parse_quote, Attribute};
 
@@ -15,7 +17,7 @@ fn assert_eq_tokens(left: TokenStream, right: TokenStream) {
 
 /// Generates conditional compilation attributes changing the wasm_bindgen module path,
 /// depending on the feature name.
-/// 
+///
 /// ## Examples
 /// ### Example config:
 /// ```toml
@@ -28,13 +30,13 @@ fn assert_eq_tokens(left: TokenStream, right: TokenStream) {
 /// ```rust
 /// use js_bind_core::config::Bundle;
 /// let bundles = vec![];
-/// 
+///
 /// use quote::quote;
 /// let attrs = js_bind_core::macros::gen_prelude_attrs(bundles).unwrap();
 /// let expected = quote!{ };
 /// assert_eq!(attrs.to_string(), expected.to_string());
 /// ```
-/// 
+///
 /// ### Example with 1 bundle
 /// ```rust
 /// use js_bind_core::config::Bundle;
@@ -43,13 +45,13 @@ fn assert_eq_tokens(left: TokenStream, right: TokenStream) {
 /// 	then_js_path: "js/file/path.here".to_string(),
 /// 	to_build_command: "echo 'not used'".to_string(),
 /// }];
-/// 
+///
 /// use quote::quote;
 /// let attrs = js_bind_core::macros::gen_prelude_attrs(bundles).unwrap();
 /// let expected = quote!{ #[cfg_attr(feature = "feature-name1", ::wasm_bindgen::prelude::wasm_bindgen(module = "js/file/path.here"))] };
 /// assert_eq!(attrs.to_string(), expected.to_string());
 /// ```
-/// 
+///
 /// ### Example with 2 bundles
 /// ```rust
 /// use js_bind_core::config::Bundle;
@@ -65,7 +67,7 @@ fn assert_eq_tokens(left: TokenStream, right: TokenStream) {
 /// 		to_build_command: "echo 'not used'".to_string(),
 /// 	},
 /// ];
-/// 
+///
 /// use quote::quote;
 /// let attrs = js_bind_core::macros::gen_prelude_attrs(bundles).unwrap();
 /// let expected = quote!{
@@ -102,7 +104,7 @@ mod prelude_tests {
 
 	#[test]
 	fn test_prelude_attrs() {
-		let attrs_empty = quote! { };
+		let attrs_empty = quote! {};
 		assert_eq_tokens(attrs_empty, gen_prelude_attrs(vec![]).unwrap());
 
 		let attrs1 = quote! {
@@ -212,7 +214,7 @@ pub fn parse_attr(attr: TokenStream) -> syn::Result<Attrs> {
 					base_error.combine(syn::Error::new(
 						input.span(),
 						// format!("Expected attribute name, current attr: {:?}", &attrs),
-						"Expected attribute name"
+						"Expected attribute name",
 					));
 					return Err(base_error);
 				}
@@ -223,7 +225,7 @@ pub fn parse_attr(attr: TokenStream) -> syn::Result<Attrs> {
 			Ok(attrs)
 		}
 	}
-	
+
 	syn::parse2(attr)
 }
 
@@ -233,27 +235,42 @@ mod parse_attrs_tests {
 
 	#[test]
 	fn test_attrs_parse_args() {
-		assert_eq!(Attrs::default(), parse_attr(quote!{}).unwrap());
-		assert_eq!(Attrs {
-			config_path: "js-bind.toml".to_string(),
-			..Attrs::default()
-		}, parse_attr(quote!{config_path = "js-bind.toml"}).unwrap());
-		assert_eq!(Attrs {
-			js_module: Some("firebase/app".to_string()),
-			..Attrs::default()
-		}, parse_attr(quote!{js_module = "firebase/app"}).unwrap());
-		assert_eq!(Attrs {
-			conditional_attrs: true,
-			..Attrs::default()
-		}, parse_attr(quote!{conditional_attrs}).unwrap());
-		assert_eq!(Attrs {
-			inject_docs: true,
-			..Attrs::default()
-		}, parse_attr(quote!{inject_docs}).unwrap());
-		assert_eq!(Attrs {
-			extract_tests: true,
-			..Attrs::default()
-		}, parse_attr(quote!{extract_tests}).unwrap());
+		assert_eq!(Attrs::default(), parse_attr(quote! {}).unwrap());
+		assert_eq!(
+			Attrs {
+				config_path: "js-bind.toml".to_string(),
+				..Attrs::default()
+			},
+			parse_attr(quote! {config_path = "js-bind.toml"}).unwrap()
+		);
+		assert_eq!(
+			Attrs {
+				js_module: Some("firebase/app".to_string()),
+				..Attrs::default()
+			},
+			parse_attr(quote! {js_module = "firebase/app"}).unwrap()
+		);
+		assert_eq!(
+			Attrs {
+				conditional_attrs: true,
+				..Attrs::default()
+			},
+			parse_attr(quote! {conditional_attrs}).unwrap()
+		);
+		assert_eq!(
+			Attrs {
+				inject_docs: true,
+				..Attrs::default()
+			},
+			parse_attr(quote! {inject_docs}).unwrap()
+		);
+		assert_eq!(
+			Attrs {
+				extract_tests: true,
+				..Attrs::default()
+			},
+			parse_attr(quote! {extract_tests}).unwrap()
+		);
 		assert_eq!(Attrs {
 			config_path: "js-bind.toml".into(),
 			js_module: Some("firebase/app".into()),
@@ -279,7 +296,7 @@ pub fn js_bind_impl(attrs: TokenStream, input: TokenStream) -> syn::Result<Token
 
 	let mut prelude = TokenStream::new();
 	if attrs.conditional_attrs {
-		prelude = gen_prelude_attrs(config.bundles)?;
+		prelude = gen_prelude_attrs(config.bundles.expect("Expected config to have a [[bundles]] table because #[js_bind(conditional_attrs)] was specified which requires [[bundles]] to have at least one entry"))?;
 	}
 
 	Ok(quote! {

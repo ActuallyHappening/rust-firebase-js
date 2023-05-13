@@ -12,8 +12,10 @@ use serde::{Deserialize, Serialize};
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub struct Config {
-	pub bundles: Vec<Bundle>,
-	pub codegen: CodeGen,
+	pub bundles: Option<Vec<Bundle>>,
+	pub codegen: Option<CodeGen>,
+	#[serde(rename = "doctestgen")]
+	pub doc_test_gen: Option<DocTestGen>,
 
 	full_path: Option<PathBuf>,
 }
@@ -43,7 +45,7 @@ pub struct Bundle {
 	pub to_build_command: String,
 }
 
-/// Represents the codegen side of the config, e.g. documentation + test generation
+/// Represents the JS bundle codegen part of the config
 ///
 /// ```rust
 /// use js_bind_core::config::CodeGen;
@@ -58,7 +60,27 @@ pub struct Bundle {
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub struct CodeGen {
+	/// Relative file name
 	pub output: String,
+	/// Contains variables #name and #mod
+	pub template: String,
+}
+
+/// Represents the doc-test codegen part of the config
+/// 
+/// ```rust
+/// use js_bind_core::config::DocTestGen;
+/// 
+/// let toml_str = r#"
+/// template = "NA"
+/// "#;
+/// 
+/// let config = toml::from_str::<DocTestGen>(toml_str);
+/// config.expect("to parse");
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
+pub struct DocTestGen {
+	/// Contains variables #web_feature_name, #test_name and #code
 	pub template: String,
 }
 
@@ -100,3 +122,4 @@ impl Config {
 		Ok(config)
 	}
 }
+

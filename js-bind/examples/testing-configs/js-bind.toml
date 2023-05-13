@@ -16,3 +16,16 @@ template = """
 import { #name as _#name } from '#mod';
 export const #name = _#name;
 """
+
+[doctestgen]
+template = """
+#[cfg(feature = #web_feature_name)]
+wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+
+use wasm_bindgen::prelude::*;
+
+#[::wasm_bindgen_test::wasm_bindgen_test]
+fn #test_name() {
+	#code
+}
+"""
