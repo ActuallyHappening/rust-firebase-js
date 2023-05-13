@@ -30,6 +30,9 @@ exclude = [
 # 	"firebase-wasm-rs"
 # ]
 
+[package.metadata.scripts]
+test = "./test.sh"
+
 [features]
 default = ["node-not-web", "verbose-logging"]
 
@@ -58,11 +61,12 @@ console_log = { version = "1.0.0" }
 document-features = "0.2.7"
 log = "0.4.17"
 wasm-bindgen = { version = "0.2.84" }
+cfg-if = "1.0.0"
 
 # Local deps
 firebase-types = { path = "../firebase-types" }
 # firebase-js-sys-proc = { path = "./proc", default-features = false }
-cfg-if = "1.0.0"
+js-bind = { path = "../js-bind" }
 
 
 [dev-dependencies]

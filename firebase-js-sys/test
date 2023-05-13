@@ -1,3 +1,0 @@
-wasm-pack test --headless --safari --no-default-features --features web-not-node
-wasm-pack test --node --no-default-features --features node-not-web
-open /Applications/Visual\ Studio\ Code.app

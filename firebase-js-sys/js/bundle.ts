@@ -1,5 +1,2 @@
-import * as _app from 'firebase/app';
-export const app = _app;
-
-import * as _database from 'firebase/database';
-export const database = _database;
+import { initializeApp as _initializeApp } from "firebase/app";
+export const initializeApp = _initializeApp;

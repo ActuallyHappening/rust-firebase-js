@@ -9,9 +9,9 @@ members = [
 	# "firebase-js-sys/proc",
 	# "firebase-js-sys/proc/syner",
 	"firebase-types",
-	"js-bind"
+	# "js-bind"
 ]
-exclude = ["js-bind-tests"]
+exclude = ["js-bind"]
 
 [workspace.package]
 # REMEMBER: UPDATE in js-bind/Cargo.toml !!
