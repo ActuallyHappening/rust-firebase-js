@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 ///```rust
 /// use js_bind_core::config::Config;
 ///
-/// let toml_str = &std::fs::read_to_string("../../js-bind-tests/js-bind.toml").expect("Couldn't read file");
+/// let toml_str = &std::fs::read_to_string("../examples/testing-configs/js-bind.toml").expect("Couldn't read file");
 ///
 /// let config = toml::from_str::<Config>(toml_str);
 /// config.expect("to parse");

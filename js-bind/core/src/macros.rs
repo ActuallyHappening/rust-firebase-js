@@ -10,7 +10,7 @@ fn assert_eq_tokens(left: TokenStream, right: TokenStream) {
 	// assert_eq!(left.to_string(), right.to_string(), "left: {}\nright: {}", left.to_string(), right.to_string());
 	let left = left.to_string();
 	let right = right.to_string();
-	assert_eq!(left, right, "left: {}\nright: {}", left, right);
+	assert_eq!(left, right);
 }
 
 /// Generates conditional compilation attributes changing the wasm_bindgen module path,
@@ -257,10 +257,11 @@ mod parse_attrs_tests {
 		assert_eq!(Attrs {
 			config_path: "js-bind.toml".into(),
 			js_module: Some("firebase/app".into()),
+			fallback: true,
 			conditional_attrs: true,
 			inject_docs: true,
 			extract_tests: true,
-		}, parse_attr(quote!{config_path = "js-bind.toml", js_module = "firebase/app", conditional_attrs, inject_docs, extract_tests}).unwrap());
+		}, parse_attr(quote!{config_path = "js-bind.toml", js_module = "firebase/app", fallback, conditional_attrs, inject_docs, extract_tests}).unwrap());
 	}
 }
 
@@ -286,4 +287,62 @@ pub fn js_bind_impl(attrs: TokenStream, input: TokenStream) -> syn::Result<Token
 		#fallback
 		#input
 	})
+}
+
+// Duplicate test
+
+pub fn duplicate_wasmbindgen_test_impl(_attrs: TokenStream, input: TokenStream) -> syn::Result<TokenStream> {
+	let mut func = syn::parse2::<syn::ItemFn>(input)?;
+	let config = Config::from_cwd("js-bind.toml").expect("Cannot parse config");
+
+	fn add_semi_to_last_stmt(func: &mut syn::ItemFn) {
+		// add a semi-colon to the end of the last statement if not present already
+		func.block.stmts.last_mut().map(|stmt| {
+			match stmt {
+				syn::Stmt::Expr(expr, semi) => {
+					if semi.is_none() {
+						*semi = Some(syn::token::Semi::default());
+					}
+				}
+				_ => {}
+			}
+		});
+	}
+	
+	let mut func_web = func.clone();
+	add_semi_to_last_stmt(&mut func_web);
+	// add a line to the function
+	func_web.block.stmts.push(parse_quote! {
+		::wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+	});
+	// add _web to func name
+	func_web.sig.ident = syn::Ident::new(&format!("{}_web", func_web.sig.ident), func_web.sig.ident.span());
+
+	Ok(quote! {
+		#[::wasm_bindgen_test::wasm_bindgen_test]
+		#func_web
+	})
+}
+
+#[cfg(test)]
+mod dup_tests {
+	use super::*;
+	
+	#[test]
+	fn test_duplicate_tests() {
+		let input = quote! {
+			fn test() {
+				assert_eq!(1, 1);
+			}
+		};
+		let expected = quote! {
+			#[::wasm_bindgen_test::wasm_bindgen_test]
+			fn test_web() {
+				assert_eq!(1, 1);
+				::wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+			}
+		};
+		let received = duplicate_wasmbindgen_test_impl(quote!{}, input).unwrap();
+		assert_eq_tokens(expected, received);
+	}
 }

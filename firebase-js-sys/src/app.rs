@@ -1,7 +1,7 @@
 use js_bind::js_bind;
 use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 
-#[js_bind(config_path = "firebase-js-sys/js-bind.toml", fallback)]
+#[js_bind(config_path = "firebase-js-sys/js-bind.toml", fallback, conditional_attrs)]
 extern "C" {
 	/// Takes a config object and returns a firebase app instance
 	///
