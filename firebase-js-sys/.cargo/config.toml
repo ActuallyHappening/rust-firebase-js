@@ -4,7 +4,7 @@
 t = "run-script test"
 tq = "run-script testq"
 
-em = "expand --bin firebase-js-sys-proc"
+em = "expand --lib firebase-js-sys"
 # Full testing command:  rm debug.rs && RUSTFLAGS="-Zmacro-backtrace" cargo em > debug.rs
 
 [target.wasm32-unknown-unknown]

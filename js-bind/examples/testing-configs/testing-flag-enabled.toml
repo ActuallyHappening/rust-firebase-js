@@ -9,10 +9,3 @@ to-build = "rollup -args"
 # if = "link-node"
 # then = "something/path.js"
 # to-build = "rollup -args"
-
-[codegen]
-output = "js/bundle.ts"
-template = """
-import { #name as _#name } from '#mod';
-export const #name = _#name;
-"""
