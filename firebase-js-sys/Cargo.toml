@@ -61,7 +61,7 @@ console_error_panic_hook = "0.1.7"
 console_log = { version = "1.0.0" }
 document-features = "0.2.7"
 log = "0.4.17"
-wasm-bindgen = { version = "0.2.84" }
+wasm-bindgen = { version = "0.2.84", features = ["serde"] }
 cfg-if = "1.0.0"
 
 # Local deps
@@ -72,4 +72,6 @@ js-bind = { path = "../js-bind" }
 
 [dev-dependencies]
 execute = "0.2.12"
+serde-wasm-bindgen = "0.5.0"
+serde_json = "1.0.96"
 wasm-bindgen-test = "0.3.34"

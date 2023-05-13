@@ -15,25 +15,30 @@ documentation = "https://actuallyhappening.github.io/rust-firebase-js/"
 
 [features]
 ## By default, no features are enabled
-default = []
+default = ["js"]
 
-# default = ["serde", "expose-jsvalue"]
 ## Enables generic serde support
 serde = ["dep:serde"]
 
-## Enables support for deferencing [Deserializable] types in `JsValue` using `serde-wasm-bindgen`
+## Enables wasm-bindgen support, including serialization and de-serialization, JsValue dereferencing, e.t.c.
 ## Implies `serde` feature
-expose-jsvalue = ["serde", "dep:wasm-bindgen", "dep:serde-wasm-bindgen"]
+js = ["serde", "dep:wasm-bindgen", "dep:serde-wasm-bindgen"]
+
+[package.metadata.scripts]
+testq = """wasm-pack test --headless --safari --node --no-default-features --features js
+open "/Applications/Visual Studio Code.app"
+"""
 
 [dependencies]
 serde = { version = "1.0.160", features = ["derive"], optional = true }
 serde-wasm-bindgen = { version = "0.5.0", optional = true }
-wasm-bindgen = { version = "0.2.84", optional = true }
+wasm-bindgen = { version = "0.2", optional = true }
 document-features = { version = "0.2.7", optional = false }
 
 [dev-dependencies]
 getrandom = { version = "0.2.9", features = ["js"] }
 rand = "0.8.5"
+wasm-bindgen = { version = "0.2" }
 
 [package.metadata.docs.rs]
 cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples=examples"]

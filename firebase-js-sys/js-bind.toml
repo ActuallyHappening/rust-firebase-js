@@ -1,13 +1,13 @@
 # File for tests run concerning js-bind directory
 
 [[bundles]]
-if = "link-node"
-then = "something/path.js"
+if = "web-not-node"
+then = "js/bundle-esm.js"
 to-build = "rollup -args"
 
 [[bundles]]
-if = "link-node"
-then = "something/path.js"
+if = "node-not-web"
+then = "js/bundle-cjs.js"
 to-build = "rollup -args"
 
 [codegen]

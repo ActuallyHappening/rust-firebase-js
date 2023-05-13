@@ -43,13 +43,3 @@ pub struct FirebaseConfig {
 
 #[derive(Deref)]
 pub struct FirebaseApp(JsValue);
-
-pub fn initialize_app(firebase_config: &FirebaseConfig) -> Result<FirebaseApp, FirebaseError> {
-	match to_value(firebase_config) {
-		Ok(val) => {
-			let app: JsValue = app::initialize_app(&val);
-			Ok(FirebaseApp(app))
-		},
-		Err(_) => Err(FirebaseError::UnimplementedErrorHandling),
-	}
-}

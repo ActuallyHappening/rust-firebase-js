@@ -2,19 +2,19 @@ use std::env::VarError;
 
 #[cfg(feature = "serde")]
 use serde::{Serialize, Deserialize};
-#[cfg(feature = "expose-jsvalue")]
+#[cfg(feature = "js")]
 use wasm_bindgen::prelude::*;
-// #[cfg(feature = "expose-jsvalue")]
+// #[cfg(feature = "js")]
 // use serde_wasm_bindgen::*;
 
 /// ## Represents a Firebase config object.
 /// This object **is serializable to JS** as you expect.
-/// I suggest constructing this object using the [FirebaseConfigConstructor] type,
+/// If using `js` feature, I suggest constructing this object using the [JsFirebaseConfigConstructor] type,
 /// as it is easier to copy-paste from JS.
 /// 
 /// ### Constructors
-/// - [`FirebaseConfig::new`]
-/// - [`FirebaseConfigConstructor::into_config().expect("projectId to be provided")`]
+/// - [FirebaseConfig] ::new
+/// - [JsFirebaseConfigConstructor] ::into_config().expect("projectId to be provided")
 /// 
 /// ## Example:
 /// Constructing with just a project id:
@@ -42,14 +42,14 @@ use wasm_bindgen::prelude::*;
 /// assert_eq!(config.app_id, Some("some-app-id".to_owned()));
 /// assert_eq!(config.measurement_id, Some("some-measurement-id".to_owned()));
 /// ```
-/// Serializing into a [JsValue] (requires feature `expose-jsvalue`)
+/// Conversion into JsValue (requires `js` feature enabled):
 /// ```rust,no_run
 /// use firebase_types::config::FirebaseConfig;
 /// use wasm_bindgen::JsValue;
 /// 
-/// let config = FirebaseConfig::new("some-project-id");
+/// let config: FirebaseConfig = FirebaseConfig::new("some-project-id".to_owned());
 /// 
-/// let raw_js_value: JsValue = config.try_into().expect("serde_wasm_bindgen to work");
+/// let js_value: JsValue = config.try_into().expect("to convert into JsValue");
 /// ```
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Default, Debug, Clone, PartialEq, Eq, Hash)]
@@ -143,7 +143,7 @@ impl FirebaseConfig {
 	}
 }
 
-#[cfg(feature = "expose-jsvalue")]
+#[cfg(feature = "js")]
 impl TryFrom<FirebaseConfig> for JsValue {
 	type Error = JsValue;
 
@@ -167,10 +167,10 @@ impl TryFrom<FirebaseConfig> for JsValue {
 /// }
 /// ```
 /// ```rust
-/// use firebase_types::config::{FirebaseConfigConstructor, FirebaseConfig};
+/// use firebase_types::config::{JsFirebaseConfigConstructor, FirebaseConfig};
 /// 
 /// // If you copy-paste this from js, add a `..Default::default()` to the end.
-/// let helper_config = FirebaseConfigConstructor {
+/// let helper_config = JsFirebaseConfigConstructor {
 ///		projectId: "some-project-id",
 /// 	databaseURL: "https://some-project-id.firebaseio.com",
 /// 
@@ -189,7 +189,7 @@ impl TryFrom<FirebaseConfig> for JsValue {
 /// ## Why
 /// If you tried to construct a [FirebaseConfig] directly and you had many extra fields,
 /// you would end up writing a lot of boilerplate code.
-/// Also, the names of the fields in [FirebaseConfigConstructor] are the same as the JS object,
+/// Also, the names of the fields in [JsFirebaseConfigConstructor] are the same as the JS object,
 /// so no renaming is requried.
 /// ```js
 /// // Imagine you had this firebase config object:
@@ -218,11 +218,11 @@ impl TryFrom<FirebaseConfig> for JsValue {
 /// assert_eq!(config.app_id, Some("some-app-id".to_owned()));
 /// assert_eq!(config.measurement_id, Some("some-measurement-id".to_owned()));
 /// ```
-/// Using [FirebaseConfigConstructor] (less verbose):
+/// Using [JsFirebaseConfigConstructor] (less verbose):
 /// ```rust
-/// use firebase_types::config::{FirebaseConfigConstructor, FirebaseConfig};
+/// use firebase_types::config::{JsFirebaseConfigConstructor, FirebaseConfig};
 /// 
-/// let config: FirebaseConfig = FirebaseConfigConstructor {
+/// let config: FirebaseConfig = JsFirebaseConfigConstructor {
 ///		// Not how the field names are the same as JS
 /// 	projectId: "some-project-id",
 /// 	databaseURL: "https://some-project-id.firebaseio.com",
@@ -232,8 +232,9 @@ impl TryFrom<FirebaseConfig> for JsValue {
 /// }.into_config().expect("projectId to be provided");
 /// ```
 #[allow(non_snake_case)]
+#[cfg(feature = "js")]
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct FirebaseConfigConstructor<'a> {
+pub struct JsFirebaseConfigConstructor<'a> {
 	pub projectId: &'a str,
 	pub apiKey: &'a str,
 	pub authDomain: &'a str,
@@ -244,20 +245,21 @@ pub struct FirebaseConfigConstructor<'a> {
 	pub databaseURL: &'a str,
 }
 
-impl<'a> FirebaseConfigConstructor<'a> {
-	/// ## Convert a [FirebaseConfigConstructor] into a [FirebaseConfig].
+#[cfg(feature = "js")]
+impl<'a> JsFirebaseConfigConstructor<'a> {
+	/// ## Convert a [JsFirebaseConfigConstructor] into a [FirebaseConfig].
 	/// 
 	/// This type is useful when copy-pasting from a JS config object.
 	/// 
 	/// ## Returns [None]
-	/// Returns [None] if [FirebaseConfigConstructor.projectId] is empty, i.e. `""`.
+	/// Returns [None] if [JsFirebaseConfigConstructor.projectId] is empty, i.e. `""`.
 	/// This field is required for the [FirebaseConfig] type.
 	/// 
 	/// ## Example
 	/// ```
-	/// use firebase_types::config::{FirebaseConfigConstructor, FirebaseConfig};
+	/// use firebase_types::config::{JsFirebaseConfigConstructor, FirebaseConfig};
 	/// 
-	/// let helper_config = FirebaseConfigConstructor {
+	/// let helper_config = JsFirebaseConfigConstructor {
 	/// 	projectId: "my-project-id",
 	/// 	..Default::default()
 	/// }.into_config().expect("projectId to be provided");
@@ -291,8 +293,9 @@ impl<'a> FirebaseConfigConstructor<'a> {
 	}
 }
 
+#[cfg(feature = "js")]
 #[cfg(test)]
-mod tests {
+mod js_config_constructor_tests {
 	use super::*;
 
 	fn random_string() -> String {
@@ -305,7 +308,7 @@ mod tests {
 	#[test]
 	pub fn config_constructor_using_default() {
 		let rand_item = random_string();
-		let config_constructor = FirebaseConfigConstructor {
+		let config_constructor = JsFirebaseConfigConstructor {
 			projectId: "my-project-id",
 			appId: &rand_item,
 			..Default::default()
@@ -323,7 +326,7 @@ mod tests {
 
 	#[test]
 	pub fn config_constructor_minimal_using_default_into_config() {
-		let config_constructor = FirebaseConfigConstructor {
+		let config_constructor = JsFirebaseConfigConstructor {
 			projectId: "my-project-id",
 			..Default::default()
 		};
@@ -354,7 +357,7 @@ mod tests {
 
 	#[test]
 	pub fn config_constructor_minimal_using_default_into_config_fails() {
-		let config_constructor = FirebaseConfigConstructor {
+		let config_constructor = JsFirebaseConfigConstructor {
 			// projectId: "my-project-id",
 			..Default::default()
 		};
