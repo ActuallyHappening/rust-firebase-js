@@ -157,6 +157,7 @@ pub struct Attrs {
 	config_path: String,
 	js_module: Option<String>,
 
+	fallback: bool,
 	conditional_attrs: bool,
 	inject_docs: bool,
 	extract_tests: bool,
@@ -189,6 +190,9 @@ pub fn parse_attr(attr: TokenStream) -> syn::Result<Attrs> {
 						}
 						"conditional_attrs" => {
 							attrs.conditional_attrs = true;
+						}
+						"fallback" => {
+							attrs.fallback = true;
 						}
 						"inject_docs" => {
 							attrs.inject_docs = true;
@@ -265,6 +269,13 @@ pub fn js_bind_impl(attrs: TokenStream, input: TokenStream) -> syn::Result<Token
 
 	let config = Config::from_cwd(&attrs.config_path).expect("Cannot parse config");
 
+	let mut fallback = TokenStream::new();
+	if attrs.fallback {
+		fallback = quote! {
+			#[::wasm_bindgen::prelude::wasm_bindgen]
+		};
+	}
+
 	let mut prelude = TokenStream::new();
 	if attrs.conditional_attrs {
 		prelude = gen_prelude_attrs(config.bundles)?;
@@ -272,6 +283,7 @@ pub fn js_bind_impl(attrs: TokenStream, input: TokenStream) -> syn::Result<Token
 
 	Ok(quote! {
 		#prelude
+		#fallback
 		#input
 	})
 }

@@ -21,6 +21,7 @@ documentation = "https://actuallyhappening.github.io/rust-firebase-js/"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
+## Don't use this, for compiling / testing only
 testing-slash-examples-feature-flag = []
 
 [dependencies]
