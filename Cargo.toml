@@ -2,17 +2,19 @@
 members = [
 	"firebase-js",
 	"firebase-js-sys",
-	"js-bind",
-	"js-bind/core",
-	"js-bind/proc",
+	# "js-bind",
+	# "js-bind/core",
+	# "js-bind/proc",
 	# "js-bind-tests",
 	# "firebase-js-sys/proc",
 	# "firebase-js-sys/proc/syner",
 	"firebase-types",
+	"js-bind"
 ]
 exclude = ["js-bind-tests"]
 
 [workspace.package]
+# REMEMBER: UPDATE in js-bind/Cargo.toml !!
 authors = []
 homepage = "https://actuallyhappening.github.io/rust-firebase-js/"
 repository = "https://github.com/ActuallyHappening/rust-firebase-js"

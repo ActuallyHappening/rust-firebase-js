@@ -1,12 +1,16 @@
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
+use smart_default::SmartDefault;
 use syn::{parse::Parse, parse_quote, Attribute};
 
-use crate::config::Bundle;
+use crate::config::{Bundle, Config};
 
 #[cfg(test)]
 fn assert_eq_tokens(left: TokenStream, right: TokenStream) {
-	assert_eq!(left.to_string(), right.to_string());
+	// assert_eq!(left.to_string(), right.to_string(), "left: {}\nright: {}", left.to_string(), right.to_string());
+	let left = left.to_string();
+	let right = right.to_string();
+	assert_eq!(left, right, "left: {}\nright: {}", left, right);
 }
 
 /// Generates conditional compilation attributes changing the wasm_bindgen module path,
@@ -102,7 +106,7 @@ mod prelude_tests {
 		assert_eq_tokens(attrs_empty, gen_prelude_attrs(vec![]).unwrap());
 
 		let attrs1 = quote! {
-			#[cfg_attr(feature = "web-not-node", wasm_bindgen(module = "/target/js/bundle-es.js"))]
+			#[cfg_attr(feature = "web-not-node", ::wasm_bindgen::prelude::wasm_bindgen(module = "/target/js/bundle-es.js"))]
 		};
 		let bundles1 = vec![Bundle {
 			if_feature: "web-not-node".to_string(),
@@ -112,8 +116,8 @@ mod prelude_tests {
 		assert_eq_tokens(attrs1, gen_prelude_attrs(bundles1).unwrap());
 
 		let attrs2 = quote! {
-			#[cfg_attr(feature = "web-not-node", wasm_bindgen(module = "/target/js/bundle-es.js"))]
-			#[cfg_attr(feature = "node-not-web", wasm_bindgen(module = "/target/js/bundle-cjs.js"))]
+			#[cfg_attr(feature = "web-not-node", ::wasm_bindgen::prelude::wasm_bindgen(module = "/target/js/bundle-es.js"))]
+			#[cfg_attr(feature = "node-not-web", ::wasm_bindgen::prelude::wasm_bindgen(module = "/target/js/bundle-cjs.js"))]
 		};
 		let bundles2 = vec![
 			Bundle {
@@ -133,21 +137,26 @@ mod prelude_tests {
 	#[test]
 	fn test_bundle_into_conditional_attr() {
 		let test_attr: Attribute = parse_quote! {
-			#[cfg_attr(feature = "web-not-node", wasm_bindgen(module = "/target/js/bundle-es.js"))]
+			#[cfg_attr(feature = "web-not-node", ::wasm_bindgen::prelude::wasm_bindgen(module = "/target/js/bundle-es.js"))]
 		};
-		let received_attr = Bundle {
+		let received_attr: Attribute = Bundle {
 			if_feature: "web-not-node".to_string(),
 			then_js_path: "/target/js/bundle-es.js".to_string(),
 			to_build_command: "".to_string(),
 		}
 		.into_conditional_attr();
+		// assert_eq!(test_attr.to_token_stream().to_string(), received_attr.to_token_stream().to_string());
+		assert_eq_tokens(test_attr.to_token_stream(), received_attr.to_token_stream());
 		assert_eq!(test_attr, received_attr);
 	}
 }
 
-#[derive(Debug, Default, PartialEq, Eq, Hash)]
+#[derive(Debug, SmartDefault, PartialEq, Eq, Hash)]
 pub struct Attrs {
+	#[default = "js-bind.toml"]
+	config_path: String,
 	js_module: Option<String>,
+
 	conditional_attrs: bool,
 	inject_docs: bool,
 	extract_tests: bool,
@@ -168,6 +177,11 @@ pub fn parse_attr(attr: TokenStream) -> syn::Result<Attrs> {
 				if lookahead.peek(syn::Ident) {
 					let ident: syn::Ident = input.parse()?;
 					match ident.to_string().as_str() {
+						"config_path" => {
+							input.parse::<syn::Token![=]>()?;
+							let config_path: syn::LitStr = input.parse()?;
+							attrs.config_path = config_path.value();
+						}
 						"js_module" => {
 							input.parse::<syn::Token![=]>()?;
 							let js_module: syn::LitStr = input.parse()?;
@@ -217,6 +231,10 @@ mod parse_attrs_tests {
 	fn test_attrs_parse_args() {
 		assert_eq!(Attrs::default(), parse_attr(quote!{}).unwrap());
 		assert_eq!(Attrs {
+			config_path: "js-bind.toml".to_string(),
+			..Attrs::default()
+		}, parse_attr(quote!{config_path = "js-bind.toml"}).unwrap());
+		assert_eq!(Attrs {
 			js_module: Some("firebase/app".to_string()),
 			..Attrs::default()
 		}, parse_attr(quote!{js_module = "firebase/app"}).unwrap());
@@ -233,25 +251,27 @@ mod parse_attrs_tests {
 			..Attrs::default()
 		}, parse_attr(quote!{extract_tests}).unwrap());
 		assert_eq!(Attrs {
-			js_module: Some("firebase/app".to_string()),
+			config_path: "js-bind.toml".into(),
+			js_module: Some("firebase/app".into()),
 			conditional_attrs: true,
 			inject_docs: true,
 			extract_tests: true,
-		}, parse_attr(quote!{js_module = "firebase/app", conditional_attrs, inject_docs, extract_tests}).unwrap());
+		}, parse_attr(quote!{config_path = "js-bind.toml", js_module = "firebase/app", conditional_attrs, inject_docs, extract_tests}).unwrap());
 	}
 }
 
 pub fn js_bind_impl(attrs: TokenStream, input: TokenStream) -> syn::Result<TokenStream> {
 	let attrs = parse_attr(attrs)?;
 
+	let config = Config::from_cwd(&attrs.config_path).expect("Cannot parse config");
+
 	let mut prelude = TokenStream::new();
 	if attrs.conditional_attrs {
-		prelude = gen_prelude_attrs(vec![])?;
+		prelude = gen_prelude_attrs(config.bundles)?;
 	}
 
 	Ok(quote! {
 		#prelude
-		// #[wasm_bindgen] // Adds wasm_bindgen attr as fallback
 		#input
 	})
 }

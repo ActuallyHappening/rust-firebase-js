@@ -4,7 +4,7 @@ use js_bind_proc::js_bind;
 use wasm_bindgen::prelude::*;
 
 // WARNING: THIS DOES NOT USE WASMBINDGEN
-#[js_bind]
+#[js_bind(config_path = "123")]
 extern "C" {
 	// #[wasm_bindgen] // Adding this should error
 	fn alert_bad1(s: &str);

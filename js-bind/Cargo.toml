@@ -3,6 +3,20 @@ name = "js-bind"
 version = "0.1.0"
 edition = "2021"
 
+[workspace]
+members = [
+		"core",
+		"proc",
+]
+
+[workspace.package]
+authors = []
+homepage = "https://actuallyhappening.github.io/rust-firebase-js/"
+repository = "https://github.com/ActuallyHappening/rust-firebase-js"
+license = "MIT"
+license-file = "LICENSE"
+documentation = "https://actuallyhappening.github.io/rust-firebase-js/"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 

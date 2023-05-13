@@ -67,29 +67,36 @@ pub struct CodeGen {
 const CONFIG_FILE_NAME: &str = "js-bind.toml";
 
 impl Config {
-	/// Gets the config from the current working directory
+	/// Gets the config from the current working directory,
+	/// using the relative path provided.
 	/// 
+	/// ## Example
 	/// ```rust
 	/// use js_bind_core::config::Config;
 	/// 
 	/// # // Change dir to directory for doctests
 	/// # std::env::set_current_dir("../examples/doctest").expect("to change dir");
-	/// 
 	/// // create file
 	/// // std::fs::write("js-bind.toml", r#"
 	/// // [[bundles]]
 	/// // if = "link-node"
 	/// // then = "something/path.js"
 	/// // to-build = "rollup -args"
+	/// // 
+	/// // e.t.c.
 	/// // "#).expect("to write file");
 	/// 
-	/// let config = Config::from_cwd();
+	/// // Parses the file `js-bind.toml` in the current working directory
+	/// // as a config file
+	/// let config = Config::from_cwd("js-bind.toml");
 	/// config.expect("to parse");
 	/// ```
-	pub fn from_cwd() -> Result<Self, toml::de::Error> {
+	pub fn from_cwd(relative_path: &str) -> Result<Self, toml::de::Error> {
 		let cwd = std::env::current_dir().expect("Cannot locate cwd");
 		let full_path = cwd.join(CONFIG_FILE_NAME);
-		let string = std::fs::read_to_string(full_path.clone()).expect("Couldn't read file");
+
+		let string = std::fs::read_to_string(full_path.clone()).expect(format!("Couldn't read file: {:?}", full_path).as_str());
+
 		let mut config = toml::from_str::<Config>(string.as_str())?;
 		config.full_path = Some(full_path);
 		Ok(config)
