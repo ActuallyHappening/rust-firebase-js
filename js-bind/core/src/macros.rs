@@ -39,14 +39,14 @@ fn assert_eq_tokens(left: TokenStream, right: TokenStream) {
 /// ```rust
 /// use js_bind_core::config::Bundle;
 /// let bundles = vec![Bundle {
-/// 	if_feature: "feature-name".to_string(),
+/// 	if_feature: "feature-name1".to_string(),
 /// 	then_js_path: "js/file/path.here".to_string(),
 /// 	to_build_command: "echo 'not used'".to_string(),
 /// }];
 /// 
 /// use quote::quote;
 /// let attrs = js_bind_core::macros::gen_prelude_attrs(bundles).unwrap();
-/// let expected = quote!{ #[cfg_attr(feature = "feature-name", wasm_bindgen(module = "js/file/path.here"))] };
+/// let expected = quote!{ #[cfg_attr(feature = "feature-name1", ::wasm_bindgen::prelude::wasm_bindgen(module = "js/file/path.here"))] };
 /// assert_eq!(attrs.to_string(), expected.to_string());
 /// ```
 /// 
@@ -69,8 +69,8 @@ fn assert_eq_tokens(left: TokenStream, right: TokenStream) {
 /// use quote::quote;
 /// let attrs = js_bind_core::macros::gen_prelude_attrs(bundles).unwrap();
 /// let expected = quote!{
-/// #[cfg_attr(feature = "feature-name", wasm_bindgen(module = "js/file/path.here"))]
-/// #[cfg_attr(feature = "feature-name2", wasm_bindgen(module = "js/file/path.here2"))]
+/// #[cfg_attr(feature = "feature-name", ::wasm_bindgen::prelude::wasm_bindgen(module = "js/file/path.here"))]
+/// #[cfg_attr(feature = "feature-name2", ::wasm_bindgen::prelude::wasm_bindgen(module = "js/file/path.here2"))]
 /// };
 /// assert_eq!(attrs.to_string(), expected.to_string());
 /// ```

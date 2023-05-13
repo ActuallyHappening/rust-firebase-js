@@ -1,0 +1,18 @@
+# File for tests run concerning js-bind directory
+
+[[bundles]]
+if = "testing-slash-examples-feature-flag"
+then = "something/path.js"
+to-build = "rollup -args"
+
+# [[bundles]]
+# if = "link-node"
+# then = "something/path.js"
+# to-build = "rollup -args"
+
+[codegen]
+output = "js/bundle.ts"
+template = """
+import { #name as _#name } from '#mod';
+export const #name = _#name;
+"""
