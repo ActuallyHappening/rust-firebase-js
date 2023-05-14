@@ -19,7 +19,7 @@ to-build = "rollup -args"
 # """
 
 [doctestgen]
-replace-package = "firebase_js_sys" # TODO: implement
+replace-package = "firebase_js_sys"
 template = """
 #[cfg(test)]
 #[::wasm_bindgen_test::wasm_bindgen_test]

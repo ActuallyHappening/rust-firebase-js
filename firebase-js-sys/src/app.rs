@@ -26,8 +26,9 @@ extern "C" {
 	/// ```
 	///
 	/// ## Examples
-	/// ```rust,ignore
+	/// ```rust
 	/// // JSBIND-TEST test_initialize_app
+	/// use firebase_js_sys::app::initialize_app;
 	///
 	/// assert!(initialize_app(JsValue::UNDEFINED, JsValue::UNDEFINED).is_err());
 	/// assert!(initialize_app(JsValue::NULL, JsValue::UNDEFINED).is_err());
