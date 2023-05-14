@@ -22,7 +22,7 @@ to-build = "rollup -args"
 template = """
 #[cfg(test)]
 #[::wasm_bindgen_test::wasm_bindgen_test]
-fn #test_name() {
+fn _gentest_#test_name() {
 	use super::*;
 	
 	#[cfg(feature = "web-not-node")]
