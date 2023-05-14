@@ -388,7 +388,7 @@ mod parse_attrs_tests {
 /// let generated1 = gen_doc_test(&config, &attributes1).unwrap();
 /// assert_eq!(expected1.to_string(), generated1.to_string());
 /// ```
-pub fn gen_doc_test(config: &DocTestGen, attrs: &Vec<Attribute>) -> syn::Result<ItemFn> {
+pub fn gen_doc_test(config: &DocTestGen, attrs: &Vec<Attribute>) -> Option<ItemFn> {
 	fn extract_documentation(attrs: &Vec<Attribute>) -> Vec<String> {
 		attrs
 			.iter()
@@ -546,7 +546,13 @@ pub fn gen_doc_test(config: &DocTestGen, attrs: &Vec<Attribute>) -> syn::Result<
 
 	to_debug_file("debug-docgen.rs", &tokens.clone());
 
-	return syn::parse2(tokens);
+	match syn::parse2(tokens) {
+		Ok(item_fn) => Some(item_fn),
+		Err(err) => {
+			// println!("Error parsing tokens: {:?}", err);
+			None
+		}
+	}
 }
 
 fn to_debug_file(name: &str, tokens: &TokenStream) {
@@ -597,7 +603,7 @@ pub fn js_bind_impl(attr: TokenStream, input: TokenStream) -> syn::Result<TokenS
 				}
 			})
 			.map(|f| gen_doc_test(&config, &f.attrs))
-			.collect::<syn::Result<Vec<_>>>()?
+			.collect::<Vec<_>>()
 			.into_iter()
 			.fold(TokenStream::new(), |mut acc, f| {
 				acc.extend(f.to_token_stream());

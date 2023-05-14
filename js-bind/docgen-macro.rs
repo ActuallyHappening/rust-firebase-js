@@ -1,0 +1,1 @@
+# [cfg_attr (feature = "testing-slash-examples-feature-flag" , :: wasm_bindgen :: prelude :: wasm_bindgen (module = "/something/path.js"))] # [:: wasm_bindgen :: prelude :: wasm_bindgen] extern "C" {# [doc = " Documentation of func"] # [doc = " "] # [doc = " ```rust"] # [doc = " assert_eq!(\"Yes this test executed well!\", \"\")"] # [doc = " ```"] fn alert2 (s : & str) ;}
