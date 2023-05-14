@@ -1,3 +1,4 @@
+#[allow(unused_imports)]
 use std::{println, unimplemented};
 
 use proc_macro2::{Span, TokenStream};
@@ -6,7 +7,7 @@ use quote::quote;
 use quote::ToTokens;
 use smart_default::SmartDefault;
 use syn::{
-	parse::Parse, parse_quote, spanned::Spanned, Attribute, Expr, ExprLit, ItemFn, ItemForeignMod,
+	parse::Parse, parse_quote, Attribute, Expr, ExprLit, ItemFn, ItemForeignMod,
 	Lit, Meta,
 };
 
@@ -360,11 +361,9 @@ mod parse_attrs_tests {
 /// use quote::ToTokens;
 ///
 /// let toml_str = r##"
-/// web-feature-name = "example-flag"
 /// template = """
 /// #[::wasm_bindgen_test::wasm_bindgen_test]
 /// fn #test_name() {
-/// 	assert_eq!(#web_feature_name, "example-flag");
 /// 	#code
 /// }
 /// """
@@ -384,7 +383,6 @@ mod parse_attrs_tests {
 /// let expected1 = quote::quote!{
 /// 	#[::wasm_bindgen_test::wasm_bindgen_test]
 /// 	fn example_test_name() {
-/// 		assert_eq!("example-flag", "example-flag");
 /// 		assert_eq!(1, 1);
 /// 	}
 /// };
@@ -462,6 +460,7 @@ pub fn gen_doc_test(config: &DocTestGen, attrs: &Vec<Attribute>) -> Option<ItemF
 	}
 
 	#[derive(Debug)]
+	#[allow(dead_code)]
 	struct RawCodeBlock {
 		first_line: String,
 		inner_lines: Vec<String>,
@@ -554,10 +553,6 @@ pub fn gen_doc_test(config: &DocTestGen, attrs: &Vec<Attribute>) -> Option<ItemF
 			let mut template = config.template.clone();
 			template = template.replace("#code", self.code.join("\n").as_str());
 			template = template.replace("#test_name", self.name.as_str());
-			template = template.replace(
-				"#web_feature_name",
-				&format!(r#""{}""#, config.web_feature_name.as_str()),
-			);
 
 			let mut tokens = TokenStream::new();
 
@@ -588,7 +583,7 @@ pub fn gen_doc_test(config: &DocTestGen, attrs: &Vec<Attribute>) -> Option<ItemF
 
 	match syn::parse2(tokens.clone()) {
 		Ok(item_fn) => Some(item_fn),
-		Err(err) => {
+		Err(_) => {
 			// println!("Error parsing tokens: {:?}", err);
 			if !tokens.is_empty() {
 				panic!(
@@ -603,12 +598,13 @@ pub fn gen_doc_test(config: &DocTestGen, attrs: &Vec<Attribute>) -> Option<ItemF
 	}
 }
 
+#[allow(unused_variables)]
 fn to_debug_file(name: &str, tokens: &TokenStream) {
 	let cwd = std::env::current_dir().expect("to get cwd");
 	let path = cwd.join(name);
 	let payload = tokens.to_string();
-	println!("writing debug file to {:?}: {:?}", name, payload);
-	std::fs::write(path, payload).expect("to write debug file");
+	// println!("writing debug file to {:?}: {:?}", name, payload);
+	// std::fs::write(path, payload).expect("to write debug file");
 }
 
 pub fn js_bind_impl(attr: TokenStream, input: TokenStream) -> syn::Result<TokenStream> {

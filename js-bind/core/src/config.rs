@@ -83,10 +83,6 @@ pub struct CodeGen {
 pub struct DocTestGen {
 	/// Contains variables #web_feature_name, #test_name and #code
 	pub template: String,
-
-	/// Name of feature used for template interpolation
-	#[serde(rename = "web-feature-name")]
-	pub web_feature_name: String,
 }
 
 // Impls
