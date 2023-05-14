@@ -24,8 +24,6 @@ template = """
 #[cfg(test)]
 #[::wasm_bindgen_test::wasm_bindgen_test]
 fn #test_name_jsbind_doctestgen() {
-	use wasm_bindgen::JsValue;
-	
 	#[cfg(feature = "web-not-node")]
 	::wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
