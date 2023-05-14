@@ -1,11 +1,13 @@
-use proc_macro2::TokenStream;
+use std::unimplemented;
+
+use proc_macro2::{Span, TokenStream};
+use quote::quote;
 #[allow(unused_imports)]
 use quote::ToTokens;
-use quote::quote;
 use smart_default::SmartDefault;
-use syn::{parse::Parse, parse_quote, Attribute};
+use syn::{parse::Parse, parse_quote, spanned::Spanned, Attribute, ItemForeignMod, Meta, Expr, ExprLit, Lit};
 
-use crate::config::{Bundle, Config};
+use crate::config::{Bundle, Config, DocTestGen};
 
 #[cfg(test)]
 fn assert_eq_tokens(left: TokenStream, right: TokenStream) {
@@ -153,7 +155,7 @@ mod prelude_tests {
 	}
 }
 
-#[derive(Debug, SmartDefault, PartialEq, Eq, Hash)]
+#[derive(Debug, SmartDefault)]
 pub struct Attrs {
 	#[default = "js-bind.toml"]
 	config_path: String,
@@ -161,9 +163,28 @@ pub struct Attrs {
 
 	fallback: bool,
 	conditional_attrs: bool,
+	#[default(Span::call_site())]
+	conditional_attrs_span: Span,
+
 	inject_docs: bool,
+
 	extract_tests: bool,
+	#[default(Span::call_site())]
+	extract_tests_span: Span,
 }
+
+// implement PartialEq and Eq for Attrs, ignoring spans
+impl PartialEq for Attrs {
+	fn eq(&self, other: &Self) -> bool {
+		self.config_path == other.config_path
+			&& self.js_module == other.js_module
+			&& self.fallback == other.fallback
+			&& self.conditional_attrs == other.conditional_attrs
+			&& self.inject_docs == other.inject_docs
+			&& self.extract_tests == other.extract_tests
+	}
+}
+impl Eq for Attrs {}
 
 pub fn parse_attr(attr: TokenStream) -> syn::Result<Attrs> {
 	impl Parse for Attrs {
@@ -192,6 +213,7 @@ pub fn parse_attr(attr: TokenStream) -> syn::Result<Attrs> {
 						}
 						"conditional_attrs" => {
 							attrs.conditional_attrs = true;
+							attrs.conditional_attrs_span = ident.span();
 						}
 						"fallback" => {
 							attrs.fallback = true;
@@ -201,6 +223,7 @@ pub fn parse_attr(attr: TokenStream) -> syn::Result<Attrs> {
 						}
 						"extract_tests" => {
 							attrs.extract_tests = true;
+							attrs.extract_tests_span = ident.span();
 						}
 						_ => {
 							return Err(syn::Error::new(
@@ -278,12 +301,97 @@ mod parse_attrs_tests {
 			conditional_attrs: true,
 			inject_docs: true,
 			extract_tests: true,
+
+			..Default::default()
 		}, parse_attr(quote!{config_path = "js-bind.toml", js_module = "firebase/app", fallback, conditional_attrs, inject_docs, extract_tests}).unwrap());
 	}
 }
 
-pub fn js_bind_impl(attrs: TokenStream, input: TokenStream) -> syn::Result<TokenStream> {
-	let attrs = parse_attr(attrs)?;
+/// Generates test items suitable to be ran by `wasm-bindgen-test`
+///
+/// ```rust
+/// use js_bind_core::config::DocTestGen;
+/// use js_bind_core::macros::gen_doc_tests;
+///
+/// let toml_str = r##"
+/// template = """
+/// use wasm_bindgen_test::wasm_bindgen_test as test;
+/// #[test]
+/// fn test_generated() {
+/// 	#code
+/// }
+/// """
+/// "##;
+///
+/// let config: DocTestGen = toml::from_str(toml_str).expect("to parse");
+/// assert_eq!(config.template.split("\n").collect::<Vec<_>>()[1], "#[test]");
+///
+/// let attributes = vec![
+///		syn::parse_quote!{ #[doc = r#"
+///		Example test:
+/// 	```rust
+/// 		assert_eq!(1, 1);
+/// 	```
+/// "#]}
+/// ];
+///
+/// let expected = quote::quote!{
+/// use wasm_bindgen_test::wasm_bindgen_test as test;
+/// #[test]
+/// fn test_generated() {
+/// 	assert_eq!(1, 1);
+/// }
+/// };
+///
+/// let generated = gen_doc_tests(&config, &attributes).unwrap();
+///
+/// assert_eq!(expected.to_string(), generated.to_string());
+/// ```
+pub fn gen_doc_tests(config: &DocTestGen, attrs: &Vec<Attribute>, name: String) -> syn::Result<TokenStream> {
+	fn extract_documentation(attrs: &Vec<Attribute>) -> Vec<String> {
+		attrs
+			.iter()
+			.filter_map(|attr| {
+				if let Meta::NameValue(meta_name_value) = &attr.meta {
+					if meta_name_value.path.is_ident("doc") {
+						match &meta_name_value.value {
+							Expr::Lit(ExprLit {
+								lit: Lit::Str(doc), ..
+							}) => {
+								return Some(doc.value());
+							}
+							_ => None
+						}
+					} else {
+						None
+					}
+				} else {
+					None
+				}
+			})
+			.collect()
+	}
+
+	struct TestableCodeBlock {
+		/// Lines of code to be subbed in for #code var
+		code: Vec<String>,
+		/// Full name of test
+		name: String,
+
+		// flags: Vec<Flag>,
+	}
+
+	fn parse_documentation(lines: Vec<String>) -> Vec<TestableCodeBlock> {
+		unimplemented!()
+
+	}
+	unimplemented!()
+}
+
+pub fn js_bind_impl(attr: TokenStream, input: TokenStream) -> syn::Result<TokenStream> {
+	let attr_span = attr.span();
+	let attrs = parse_attr(attr)?;
+	let input_extern: ItemForeignMod = syn::parse2(input.clone())?;
 
 	let config = Config::from_cwd(&attrs.config_path).expect("Cannot parse config");
 
@@ -296,12 +404,30 @@ pub fn js_bind_impl(attrs: TokenStream, input: TokenStream) -> syn::Result<Token
 
 	let mut prelude = TokenStream::new();
 	if attrs.conditional_attrs {
-		prelude = gen_prelude_attrs(config.bundles.expect("Expected config to have a [[bundles]] table because #[js_bind(conditional_attrs)] was specified which requires [[bundles]] to have at least one entry"))?;
+		let err_msg = "Expected config to have a [[bundles]] table because #[js_bind(conditional_attrs)] was specified which requires [[bundles]].if and [[bundles]].then to have at least one entry";
+		let bundles = config
+			.bundles
+			.ok_or_else(|| syn::Error::new(attrs.conditional_attrs_span, err_msg))?;
+		prelude = gen_prelude_attrs(bundles)?;
 	}
+
+	let mut doc_test_gen = TokenStream::new();
+	if attrs.extract_tests {
+		let err_msg = "Expected config to have a [doctestgen] table because #[js_bind(extract_tests)] was specified which requires [doctestgen.template] to be specified";
+		let config = config
+			.doc_test_gen
+			.ok_or_else(|| syn::Error::new(attrs.extract_tests_span, err_msg))?;
+		// TODO: Loop through all items/fns and generate tests for them, maybe extract into seperate func?
+		// doc_test_gen = gen_doc_tests(&config, &attributes)?;
+	}
+
+	let processed_output = input;
 
 	Ok(quote! {
 		#prelude
 		#fallback
-		#input
+		#processed_output
+
+		#doc_test_gen
 	})
 }

@@ -9,3 +9,8 @@ to-build = "rollup -args"
 # if = "link-node"
 # then = "something/path.js"
 # to-build = "rollup -args"
+
+[doctestgen]
+template = """
+yippee
+"""
