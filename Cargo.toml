@@ -1,17 +1,13 @@
 [workspace]
 members = [
-	"firebase-js",
+	# "firebase-js",
 	"firebase-js-sys",
-	# "js-bind",
-	# "js-bind/core",
-	# "js-bind/proc",
-	# "js-bind-tests",
-	# "firebase-js-sys/proc",
-	# "firebase-js-sys/proc/syner",
+	"js-bind",
+	"js-bind/core",
+	"js-bind/proc",
 	"firebase-types",
-	# "js-bind"
 ]
-exclude = ["js-bind"]
+exclude = ["firebase-js"]
 
 [workspace.package]
 # REMEMBER: UPDATE in js-bind/Cargo.toml !!

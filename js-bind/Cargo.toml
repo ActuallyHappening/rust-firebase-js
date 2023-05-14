@@ -2,23 +2,17 @@
 name = "js-bind"
 version = "0.1.0"
 edition = "2021"
-
-[workspace]
-members = [
-		"core",
-		"proc",
+description = "wasm32 doctests, multiple wasm32 targets: procedural macros"
+authors = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+exclude = [
+	"*",
+	"!src",
+	"!Cargo.toml",
+	"!Cargo.lock",
+	"!README.md",
 ]
-
-[workspace.package]
-# REMEMBER: UPDATE parent workspace!
-authors = []
-homepage = "https://actuallyhappening.github.io/rust-firebase-js/"
-repository = "https://github.com/ActuallyHappening/rust-firebase-js"
-license = "MIT"
-license-file = "LICENSE"
-documentation = "https://actuallyhappening.github.io/rust-firebase-js/"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
 ## Don't use this, for compiling / testing only

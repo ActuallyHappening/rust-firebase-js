@@ -1,6 +1,6 @@
 [package]
 name = "firebase-js-sys"
-version = "0.1.0"
+version = "0.0.1"
 description = "`wasm32-unknown-unknown` bindings for the Firebase modular JS SDK (`npm` firebase@9)"
 repository = "https://github.com/ActuallyHappening/rust-firebase-js/tree/master/firebase-js-sys"
 edition = "2021"
@@ -63,9 +63,13 @@ wasm-bindgen = { version = "0.2.84", features = ["serde"] }
 cfg-if = "1.0.0"
 
 # Local deps
-firebase-types = { path = "../firebase-types" }
+
 # firebase-js-sys-proc = { path = "./proc", default-features = false }
 js-bind = { path = "../js-bind" }
+
+# [dependencies.firebase-types]
+# path = "../firebase-types"
+# version = "0.0.1"
 
 
 [dev-dependencies]
