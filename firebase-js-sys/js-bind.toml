@@ -1,4 +1,4 @@
-# File for tests run concerning js-bind directory
+# Config for linking `firebase-js-sys` using `js-bind` crate
 
 [[bundles]]
 if = "web-not-node"
@@ -19,10 +19,11 @@ to-build = "rollup -args"
 # """
 
 [doctestgen]
+replace-package = "firebase_js_sys" # TODO: implement
 template = """
 #[cfg(test)]
 #[::wasm_bindgen_test::wasm_bindgen_test]
-fn _gentest_#test_name() {
+fn #test_name_jsbind_doctestgen() {
 	use wasm_bindgen::JsValue;
 	
 	#[cfg(feature = "web-not-node")]

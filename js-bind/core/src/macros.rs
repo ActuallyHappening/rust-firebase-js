@@ -7,8 +7,7 @@ use quote::quote;
 use quote::ToTokens;
 use smart_default::SmartDefault;
 use syn::{
-	parse::Parse, parse_quote, Attribute, Expr, ExprLit, ItemFn, ItemForeignMod,
-	Lit, Meta,
+	parse::Parse, parse_quote, Attribute, Expr, ExprLit, ItemFn, ItemForeignMod, ItemUse, Lit, Meta, Token,
 };
 
 use crate::config::{Bundle, Config, DocTestGen};
@@ -361,6 +360,7 @@ mod parse_attrs_tests {
 /// use quote::ToTokens;
 ///
 /// let toml_str = r##"
+/// replace-package = "firebase_js_sys"
 /// template = """
 /// #[::wasm_bindgen_test::wasm_bindgen_test]
 /// fn #test_name() {
@@ -388,14 +388,34 @@ mod parse_attrs_tests {
 /// };
 /// let generated1 = gen_doc_test(&config, &attributes1).expect("there to be a test");
 /// assert_eq!(expected1.to_string(), generated1.to_token_stream().to_string());
-/// ```
 /// 
+/// let attributes2 = vec![syn::parse_quote!{ #[doc = r#"
+/// 	Example test that shows off package import replacement:
+/// 	```rust
+/// 	// JSBIND-TEST example_test_with_replaced_package
+/// 	use firebase_js_sys::something::deep as here;
+/// 	assert_eq!(42, 42);
+/// 	```
+/// "#]}];
+/// let expected2 = quote::quote!{
+/// 	#[::wasm_bindgen_test::wasm_bindgen_test]
+/// 	fn example_test_with_replaced_package() {
+/// 		// Note how the package name is replaced, because this test
+/// 		// is not a documentation test this will ususally work
+/// 		use crate::something::deep as here;
+/// 		assert_eq!(42, 42);
+/// 	}
+/// };
+/// let generated2 = gen_doc_test(&config, &attributes2).expect("there to be a test");
+/// assert_eq!(expected2.to_string(), generated2.to_token_stream().to_string());
+/// ```
+///
 /// Example that doesn't produce valid rust code:
 /// ```rust,should_panic
 /// use js_bind_core::config::DocTestGen;
 /// use js_bind_core::macros::gen_doc_test;
 /// use quote::ToTokens;
-/// 
+///
 /// let toml_str = r##"
 /// web-feature-name = "example-flag"
 /// template = """
@@ -406,21 +426,21 @@ mod parse_attrs_tests {
 /// }
 /// """
 /// "##;
-/// 
+///
 /// let config: DocTestGen = toml::from_str(toml_str).expect("to parse");
-/// 
+///
 /// let attributes1 = vec![
 /// 	syn::parse_quote!{ #[doc = r#"
 /// 	Example test:
 /// 	```rust
 /// 		// JSBIND-TEST example_test_name
 /// 		assert_eq!(1, 1);
-/// 
+///
 /// 		this_is_not valid- rust_code ();
 /// 	```
 /// "#]}
 /// ];
-/// 
+///
 /// gen_doc_test(&config, &attributes1);
 /// ```
 pub fn gen_doc_test(config: &DocTestGen, attrs: &Vec<Attribute>) -> Option<ItemFn> {
@@ -482,7 +502,7 @@ pub fn gen_doc_test(config: &DocTestGen, attrs: &Vec<Attribute>) -> Option<ItemF
 		}
 	}
 
-	fn parse_documentation(lines: Vec<String>) -> Vec<TestableCodeBlock> {
+	fn parse_documentation(lines: Vec<String>, config: &DocTestGen) -> Vec<TestableCodeBlock> {
 		// groups into lines that start with "```*" and end with "```"
 		let mut groups: Vec<Vec<String>> = Vec::new();
 		let mut current_group: Vec<String> = Vec::new();
@@ -543,7 +563,8 @@ pub fn gen_doc_test(config: &DocTestGen, attrs: &Vec<Attribute>) -> Option<ItemF
 					.trim()
 					.to_string();
 				assert_ne!(name, "", "Test name cannot be empty");
-				TestableCodeBlock { code, name }
+
+				TestableCodeBlock { code, name }.replace_crate_imports(&config)
 			})
 			.collect()
 	}
@@ -562,12 +583,50 @@ pub fn gen_doc_test(config: &DocTestGen, attrs: &Vec<Attribute>) -> Option<ItemF
 
 			Ok(tokens)
 		}
+
+		/// Replaces potential imports to absolute package name to `crate`
+		pub fn replace_crate_imports(self, config: &DocTestGen) -> Self {
+			let code = self.code.into_iter().map(|line| {
+				let mut line_mut = line;
+				if line_mut.trim().starts_with("use ") && line_mut.trim().ends_with(";") {
+					// parse line as rust import `use foo::bar;`
+					match syn::parse_str::<ItemUse>(&line_mut) {
+						Ok(import) => {
+							let mut import = import;
+							match import.tree {
+								syn::UseTree::Path(ref mut path) => {
+									// get first ident
+									let first_ident = path.ident.to_string();
+									if first_ident == config.replace_package.clone().expect("to have a replace_package") {
+										path.ident = syn::Ident::new(
+											"crate",
+											path.ident.span(),
+										);
+										// path.ident = Token![crate](path.ident.span());
+									}
+								}
+								_ => unimplemented!("Only path imports are supported"),
+							}
+							line_mut = import.to_token_stream().to_string();
+						}
+						Err(err) => {
+							eprintln!("Error parsing line as rust import. This may not be a fatal error, but often it is an early indicator of bad syntax\nErr:\n{:?}\nline: {:?}", err, line_mut)
+						}
+					}
+				}
+				line_mut
+			}).collect();
+			Self {
+				code,
+				name: self.name,
+			}
+		}
 	}
 
 	let documentation = extract_documentation(attrs);
 	// println!("documentation: {:?}", documentation);
 
-	let testable_code_blocks = parse_documentation(documentation);
+	let testable_code_blocks = parse_documentation(documentation, &config);
 	// println!("testable_code_blocks: {:?}", testable_code_blocks);
 
 	let tokens: TokenStream = testable_code_blocks

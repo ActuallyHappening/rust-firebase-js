@@ -83,6 +83,10 @@ pub struct CodeGen {
 pub struct DocTestGen {
 	/// Contains variables #web_feature_name, #test_name and #code
 	pub template: String,
+
+	/// Replaces package name when expanding test template
+	#[serde(rename = "replace-package")]
+	pub replace_package: Option<String>,
 }
 
 // Impls
