@@ -11,12 +11,12 @@ if = "node-not-web"
 then = "js/bundle-cjs.js"
 to-build = "rollup -args"
 
-[codegen]
-output = "js/bundle.ts"
-template = """
-import { #name as _#name } from '#mod';
-export const #name = _#name;
-"""
+# [codegen]
+# output = "js/bundle.ts"
+# template = """
+# import { #name as _#name } from '#mod';
+# export const #name = _#name;
+# """
 
 [doctestgen]
 template = """

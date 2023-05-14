@@ -4,7 +4,7 @@ use wasm_bindgen_test::wasm_bindgen_test as test;
 use wasm_bindgen_test::wasm_bindgen_test_configure;
 use firebase_js_sys::app;
 
-// #[cfg(feature = "web-not-node")]
+#[cfg(feature = "web-not-node")]
 wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
 /// Tests using values:

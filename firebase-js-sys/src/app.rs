@@ -1,8 +1,10 @@
 use js_bind::js_bind;
 use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 
-// #[js_bind(config_path = "firebase-js-sys/js-bind.toml", fallback, conditional_attrs)]
-#[wasm_bindgen(module = "/js/bundle-esm.js")]
+#[js_bind(config_path = "firebase-js-sys/js-bind.toml")]
+#[cfg_attr(feature = "web-not-node", wasm_bindgen(module = "/js/bundle-esm.js"))]
+#[cfg_attr(feature = "node-not-web", wasm_bindgen(module = "/js/bundle-cjs.js"))]
+// #[wasm_bindgen]
 extern "C" {
 	/// Takes a config object and returns a firebase app instance
 	///
@@ -38,16 +40,14 @@ extern "C" {
 mod tests {
 	use super::*;
 
-	// #[cfg(feature = "web-not-node")]
+	#[cfg(feature = "web-not-node")]
 	wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
 	#[wasm_bindgen_test::wasm_bindgen_test]
 	fn test() {
-		
-
 		let config_obj = serde_wasm_bindgen::to_value(&serde_json::json!({})).unwrap();
 		let result = initialize_app(config_obj.clone());
-		assert!(result.is_ok());
+		assert!(result.is_ok(), "Expected Ok, got {:?}", result);
 	}
 }
 

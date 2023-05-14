@@ -35,7 +35,8 @@ test = "./test.sh"
 testq = "./test.sh 2>/dev/null"
 
 [features]
-default = ["node-not-web", "verbose-logging"]
+# default = ["node-not-web", "verbose-logging"]
+default = ["web-not-node", "verbose-logging"]
 
 ### If multiple runtimes could be linked to at once, you would end up with two seperate instances of `firebase` in the final bundle (which is bad!)
 ### For that reason, you must enable one of the following features to specify which runtime you want to link to:

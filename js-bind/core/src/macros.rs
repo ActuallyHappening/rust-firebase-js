@@ -5,7 +5,9 @@ use quote::quote;
 #[allow(unused_imports)]
 use quote::ToTokens;
 use smart_default::SmartDefault;
-use syn::{parse::Parse, parse_quote, spanned::Spanned, Attribute, ItemForeignMod, Meta, Expr, ExprLit, Lit};
+use syn::{
+	parse::Parse, parse_quote, spanned::Spanned, Attribute, Expr, ExprLit, ItemForeignMod, Lit, Meta,
+};
 
 use crate::config::{Bundle, Config, DocTestGen};
 
@@ -50,7 +52,7 @@ fn assert_eq_tokens(left: TokenStream, right: TokenStream) {
 ///
 /// use quote::quote;
 /// let attrs = js_bind_core::macros::gen_prelude_attrs(bundles).unwrap();
-/// let expected = quote!{ #[cfg_attr(feature = "feature-name1", ::wasm_bindgen::prelude::wasm_bindgen(module = "js/file/path.here"))] };
+/// let expected = quote!{ #[cfg_attr(feature = "feature-name1", ::wasm_bindgen::prelude::wasm_bindgen(module = "/js/file/path.here"))] };
 /// assert_eq!(attrs.to_string(), expected.to_string());
 /// ```
 ///
@@ -73,8 +75,8 @@ fn assert_eq_tokens(left: TokenStream, right: TokenStream) {
 /// use quote::quote;
 /// let attrs = js_bind_core::macros::gen_prelude_attrs(bundles).unwrap();
 /// let expected = quote!{
-/// #[cfg_attr(feature = "feature-name", ::wasm_bindgen::prelude::wasm_bindgen(module = "js/file/path.here"))]
-/// #[cfg_attr(feature = "feature-name2", ::wasm_bindgen::prelude::wasm_bindgen(module = "js/file/path.here2"))]
+/// #[cfg_attr(feature = "feature-name", ::wasm_bindgen::prelude::wasm_bindgen(module = "/js/file/path.here"))]
+/// #[cfg_attr(feature = "feature-name2", ::wasm_bindgen::prelude::wasm_bindgen(module = "/js/file/path.here2"))]
 /// };
 /// assert_eq!(attrs.to_string(), expected.to_string());
 /// ```
@@ -83,6 +85,12 @@ pub fn gen_prelude_attrs(bundles: Vec<Bundle>) -> syn::Result<TokenStream> {
 		fn into_conditional_attr(self) -> Attribute {
 			let feature_name = self.if_feature;
 			let module_path = self.then_js_path;
+			assert_ne!(feature_name, "");
+			// assert first char isn't '/'
+			assert_ne!(module_path.chars().next().unwrap(), '/', r##"
+Paths in [[bundles]].then must be relative to package root, not absolute.
+Consider removing the leading '/' from the path: "{:?}""##, module_path);
+			let module_path = format!("/{}", module_path);
 			parse_quote! {
 				#[cfg_attr(feature = #feature_name, ::wasm_bindgen::prelude::wasm_bindgen(module = #module_path))]
 			}
@@ -105,6 +113,31 @@ mod prelude_tests {
 	use super::*;
 
 	#[test]
+	fn debug() {
+		let input = quote! {
+			extern "C" {
+				/// Takes a config object and returns a firebase app instance
+				#[wasm_bindgen(js_name = "initializeApp", catch)]
+				pub fn initialize_app(config: JsValue) -> Result<JsValue, JsValue>;
+			}
+		};
+
+		let expected = quote! {
+			#[cfg_attr(feature = "web-not-node", ::wasm_bindgen::prelude::wasm_bindgen(module = "/js/bundle-esm.js"))]
+			#[cfg_attr(feature = "node-not-web", ::wasm_bindgen::prelude::wasm_bindgen(module = "/js/bundle-cjs.js"))]
+			extern "C" {
+				/// Takes a config object and returns a firebase app instance
+				#[wasm_bindgen(js_name = "initializeApp", catch)]
+				pub fn initialize_app(config: JsValue) -> Result<JsValue, JsValue>;
+			}
+		};
+
+		let returned = js_bind_impl(quote! {config_path = "../examples/testing-configs/firebase.js-bind.toml", conditional_attrs}, input).unwrap();
+
+		assert_eq_tokens(expected, returned);
+	}
+
+	#[test]
 	fn test_prelude_attrs() {
 		let attrs_empty = quote! {};
 		assert_eq_tokens(attrs_empty, gen_prelude_attrs(vec![]).unwrap());
@@ -114,7 +147,7 @@ mod prelude_tests {
 		};
 		let bundles1 = vec![Bundle {
 			if_feature: "web-not-node".to_string(),
-			then_js_path: "/target/js/bundle-es.js".to_string(),
+			then_js_path: "target/js/bundle-es.js".to_string(),
 			to_build_command: "".to_string(),
 		}];
 		assert_eq_tokens(attrs1, gen_prelude_attrs(bundles1).unwrap());
@@ -126,12 +159,12 @@ mod prelude_tests {
 		let bundles2 = vec![
 			Bundle {
 				if_feature: "web-not-node".to_string(),
-				then_js_path: "/target/js/bundle-es.js".to_string(),
+				then_js_path: "target/js/bundle-es.js".to_string(),
 				to_build_command: "".to_string(),
 			},
 			Bundle {
 				if_feature: "node-not-web".to_string(),
-				then_js_path: "/target/js/bundle-cjs.js".to_string(),
+				then_js_path: "target/js/bundle-cjs.js".to_string(),
 				to_build_command: "".to_string(),
 			},
 		];
@@ -145,7 +178,7 @@ mod prelude_tests {
 		};
 		let received_attr: Attribute = Bundle {
 			if_feature: "web-not-node".to_string(),
-			then_js_path: "/target/js/bundle-es.js".to_string(),
+			then_js_path: "target/js/bundle-es.js".to_string(),
 			to_build_command: "".to_string(),
 		}
 		.into_conditional_attr();
@@ -338,16 +371,20 @@ mod parse_attrs_tests {
 /// let expected = quote::quote!{
 /// use wasm_bindgen_test::wasm_bindgen_test as test;
 /// #[test]
-/// fn test_generated() {
+/// fn test_prefix_1() {
 /// 	assert_eq!(1, 1);
 /// }
 /// };
 ///
-/// let generated = gen_doc_tests(&config, &attributes).unwrap();
+/// let generated = gen_doc_tests(&config, &attributes, "test_prefix".to_string()).unwrap();
 ///
 /// assert_eq!(expected.to_string(), generated.to_string());
 /// ```
-pub fn gen_doc_tests(config: &DocTestGen, attrs: &Vec<Attribute>, name: String) -> syn::Result<TokenStream> {
+pub fn gen_doc_tests(
+	config: &DocTestGen,
+	attrs: &Vec<Attribute>,
+	name: String,
+) -> syn::Result<TokenStream> {
 	fn extract_documentation(attrs: &Vec<Attribute>) -> Vec<String> {
 		attrs
 			.iter()
@@ -360,7 +397,7 @@ pub fn gen_doc_tests(config: &DocTestGen, attrs: &Vec<Attribute>, name: String) 
 							}) => {
 								return Some(doc.value());
 							}
-							_ => None
+							_ => None,
 						}
 					} else {
 						None
@@ -377,13 +414,11 @@ pub fn gen_doc_tests(config: &DocTestGen, attrs: &Vec<Attribute>, name: String) 
 		code: Vec<String>,
 		/// Full name of test
 		name: String,
-
 		// flags: Vec<Flag>,
 	}
 
 	fn parse_documentation(lines: Vec<String>) -> Vec<TestableCodeBlock> {
 		unimplemented!()
-
 	}
 	unimplemented!()
 }
