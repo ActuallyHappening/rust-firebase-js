@@ -67,15 +67,15 @@ pub struct CodeGen {
 }
 
 /// Represents the doc-test codegen part of the config
-/// 
+///
 /// ```rust
 /// use js_bind_core::config::DocTestGen;
-/// 
+///
 /// let toml_str = r#"
 /// template = "NA"
 /// web-feature-name = "yay"
 /// "#;
-/// 
+///
 /// let config = toml::from_str::<DocTestGen>(toml_str);
 /// config.expect("to parse");
 /// ```
@@ -90,11 +90,11 @@ pub struct DocTestGen {
 impl Config {
 	/// Gets the config from the current working directory,
 	/// using the relative path provided.
-	/// 
+	///
 	/// ## Example
 	/// ```rust
 	/// use js_bind_core::config::Config;
-	/// 
+	///
 	/// # // Change dir to directory for doctests
 	/// # std::env::set_current_dir("../examples/testing-configs").expect("to change dir");
 	/// // create file
@@ -103,24 +103,34 @@ impl Config {
 	/// // if = "link-node"
 	/// // then = "something/path.js"
 	/// // to-build = "rollup -args"
-	/// // 
+	/// //
 	/// // e.t.c.
 	/// // "#).expect("to write file");
-	/// 
+	///
 	/// // Parses the file `js-bind.toml` in the current working directory
 	/// // as a config file
 	/// let config = Config::from_cwd("js-bind.toml");
 	/// config.expect("to parse");
 	/// ```
 	pub fn from_cwd(relative_path: &str) -> Result<Self, toml::de::Error> {
-		let cwd = std::env::current_dir().expect("Cannot locate cwd");
-		let full_path = cwd.join(relative_path);
+		let relative_dir = std::env::current_dir().expect("Cannot locate cwd");
+		// let relative_dir: PathBuf = std::env::var("CARGO_MANIFEST_DIR").expect("manifest dir not provided through env var CARGO_MANIFEST_DIR").into();
+		// let relative_dir: PathBuf = env!("CARGO_MANIFEST_DIR").into();
 
-		let string = std::fs::read_to_string(full_path.clone()).expect(format!("Couldn't read file (relative: {:?}): {:?}", relative_path, full_path).as_str());
+		eprintln!("cwd: {}", relative_dir.to_str().unwrap());
+
+		let full_path = relative_dir.join(relative_path);
+
+		let string = std::fs::read_to_string(full_path.clone()).expect(
+			format!(
+				"Couldn't read file (relative: {:?}, relative_dir(e.g. package root): {:?}): {:?}",
+				relative_path, relative_dir, full_path
+			)
+			.as_str(),
+		);
 
 		let mut config = toml::from_str::<Config>(string.as_str())?;
 		config.full_path = Some(full_path);
 		Ok(config)
 	}
 }
-
