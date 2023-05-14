@@ -513,10 +513,11 @@ pub fn gen_doc_test(config: &DocTestGen, attrs: &Vec<Attribute>) -> syn::Result<
 	}
 
 	impl TestableCodeBlock {
-		pub fn into_tokens(&self, template: String) -> syn::Result<TokenStream> {
-			let mut template = template;
+		pub fn into_tokens(&self, config: &DocTestGen) -> syn::Result<TokenStream> {
+			let mut template = config.template.clone();
 			template = template.replace("#code", self.code.join("\n").as_str());
 			template = template.replace("#test_name", self.name.as_str());
+			template = template.replace("#web_feature_name", &format!(r#""{}""#, config.web_feature_name.as_str()));
 
 			let mut tokens = TokenStream::new();
 
@@ -536,7 +537,7 @@ pub fn gen_doc_test(config: &DocTestGen, attrs: &Vec<Attribute>) -> syn::Result<
 
 	let tokens: TokenStream = testable_code_blocks
 		.iter()
-		.map(|b| b.into_tokens(config.template.clone()))
+		.map(|b| b.into_tokens(&config))
 		.fold(TokenStream::new(), |mut acc, f| {
 			acc.extend(f);
 			acc
@@ -552,8 +553,8 @@ fn to_debug_file(name: &str, tokens: &TokenStream) {
 	let cwd = std::env::current_dir().expect("to get cwd");
 	let path = cwd.join(name);
 	let payload = tokens.to_string();
-	println!("writing debug file to {:?}: {:?}", name, payload);
-	std::fs::write(path, payload).expect("to write debug file");
+	// println!("writing debug file to {:?}: {:?}", name, payload);
+	// std::fs::write(path, payload).expect("to write debug file");
 }
 
 pub fn js_bind_impl(attr: TokenStream, input: TokenStream) -> syn::Result<TokenStream> {

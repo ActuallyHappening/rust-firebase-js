@@ -19,6 +19,7 @@ to-build = "rollup -args"
 # """
 
 [doctestgen]
+web-feature-name = "web-not-node"
 template = """
 #[::wasm_bindgen_test::wasm_bindgen_test]
 fn #test_name() {
