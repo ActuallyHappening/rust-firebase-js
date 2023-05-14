@@ -611,7 +611,7 @@ pub fn js_bind_impl(attr: TokenStream, input: TokenStream) -> syn::Result<TokenS
 	let attrs = parse_attr(attr)?;
 	let input_extern: ItemForeignMod = syn::parse2(input.clone())?;
 
-	let config = Config::from_cwd(&attrs.config_path).expect("Cannot parse config");
+	let config = Config::from_package_root(&attrs.config_path).expect("Cannot parse config");
 
 	let mut fallback = TokenStream::new();
 	if attrs.fallback {

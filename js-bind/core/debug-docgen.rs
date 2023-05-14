@@ -1,0 +1,1 @@
+# [:: wasm_bindgen_test :: wasm_bindgen_test] fn example_test_name () { assert_eq ! (# web_feature_name , "example-flag") ; assert_eq ! (1 , 1) ; this_is_not valid - rust_code () ; }

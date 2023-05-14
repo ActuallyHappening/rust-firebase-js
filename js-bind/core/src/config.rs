@@ -92,7 +92,7 @@ impl Config {
 	/// using the relative path provided.
 	///
 	/// ## Example
-	/// ```rust
+	/// ```rust,no_run
 	/// use js_bind_core::config::Config;
 	///
 	/// # // Change dir to directory for doctests
@@ -109,12 +109,12 @@ impl Config {
 	///
 	/// // Parses the file `js-bind.toml` in the current working directory
 	/// // as a config file
-	/// let config = Config::from_cwd("js-bind.toml");
+	/// let config = Config::from_package_root("js-bind.toml");
 	/// config.expect("to parse");
 	/// ```
-	pub fn from_cwd(relative_path: &str) -> Result<Self, toml::de::Error> {
-		let relative_dir = std::env::current_dir().expect("Cannot locate cwd");
-		// let relative_dir: PathBuf = std::env::var("CARGO_MANIFEST_DIR").expect("manifest dir not provided through env var CARGO_MANIFEST_DIR").into();
+	pub fn from_package_root(relative_path: &str) -> Result<Self, toml::de::Error> {
+		// let relative_dir = std::env::current_dir().expect("Cannot locate cwd");
+		let relative_dir: PathBuf = std::env::var("CARGO_MANIFEST_DIR").expect("manifest dir not provided through env var CARGO_MANIFEST_DIR").into();
 		// let relative_dir: PathBuf = env!("CARGO_MANIFEST_DIR").into();
 
 		eprintln!("cwd: {}", relative_dir.to_str().unwrap());

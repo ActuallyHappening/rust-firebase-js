@@ -1,2 +1,3 @@
 [alias]
 t = "test --quiet"
+t-all = "test --quiet --all"
