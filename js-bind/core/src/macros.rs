@@ -1,4 +1,4 @@
-use std::{unimplemented, println};
+use std::{println, unimplemented};
 
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
@@ -352,22 +352,25 @@ mod parse_attrs_tests {
 
 /// Generates test items suitable to be ran by `wasm-bindgen-test`
 ///
+/// ## Examples
+/// Correct example:
 /// ```rust
 /// use js_bind_core::config::DocTestGen;
 /// use js_bind_core::macros::gen_doc_test;
+/// use quote::ToTokens;
 ///
 /// let toml_str = r##"
+/// web-feature-name = "example-flag"
 /// template = """
-/// use wasm_bindgen_test::wasm_bindgen_test as test;
-/// #[test]
+/// #[::wasm_bindgen_test::wasm_bindgen_test]
 /// fn #test_name() {
+/// 	assert_eq!(#web_feature_name, "example-flag");
 /// 	#code
 /// }
 /// """
 /// "##;
 ///
 /// let config: DocTestGen = toml::from_str(toml_str).expect("to parse");
-/// assert_eq!(config.template.split("\n").collect::<Vec<_>>()[1], "#[test]");
 ///
 /// let attributes1 = vec![
 ///		syn::parse_quote!{ #[doc = r#"
@@ -379,14 +382,48 @@ mod parse_attrs_tests {
 /// "#]}
 /// ];
 /// let expected1 = quote::quote!{
-/// 	use wasm_bindgen_test::wasm_bindgen_test as test;
-/// 	#[test]
+/// 	#[::wasm_bindgen_test::wasm_bindgen_test]
 /// 	fn example_test_name() {
+/// 		assert_eq!("example-flag", "example-flag");
 /// 		assert_eq!(1, 1);
 /// 	}
 /// };
-/// let generated1 = gen_doc_test(&config, &attributes1).unwrap();
-/// assert_eq!(expected1.to_string(), generated1.to_string());
+/// let generated1 = gen_doc_test(&config, &attributes1).expect("there to be a test");
+/// assert_eq!(expected1.to_string(), generated1.to_token_stream().to_string());
+/// ```
+/// 
+/// Example that doesn't produce valid rust code:
+/// ```rust,should_panic
+/// use js_bind_core::config::DocTestGen;
+/// use js_bind_core::macros::gen_doc_test;
+/// use quote::ToTokens;
+/// 
+/// let toml_str = r##"
+/// web-feature-name = "example-flag"
+/// template = """
+/// #[::wasm_bindgen_test::wasm_bindgen_test]
+/// fn #test_name() {
+/// 	assert_eq!(#web_feature_name, "example-flag");
+/// 	#code
+/// }
+/// """
+/// "##;
+/// 
+/// let config: DocTestGen = toml::from_str(toml_str).expect("to parse");
+/// 
+/// let attributes1 = vec![
+/// 	syn::parse_quote!{ #[doc = r#"
+/// 	Example test:
+/// 	```rust
+/// 		// JSBIND-TEST example_test_name
+/// 		assert_eq!(1, 1);
+/// 
+/// 		this_is_not valid- rust_code ();
+/// 	```
+/// "#]}
+/// ];
+/// 
+/// gen_doc_test(&config, &attributes1);
 /// ```
 pub fn gen_doc_test(config: &DocTestGen, attrs: &Vec<Attribute>) -> Option<ItemFn> {
 	fn extract_documentation(attrs: &Vec<Attribute>) -> Vec<String> {
@@ -464,7 +501,7 @@ pub fn gen_doc_test(config: &DocTestGen, attrs: &Vec<Attribute>) -> Option<ItemF
 			}
 		}
 
-		println!("groups: {:?}", groups);
+		// println!("groups: {:?}", groups);
 
 		// convert into TestableCodeBlock
 		let mut raw_code_blocks = Vec::new();
@@ -517,7 +554,10 @@ pub fn gen_doc_test(config: &DocTestGen, attrs: &Vec<Attribute>) -> Option<ItemF
 			let mut template = config.template.clone();
 			template = template.replace("#code", self.code.join("\n").as_str());
 			template = template.replace("#test_name", self.name.as_str());
-			template = template.replace("#web_feature_name", &format!(r#""{}""#, config.web_feature_name.as_str()));
+			template = template.replace(
+				"#web_feature_name",
+				&format!(r#""{}""#, config.web_feature_name.as_str()),
+			);
 
 			let mut tokens = TokenStream::new();
 
@@ -533,7 +573,7 @@ pub fn gen_doc_test(config: &DocTestGen, attrs: &Vec<Attribute>) -> Option<ItemF
 	// println!("documentation: {:?}", documentation);
 
 	let testable_code_blocks = parse_documentation(documentation);
-	println!("testable_code_blocks: {:?}", testable_code_blocks);
+	// println!("testable_code_blocks: {:?}", testable_code_blocks);
 
 	let tokens: TokenStream = testable_code_blocks
 		.iter()
@@ -546,10 +586,18 @@ pub fn gen_doc_test(config: &DocTestGen, attrs: &Vec<Attribute>) -> Option<ItemF
 
 	to_debug_file("debug-docgen.rs", &tokens.clone());
 
-	match syn::parse2(tokens) {
+	match syn::parse2(tokens.clone()) {
 		Ok(item_fn) => Some(item_fn),
 		Err(err) => {
 			// println!("Error parsing tokens: {:?}", err);
+			if !tokens.is_empty() {
+				panic!(
+					r#"Error parsing tokens as a rust function, make sure your template produces valid rust code: "
+{:?}
+""#,
+					tokens.to_string()
+				);
+			}
 			None
 		}
 	}
@@ -559,8 +607,8 @@ fn to_debug_file(name: &str, tokens: &TokenStream) {
 	let cwd = std::env::current_dir().expect("to get cwd");
 	let path = cwd.join(name);
 	let payload = tokens.to_string();
-	// println!("writing debug file to {:?}: {:?}", name, payload);
-	// std::fs::write(path, payload).expect("to write debug file");
+	println!("writing debug file to {:?}: {:?}", name, payload);
+	std::fs::write(path, payload).expect("to write debug file");
 }
 
 pub fn js_bind_impl(attr: TokenStream, input: TokenStream) -> syn::Result<TokenStream> {

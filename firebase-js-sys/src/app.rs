@@ -36,18 +36,18 @@ extern "C" {
 	pub fn initialize_app(config: JsValue) -> Result<JsValue, JsValue>;
 }
 
-// #[cfg(test)]
-// mod tests {
-// 	use super::*;
+#[cfg(test)]
+mod tests {
+	use super::*;
 
-// 	#[cfg(feature = "web-not-node")]
-// 	wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+	#[cfg(feature = "web-not-node")]
+	wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
-// 	#[wasm_bindgen_test::wasm_bindgen_test]
-// 	fn test() {
-// 		let config_obj = serde_wasm_bindgen::to_value(&serde_json::json!({})).unwrap();
-// 		let result = initialize_app(config_obj.clone());
-// 		assert!(result.is_ok(), "Expected Ok, got {:?}", result);
-// 	}
-// }
+	#[wasm_bindgen_test::wasm_bindgen_test]
+	fn test() {
+		let config_obj = serde_wasm_bindgen::to_value(&serde_json::json!({})).unwrap();
+		let result = initialize_app(config_obj.clone());
+		assert!(result.is_ok(), "Expected Ok, got {:?}", result);
+	}
+}
 

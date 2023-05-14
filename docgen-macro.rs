@@ -1,4 +1,7 @@
-#[wasm_bindgen(module = "/js/bundle-esm.js")] extern "C"
+#[cfg_attr(feature = "web-not-node", :: wasm_bindgen :: prelude ::
+wasm_bindgen(module = "/js/bundle-esm.js"))]
+#[cfg_attr(feature = "node-not-web", :: wasm_bindgen :: prelude ::
+wasm_bindgen(module = "/js/bundle-cjs.js"))] extern "C"
 {
     /// Takes a config object and returns a firebase app instance
     ///

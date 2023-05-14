@@ -28,7 +28,7 @@ fn test_stupid_values(test_target: impl Fn(JsValue) -> Result<JsValue, JsValue>,
 }
 
 #[test]
-fn initialize_app() {
+fn test_integration_initialize_app() {
 	// test_stupid_values(app::initialize_app, |test_val, results| {
 	// 	assert!(results.is_err(), "Expected error when passed value {:?}, got {:?}", test_val, results);
 	// 	// panic!("Error description: {:?}", results.err().unwrap());
