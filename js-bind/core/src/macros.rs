@@ -1,4 +1,4 @@
-use std::unimplemented;
+use std::{unimplemented, println};
 
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
@@ -6,7 +6,8 @@ use quote::quote;
 use quote::ToTokens;
 use smart_default::SmartDefault;
 use syn::{
-	parse::Parse, parse_quote, spanned::Spanned, Attribute, Expr, ExprLit, ItemForeignMod, Lit, Meta,
+	parse::Parse, parse_quote, spanned::Spanned, Attribute, Expr, ExprLit, ItemFn, ItemForeignMod,
+	Lit, Meta,
 };
 
 use crate::config::{Bundle, Config, DocTestGen};
@@ -353,13 +354,13 @@ mod parse_attrs_tests {
 ///
 /// ```rust
 /// use js_bind_core::config::DocTestGen;
-/// use js_bind_core::macros::gen_doc_tests;
+/// use js_bind_core::macros::gen_doc_test;
 ///
 /// let toml_str = r##"
 /// template = """
 /// use wasm_bindgen_test::wasm_bindgen_test as test;
 /// #[test]
-/// fn test_generated() {
+/// fn #test_name() {
 /// 	#code
 /// }
 /// """
@@ -368,32 +369,26 @@ mod parse_attrs_tests {
 /// let config: DocTestGen = toml::from_str(toml_str).expect("to parse");
 /// assert_eq!(config.template.split("\n").collect::<Vec<_>>()[1], "#[test]");
 ///
-/// let attributes = vec![
+/// let attributes1 = vec![
 ///		syn::parse_quote!{ #[doc = r#"
 ///		Example test:
 /// 	```rust
+/// 		// JSBIND-TEST example_test_name
 /// 		assert_eq!(1, 1);
 /// 	```
 /// "#]}
 /// ];
-///
-/// let expected = quote::quote!{
-/// use wasm_bindgen_test::wasm_bindgen_test as test;
-/// #[test]
-/// fn test_prefix_1() {
-/// 	assert_eq!(1, 1);
-/// }
+/// let expected1 = quote::quote!{
+/// 	use wasm_bindgen_test::wasm_bindgen_test as test;
+/// 	#[test]
+/// 	fn example_test_name() {
+/// 		assert_eq!(1, 1);
+/// 	}
 /// };
-///
-/// let generated = gen_doc_tests(&config, &attributes, "test_prefix".to_string()).unwrap();
-///
-/// assert_eq!(expected.to_string(), generated.to_string());
+/// let generated1 = gen_doc_test(&config, &attributes1).unwrap();
+/// assert_eq!(expected1.to_string(), generated1.to_string());
 /// ```
-pub fn gen_doc_tests(
-	config: &DocTestGen,
-	attrs: &Vec<Attribute>,
-	name: String,
-) -> syn::Result<TokenStream> {
+pub fn gen_doc_test(config: &DocTestGen, attrs: &Vec<Attribute>) -> syn::Result<ItemFn> {
 	fn extract_documentation(attrs: &Vec<Attribute>) -> Vec<String> {
 		attrs
 			.iter()
@@ -410,9 +405,17 @@ pub fn gen_doc_tests(
 				}
 				None
 			})
+			.map(|line| {
+				line
+					.lines()
+					.map(|line| line.to_string())
+					.collect::<Vec<_>>()
+			})
+			.flatten()
 			.collect()
 	}
 
+	#[derive(Debug)]
 	struct TestableCodeBlock {
 		/// Lines of code to be subbed in for #code var
 		code: Vec<String>,
@@ -421,6 +424,7 @@ pub fn gen_doc_tests(
 		// flags: Vec<Flag>,
 	}
 
+	#[derive(Debug)]
 	struct RawCodeBlock {
 		first_line: String,
 		inner_lines: Vec<String>,
@@ -429,8 +433,8 @@ pub fn gen_doc_tests(
 
 	impl RawCodeBlock {
 		fn new(first_line: String, inner_lines: Vec<String>, last_line: String) -> Option<Self> {
-			assert!(first_line.starts_with("```"));
-			assert!(last_line.starts_with("```"));
+			assert!(first_line.trim().starts_with("```"));
+			assert!(last_line.trim().starts_with("```"));
 			if inner_lines.len() == 0 {
 				return None;
 			}
@@ -448,7 +452,8 @@ pub fn gen_doc_tests(
 		let mut current_group: Vec<String> = Vec::new();
 		let mut in_code_block = false;
 		for line in lines {
-			if line.starts_with("```") {
+			if line.trim().starts_with("```") {
+				current_group.push(line);
 				if in_code_block {
 					groups.push(current_group);
 					current_group = Vec::new();
@@ -458,6 +463,8 @@ pub fn gen_doc_tests(
 				current_group.push(line);
 			}
 		}
+
+		println!("groups: {:?}", groups);
 
 		// convert into TestableCodeBlock
 		let mut raw_code_blocks = Vec::new();
@@ -479,14 +486,23 @@ pub fn gen_doc_tests(
 				if b.inner_lines.len() == 0 {
 					return false;
 				}
-				if !b.inner_lines.first().unwrap().starts_with("// JSBIND-TEST") {
+				if !b
+					.inner_lines
+					.first()
+					.unwrap()
+					.trim()
+					.starts_with("// JSBIND-TEST")
+				{
 					return false;
 				}
 				true
 			})
 			.map(|b| {
 				let code = b.inner_lines[1..].to_vec();
-				let name = b.inner_lines[0]
+				let name = b
+					.inner_lines
+					.first()
+					.unwrap()
 					.replace("// JSBIND-TEST", "")
 					.trim()
 					.to_string();
@@ -503,28 +519,44 @@ pub fn gen_doc_tests(
 			template = template.replace("#test_name", self.name.as_str());
 
 			let mut tokens = TokenStream::new();
-			for line in template.lines() {
-				tokens.extend(quote! {#line});
-			}
+
+			// extend tokens with line
+			// println!("Parsing line: {:?}", template);
+			tokens.extend(syn::parse_str::<TokenStream>(&template)?);
 
 			Ok(tokens)
 		}
 	}
 
 	let documentation = extract_documentation(attrs);
-	println!("documentation: {:?}", documentation);
-	let testable_code_blocks = parse_documentation(documentation);
+	// println!("documentation: {:?}", documentation);
 
-	let tokens = testable_code_blocks
+	let testable_code_blocks = parse_documentation(documentation);
+	println!("testable_code_blocks: {:?}", testable_code_blocks);
+
+	let tokens: TokenStream = testable_code_blocks
 		.iter()
 		.map(|b| b.into_tokens(config.template.clone()))
-		.collect();
+		.fold(TokenStream::new(), |mut acc, f| {
+			acc.extend(f);
+			acc
+		});
+	// .collect();
 
-	return tokens;
+	to_debug_file("debug-docgen.rs", &tokens.clone());
+
+	return syn::parse2(tokens);
+}
+
+fn to_debug_file(name: &str, tokens: &TokenStream) {
+	let cwd = std::env::current_dir().expect("to get cwd");
+	let path = cwd.join(name);
+	let payload = tokens.to_string();
+	println!("writing debug file to {:?}: {:?}", name, payload);
+	std::fs::write(path, payload).expect("to write debug file");
 }
 
 pub fn js_bind_impl(attr: TokenStream, input: TokenStream) -> syn::Result<TokenStream> {
-	let attr_span = attr.span();
 	let attrs = parse_attr(attr)?;
 	let input_extern: ItemForeignMod = syn::parse2(input.clone())?;
 
@@ -552,17 +584,37 @@ pub fn js_bind_impl(attr: TokenStream, input: TokenStream) -> syn::Result<TokenS
 		let config = config
 			.doc_test_gen
 			.ok_or_else(|| syn::Error::new(attrs.extract_tests_span, err_msg))?;
-		// TODO: Loop through all items/fns and generate tests for them, maybe extract into seperate func?
-		// doc_test_gen = gen_doc_tests(&config, &attributes)?;
+
+		doc_test_gen = input_extern
+			.items
+			.iter()
+			.map(|item| {
+				if let syn::ForeignItem::Fn(item_fn) = item {
+					return item_fn;
+				} else {
+					unimplemented!("Only functions are supported for #[js_bind(extract_tests)]")
+				}
+			})
+			.map(|f| gen_doc_test(&config, &f.attrs))
+			.collect::<syn::Result<Vec<_>>>()?
+			.into_iter()
+			.fold(TokenStream::new(), |mut acc, f| {
+				acc.extend(f.to_token_stream());
+				acc
+			});
 	}
 
 	let processed_output = input;
 
-	Ok(quote! {
+	let expanded = quote! {
 		#prelude
 		#fallback
 		#processed_output
 
 		#doc_test_gen
-	})
+	};
+
+	to_debug_file("docgen-macro.rs", &expanded);
+
+	Ok(expanded)
 }

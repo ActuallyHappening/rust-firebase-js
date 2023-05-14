@@ -1,0 +1,1 @@
+use wasm_bindgen_test :: wasm_bindgen_test as test ; # [test] fn example_test_name () { assert_eq ! (1 , 1) ; }

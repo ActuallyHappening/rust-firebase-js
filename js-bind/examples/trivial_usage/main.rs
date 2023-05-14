@@ -24,6 +24,7 @@ extern "C" {
 	/// Documentation of func
 	/// 
 	/// ```rust
+	/// // JSBIND-TEST example_test_name
 	/// assert_eq!("Yes this test executed well!", "")
 	/// ```
 	#[wasm_bindgen(js_name = "alert")]
