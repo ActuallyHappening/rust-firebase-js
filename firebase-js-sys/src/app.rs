@@ -7,7 +7,7 @@ use wasm_bindgen::JsValue;
 // #[cfg_attr(feature = "node-not-web", wasm_bindgen(module = "/js/bundle-cjs.js"))]
 // #[wasm_bindgen]
 extern "C" {
-	/// Takes a config object and returns a firebase app instance
+	/// Takes a config object and returns a firebase app instance.
 	///
 	/// Equivalent to:
 	/// ```js
@@ -15,9 +15,8 @@ extern "C" {
 	///
 	/// // Get your own config from somewhere, typically copy-paste from firebase console
 	/// const config = {
-	/// 	apiKey: "...",
 	/// 	projectId: "...",
-	/// 	...
+	/// 	apiKey: "...",
 	/// }
 	///
 	/// initializeApp(config);
@@ -26,43 +25,13 @@ extern "C" {
 	/// ## Examples
 	/// ```rust
 	/// // JSBIND-TEST test_initialize_app
-	/// // use firebase_js_sys::app;
-	/// // use wasm_bindgen::JsValue;
 	/// 
-	/// let config = JsValue::UNDEFINED;
-	/// let returned = app::initialize_app(config);
+	/// // use firebase_js_sys::app::initialize_app;
 	/// 
-	/// assert!(returned.is_err());
+	/// assert!(app::initialize_app(JsValue::UNDEFINED).is_err());
+	/// assert!(app::initialize_app(JsValue::NULL).is_err());
+	/// assert!(app::initialize_app(serde_wasm_bindgen::to_value(&serde_json::json!({})).unwrap()).is_ok());
 	/// ```
 	#[wasm_bindgen(js_name = "initializeApp", catch)]
 	pub fn initialize_app(config: JsValue) -> Result<JsValue, JsValue>;
 }
-
-#[cfg(test)]
-mod in_lib_tests {
-	use super::*;
-
-	#[cfg(feature = "web-not-node")]
-	wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
-
-	#[wasm_bindgen_test::wasm_bindgen_test]
-	fn test() {
-		let config_obj = serde_wasm_bindgen::to_value(&serde_json::json!({})).unwrap();
-		let result = initialize_app(config_obj.clone());
-		assert!(result.is_ok(), "Expected Ok, got {:?}", result);
-	}
-}
-
-#[cfg(test)]
-#[wasm_bindgen_test::wasm_bindgen_test]
-fn standalone_func_test() {
-	use super::*;
-
-	#[cfg(feature = "web-not-node")]
-	wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
-
-	let config_obj = serde_wasm_bindgen::to_value(&serde_json::json!({})).unwrap();
-	let result = initialize_app(config_obj.clone());
-	assert!(result.is_ok(), "Expected Ok, got {:?}", result);
-}
-

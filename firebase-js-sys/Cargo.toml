@@ -10,6 +10,9 @@ license = { workspace = true }
 keywords = ["firebase", "firebase-js", "firebase-database", "wasm", "wasm-bindgen"]
 categories = ["wasm", "web-programming"]
 
+# disable autotest recognition
+autotests = false
+
 exclude = [
 	"js/**",
 	"!js/bundle-*.js",
