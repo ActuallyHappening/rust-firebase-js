@@ -14,18 +14,12 @@ categories = ["wasm", "web-programming"]
 autotests = false
 
 exclude = [
-	"js/**",
+	"*",
 	"!js/bundle-*.js",
-	"package.json",
-	"pnpm-lock.yaml",
-	"index.html",
-	"test",
-	"Trunk.toml",
-	"build.rs",
-	"main.rs",
-	"tests",
-	".cargo",
-	"tsconfig.json",
+	"!src",
+	"!Cargo.toml",
+	"!Cargo.lock",
+	"!js-bind.toml",
 ]
 
 # [workspace]
