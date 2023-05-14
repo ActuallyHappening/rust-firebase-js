@@ -28,10 +28,11 @@ extern "C" {
 	/// 
 	/// // use firebase_js_sys::app::initialize_app;
 	/// 
-	/// assert!(app::initialize_app(JsValue::UNDEFINED).is_err());
-	/// assert!(app::initialize_app(JsValue::NULL).is_err());
-	/// assert!(app::initialize_app(serde_wasm_bindgen::to_value(&serde_json::json!({})).unwrap()).is_ok());
+	/// assert!(app::initialize_app(JsValue::UNDEFINED, JsValue::UNDEFINED).is_err());
+	/// assert!(app::initialize_app(JsValue::NULL, JsValue::UNDEFINED).is_err());
+	/// assert!(app::initialize_app(serde_wasm_bindgen::to_value(&serde_json::json!({})).unwrap(), JsValue::UNDEFINED).is_ok());
+	/// assert!(app::initialize_app(serde_wasm_bindgen::to_value(&serde_json::json!({})).unwrap(), JsValue::from_str("project name here")).is_ok());
 	/// ```
 	#[wasm_bindgen(js_name = "initializeApp", catch)]
-	pub fn initialize_app(config: JsValue) -> Result<JsValue, JsValue>;
+	pub fn initialize_app(config: JsValue, optional_name: JsValue) -> Result<JsValue, JsValue>;
 }
