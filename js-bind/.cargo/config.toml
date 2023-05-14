@@ -1,3 +1,4 @@
 [alias]
 t = "test --quiet --workspace"
 te = "run --features testing-slash-examples-feature-flag --example trivial_usage"
+ee = "expand --example trivial_usage --features=testing-slash-examples-feature-flag"

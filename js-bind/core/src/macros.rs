@@ -87,9 +87,14 @@ pub fn gen_prelude_attrs(bundles: Vec<Bundle>) -> syn::Result<TokenStream> {
 			let module_path = self.then_js_path;
 			assert_ne!(feature_name, "");
 			// assert first char isn't '/'
-			assert_ne!(module_path.chars().next().unwrap(), '/', r##"
+			assert_ne!(
+				module_path.chars().next().unwrap(),
+				'/',
+				r##"
 Paths in [[bundles]].then must be relative to package root, not absolute.
-Consider removing the leading '/' from the path: "{:?}""##, module_path);
+Consider removing the leading '/' from the path: "{:?}""##,
+				module_path
+			);
 			let module_path = format!("/{}", module_path);
 			parse_quote! {
 				#[cfg_attr(feature = #feature_name, ::wasm_bindgen::prelude::wasm_bindgen(module = #module_path))]
@@ -132,7 +137,11 @@ mod prelude_tests {
 			}
 		};
 
-		let returned = js_bind_impl(quote! {config_path = "../examples/testing-configs/firebase.js-bind.toml", conditional_attrs}, input).unwrap();
+		let returned = js_bind_impl(
+			quote! {config_path = "../examples/testing-configs/firebase.js-bind.toml", conditional_attrs},
+			input,
+		)
+		.unwrap();
 
 		assert_eq_tokens(expected, returned);
 	}
@@ -391,20 +400,15 @@ pub fn gen_doc_tests(
 			.filter_map(|attr| {
 				if let Meta::NameValue(meta_name_value) = &attr.meta {
 					if meta_name_value.path.is_ident("doc") {
-						match &meta_name_value.value {
-							Expr::Lit(ExprLit {
-								lit: Lit::Str(doc), ..
-							}) => {
-								return Some(doc.value());
-							}
-							_ => None,
+						if let Expr::Lit(ExprLit {
+							lit: Lit::Str(doc), ..
+						}) = &meta_name_value.value
+						{
+							return Some(doc.value());
 						}
-					} else {
-						None
 					}
-				} else {
-					None
 				}
+				None
 			})
 			.collect()
 	}
@@ -417,10 +421,106 @@ pub fn gen_doc_tests(
 		// flags: Vec<Flag>,
 	}
 
-	fn parse_documentation(lines: Vec<String>) -> Vec<TestableCodeBlock> {
-		unimplemented!()
+	struct RawCodeBlock {
+		first_line: String,
+		inner_lines: Vec<String>,
+		last_line: String,
 	}
-	unimplemented!()
+
+	impl RawCodeBlock {
+		fn new(first_line: String, inner_lines: Vec<String>, last_line: String) -> Option<Self> {
+			assert!(first_line.starts_with("```"));
+			assert!(last_line.starts_with("```"));
+			if inner_lines.len() == 0 {
+				return None;
+			}
+			Some(Self {
+				first_line,
+				inner_lines,
+				last_line,
+			})
+		}
+	}
+
+	fn parse_documentation(lines: Vec<String>) -> Vec<TestableCodeBlock> {
+		// groups into lines that start with "```*" and end with "```"
+		let mut groups: Vec<Vec<String>> = Vec::new();
+		let mut current_group: Vec<String> = Vec::new();
+		let mut in_code_block = false;
+		for line in lines {
+			if line.starts_with("```") {
+				if in_code_block {
+					groups.push(current_group);
+					current_group = Vec::new();
+				}
+				in_code_block = !in_code_block;
+			} else if in_code_block {
+				current_group.push(line);
+			}
+		}
+
+		// convert into TestableCodeBlock
+		let mut raw_code_blocks = Vec::new();
+		for group in groups {
+			let first_line = group[0].clone();
+			let last_line = group[group.len() - 1].clone();
+
+			let inner_lines = group[1..group.len() - 1].to_vec();
+
+			if let Some(raw_code_block) = RawCodeBlock::new(first_line, inner_lines, last_line) {
+				raw_code_blocks.push(raw_code_block);
+			}
+		}
+
+		// filter code blocks that don't start with ```rust and have their first line as `// JSBIND-TEST`
+		raw_code_blocks
+			.into_iter()
+			.filter(|b| {
+				if b.inner_lines.len() == 0 {
+					return false;
+				}
+				if !b.inner_lines.first().unwrap().starts_with("// JSBIND-TEST") {
+					return false;
+				}
+				true
+			})
+			.map(|b| {
+				let code = b.inner_lines[1..].to_vec();
+				let name = b.inner_lines[0]
+					.replace("// JSBIND-TEST", "")
+					.trim()
+					.to_string();
+				assert_ne!(name, "", "Test name cannot be empty");
+				TestableCodeBlock { code, name }
+			})
+			.collect()
+	}
+
+	impl TestableCodeBlock {
+		pub fn into_tokens(&self, template: String) -> syn::Result<TokenStream> {
+			let mut template = template;
+			template = template.replace("#code", self.code.join("\n").as_str());
+			template = template.replace("#test_name", self.name.as_str());
+
+			let mut tokens = TokenStream::new();
+			for line in template.lines() {
+				tokens.extend(quote! {#line});
+			}
+
+			Ok(tokens)
+		}
+	}
+
+	let documentation = extract_documentation(attrs);
+	println!("documentation: {:?}", documentation);
+	let testable_code_blocks = parse_documentation(documentation);
+
+	let tokens = testable_code_blocks
+		.iter()
+		.map(|b| b.into_tokens(config.template.clone()))
+		.collect();
+
+	return tokens;
 }
 
 pub fn js_bind_impl(attr: TokenStream, input: TokenStream) -> syn::Result<TokenStream> {
