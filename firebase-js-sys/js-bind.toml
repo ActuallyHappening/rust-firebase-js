@@ -23,6 +23,8 @@ template = """
 #[cfg(test)]
 #[::wasm_bindgen_test::wasm_bindgen_test]
 fn #test_name() {
+	use super::*;
+	
 	#[cfg(feature = "web-not-node")]
 	::wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
