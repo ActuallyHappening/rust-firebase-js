@@ -8,7 +8,7 @@ use extract_doctest::extract_doctest;
 /// // extract-test: name_of_func
 /// assert_eq!(1, 1);
 /// ```
-// #[extract_doctest]
+#[extract_doctest]
 pub fn nothing() {
 
 }

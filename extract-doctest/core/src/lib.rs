@@ -4,7 +4,7 @@ use std::unimplemented;
 
 use proc_macro2::TokenStream;
 use serde::Deserialize;
-use syn::{Attribute, Expr, ExprLit, ItemFn, ItemUse, Lit, Meta};
+use syn::{Attribute, Expr, ExprLit, ItemFn, ItemUse, Lit, Meta, Item, spanned::Spanned};
 use quote::quote;
 
 // #[derive(Debug, Clone, Deserialize)]
@@ -320,8 +320,26 @@ use quote::quote;
 // 	}
 // }
 
-pub fn extract_doctests(_raw_input: &TokenStream) -> syn::Result<TokenStream> {
-	Ok(quote! {})
+pub fn raw_into_processable_documentations(raw_input: TokenStream) -> syn::Result<Vec<Vec<Attribute>>> {
+	// Parse input into syn::Item
+	let input_span = raw_input.span();
+	match syn::parse2::<Item>(raw_input) {
+		Ok(item) => {
+			Ok(vec![])
+		},
+		Err(e) => {
+			let mut base_err = syn::Error::new(input_span, "#[extract_docs] Failed to parse input as a rust item. \
+				Make sure you are using this macro on a valid function, struct or extern block.");
+			base_err.combine(e);
+			return Err(base_err);
+		}
+	}
+}
+
+pub fn extract_doctests(raw_input: TokenStream) -> syn::Result<TokenStream> {
+	raw_into_processable_documentations(raw_input)?;
+
+	Ok(quote!{})
 }
 
 pub fn extract_doctest_impl(
@@ -336,7 +354,7 @@ pub fn extract_doctest_impl(
 		));
 	}
 
-	let tests = extract_doctests(&raw_input)?;
+	let tests = extract_doctests(raw_input.clone())?;
 
 	let expanded: TokenStream = quote! {
 		#raw_input
