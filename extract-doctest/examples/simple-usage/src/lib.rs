@@ -5,7 +5,7 @@ use extract_doctest::extract_doctest;
 
 /// Documentation
 /// ```rust
-/// // extract-test: name_of_func
+/// // extract-doctest name_of_func
 /// assert_eq!(1, 23);
 /// ```
 #[extract_doctest]
@@ -18,6 +18,6 @@ mod test {
 	use super::*;
 
 	fn test_func_exists() {
-		// name_of_func();
+		name_of_func();
 	}
 }

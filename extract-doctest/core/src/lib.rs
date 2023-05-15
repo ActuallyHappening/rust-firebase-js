@@ -343,22 +343,35 @@ impl Config {
 		let metadata: RawConfig = manifest
 			.package
 			.ok_or(anyhow!("Cargo.toml does not contain package entry"))?
-			.metadata.ok_or(anyhow!("Cargo.toml does not contain a package.metadata entry"))?
+			.metadata
+			.ok_or(anyhow!(
+				"Cargo.toml does not contain a package.metadata entry"
+			))?
 			// deserialize into Config
-			.try_into().context("Couldn't parse Cargo.toml>package.metadata")?;
+			.try_into()
+			.context("Couldn't parse Cargo.toml>package.metadata")?;
 
 		Ok(metadata.config)
 	}
+
+	pub fn interpolate_template(&self, var_code: &str, var_test_name: &str) -> String {
+		let mut template = self.template.clone();
+		template = template.replace("{code}", var_code);
+		template = template.replace("{test_name}", var_test_name);
+		template
+	}
 }
 
+#[derive(Debug)]
 pub struct CodeBlock<T> {
 	pub inner_lines: Vec<String>,
 	pub meta: T,
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct NoCommentMeta {}
 
+#[derive(Debug)]
 pub struct CommentMeta {
 	pub name: String,
 }
@@ -423,6 +436,20 @@ impl CodeBlock<NoCommentMeta> {
 	}
 
 	/// Parses the potential code block into a `CodeBlock<CommentMeta>`
+	///
+	/// ```rust
+	/// use extract_doctest_core::{CodeBlock, NoCommentMeta};
+	///
+	/// let code_block = <CodeBlock<NoCommentMeta>>::new(vec![
+	/// 	" // extract-doctest example_test_name".to_string(),
+	/// 	"assert_eq!(1, 1);".to_string(),
+	/// ]);
+	///
+	/// let code_block = code_block.check_testable().expect("to have a testable code block");
+	/// assert_eq!(code_block.inner_lines.iter().map(|l| l.trim()).collect::<Vec<_>>(), vec![
+	/// 	"// extract-doctest example_test_name".to_string(),
+	/// 	"assert_eq!(1, 1);".to_string(),
+	/// ]);
 	pub fn check_testable(self) -> Option<CodeBlock<CommentMeta>> {
 		let first_line = self
 			.inner_lines
@@ -430,6 +457,7 @@ impl CodeBlock<NoCommentMeta> {
 			.expect("Expected to have at least one line in documentation test")
 			.clone();
 		let stripped = first_line
+			.trim()
 			.trim_start_matches("#")
 			.trim_start_matches("//")
 			.trim();
@@ -451,6 +479,26 @@ impl CodeBlock<NoCommentMeta> {
 impl CodeBlock<CommentMeta> {
 	pub fn new(inner_lines: Vec<String>, meta: CommentMeta) -> Self {
 		Self { inner_lines, meta }
+	}
+
+	pub fn into_tokens(self, config: &Config) -> syn::Result<ItemFn> {
+		let template = config.interpolate_template(&self.inner_lines.join("\n"), &self.meta.name);
+
+		// Validate template is an ItemFn
+		match syn::parse_str::<ItemFn>(&template) {
+			Ok(item_fn) => {
+				// println!("item_fn: {:?}", item_fn);
+				Ok(item_fn)
+			}
+			Err(err) => {
+				let mut base_error = syn::Error::new_spanned(
+					template,
+					"Failed to parse template as a rust function. Make sure your template produces valid rust code after interpolation.",
+				);
+				base_error.combine(err);
+				Err(base_error)
+			}
+		}
 	}
 }
 
@@ -502,14 +550,56 @@ pub fn raw_into_processable_documentations(
 	}
 }
 
+/// Does the heavy lifting
+///
+/// ```rust
+/// use extract_doctest_core::{Config, extract_doctests};
+/// use quote::ToTokens;
+/// use syn::parse_quote;
+/// use quote::quote;
+///
+/// let config = Config {
+/// 	template: r#"
+/// 		fn {test_name}() {
+/// 			{code}
+/// 		}
+/// 	"#.to_string(),
+/// };
+///
+/// let input = quote!{
+/// 	#[doc = r#"
+/// 	Example test:
+/// 	```rust
+/// 		// extract-doctest example_test_name
+/// 		assert_eq!(1, 1);
+/// 	```
+/// "#]
+/// fn example() {}
+/// };
+///
+/// let expected = quote!{
+/// 	fn example_test_name() {
+/// 		assert_eq!(1, 1);
+/// 	}
+/// };
+///
+/// let actual = extract_doctests(&config, input).expect("to have a test");
+///
+/// assert_eq!(expected.to_string(), actual.to_token_stream().to_string());
+/// ```
 pub fn extract_doctests(config: &Config, raw_input: TokenStream) -> syn::Result<TokenStream> {
-	let processed: Vec<_> = raw_into_processable_documentations(raw_input)?
+	let processed: Vec<ItemFn> = raw_into_processable_documentations(raw_input)?
 		.iter()
 		.filter_map(CodeBlock::from_attrs)
+		.inspect(|code_block| println!("code_block: {:?}", code_block))
 		.filter_map(CodeBlock::check_testable)
-		.collect();
+		.inspect(|code_block| println!("code_block: {:?}", code_block))
+		.map(|code_block| code_block.into_tokens(config))
+		.collect::<Result<_, _>>()?;
 
-	Ok(quote! {})
+	Ok(quote! {
+		#(#processed)*
+	})
 }
 
 pub fn extract_doctest_impl(

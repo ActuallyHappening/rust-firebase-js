@@ -5,8 +5,8 @@ edition = "2021"
 
 [package.metadata.extract-doctest]
 template = """
-pub fn #test_name() {
-	#code
+pub fn {test_name}() {
+	{code}
 }
 """
 
