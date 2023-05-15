@@ -1,17 +1,16 @@
 # `extract-doctest`: Macro to extract the doctest using a procedural attribute macro
+This package exports a single item: a macro `#[extract_doctest]`.
+This macro then extracts the documentation tests found within its input, interpolates
+it into a template, and then outputs the result.
+Currently, only outputing functions is supported (because this is the safest use case).
+
+
 ## Example:
 First, add a template to your package's Cargo.toml:
 ```toml
 [package.metadata.extract-doctest]
-
-# Replaces a `use example_package_name::something` statement with `use crate::something`
-# when interpolting the {code} variable (see template below)
-# This is because the generated code is in the same crate as the `example_package_name` crate
-package-to-crate = "example_package_name"
 template = """
 // This rust code is added after the component macro invocation
-// I suggest outputting a unit-test function here and validating
-// the output as a "fn" (function) type through the `validate-as` field
 
 // This specific template outputs a wasm32 unit-test function, that if
 // the feature "web-not-node" is enabled, will tell `wasm-bindgen-test`
@@ -27,9 +26,11 @@ fn {test_name}() {
 	{code}
 }
 """
-# This validates the outputted code as a syn::ItemFn (a rust fn)
-# and throws an error if not with a *more* helpful message
-validate-as = "fn"
+# Optional
+# Replaces a `use example_package_name::something` statement with `use crate::something`
+# when interpolting the {code} variable (see template below)
+# This is because the generated code is in the same crate as the `example_package_name` crate
+package-to-crate = "example_package_name"
 ```
 This config is used every #[extract_doctest] call.
 Now you can use the macro:
