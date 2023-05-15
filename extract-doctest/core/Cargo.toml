@@ -8,6 +8,8 @@ homepage = { workspace = true }
 license = { workspace = true }
 
 [dependencies]
+anyhow = "1.0.71"
+cargo_toml = "0.15.2"
 proc-macro2 = "1.0.56"
 quote = "1.0.27"
 serde = { version = "1.0.163", features = ["derive"] }

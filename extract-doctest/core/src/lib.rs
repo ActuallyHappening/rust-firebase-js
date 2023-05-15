@@ -1,6 +1,8 @@
 #![allow(unused_imports)]
 
-use std::unimplemented;
+use anyhow::{anyhow, Context};
+use cargo_toml::Manifest;
+use std::{default, unimplemented};
 
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -320,6 +322,138 @@ use syn::{spanned::Spanned, Attribute, Expr, ExprLit, Item, ItemFn, ItemUse, Lit
 // 	}
 // }
 
+#[derive(Debug, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Config {
+	pub template: String,
+}
+
+impl Config {
+	pub fn from_current_package() -> anyhow::Result<Config> {
+		let dir = std::env::var("CARGO_MANIFEST_DIR")?;
+		let path = std::path::Path::new(&dir).join("Cargo.toml");
+		let manifest = cargo_toml::Manifest::from_path(path)?;
+
+		#[derive(Deserialize)]
+		struct RawConfig {
+			#[serde(rename = "extract-doctest")]
+			config: Config,
+		}
+
+		let metadata: RawConfig = manifest
+			.package
+			.ok_or(anyhow!("Cargo.toml does not contain package entry"))?
+			.metadata.ok_or(anyhow!("Cargo.toml does not contain a package.metadata entry"))?
+			// deserialize into Config
+			.try_into().context("Couldn't parse Cargo.toml>package.metadata")?;
+
+		Ok(metadata.config)
+	}
+}
+
+pub struct CodeBlock<T> {
+	pub inner_lines: Vec<String>,
+	pub meta: T,
+}
+
+#[derive(Default)]
+pub struct NoCommentMeta {}
+
+pub struct CommentMeta {
+	pub name: String,
+}
+
+impl CodeBlock<NoCommentMeta> {
+	pub fn new(inner_lines: Vec<String>) -> Self {
+		Self {
+			inner_lines,
+			meta: NoCommentMeta::default(),
+		}
+	}
+
+	/// Extracts the documentation from a raw list of attributes
+	///
+	/// ```rust
+	/// use extract_doctest_core::CodeBlock;
+	///
+	/// let attrs = vec![
+	/// 	syn::parse_quote!{ #[doc = r#"
+	/// 	Example test:
+	/// 	```rust
+	/// 		// comment here
+	/// 		assert_eq!(1, 1);
+	/// 	```
+	/// "#]}
+	/// ];
+	///
+	/// let code_block = CodeBlock::from_attrs(&attrs).expect("to have a code block");
+	/// assert_eq!(code_block.inner_lines.iter().map(|l| l.trim()).collect::<Vec<_>>(), vec![
+	/// 	"// comment here".to_string(),
+	/// 	"assert_eq!(1, 1);".to_string(),
+	/// ]);
+	/// ```
+	pub fn from_attrs(attrs: &Vec<Attribute>) -> Option<CodeBlock<NoCommentMeta>> {
+		let mut inner_lines = Vec::new();
+		let mut in_code_block = false;
+		for attr in attrs {
+			if let Meta::NameValue(meta_name_value) = &attr.meta {
+				if meta_name_value.path.is_ident("doc") {
+					if let Expr::Lit(ExprLit {
+						lit: Lit::Str(doc), ..
+					}) = &meta_name_value.value
+					{
+						for line in doc.value().lines() {
+							if line.trim().starts_with("```") {
+								in_code_block = !in_code_block;
+							} else if in_code_block {
+								inner_lines.push(line.to_string());
+							}
+						}
+					}
+				}
+			}
+		}
+		if inner_lines.len() == 0 {
+			return None;
+		}
+		Some(Self {
+			inner_lines,
+			meta: NoCommentMeta::default(),
+		})
+	}
+
+	/// Parses the potential code block into a `CodeBlock<CommentMeta>`
+	pub fn check_testable(self) -> Option<CodeBlock<CommentMeta>> {
+		let first_line = self
+			.inner_lines
+			.first()
+			.expect("Expected to have at least one line in documentation test")
+			.clone();
+		let stripped = first_line
+			.trim_start_matches("#")
+			.trim_start_matches("//")
+			.trim();
+		if !stripped.starts_with("extract-doctest") {
+			return None;
+		}
+		let name = stripped
+			.trim_start_matches("extract-doctest")
+			.trim()
+			.to_string();
+
+		Some(<CodeBlock<CommentMeta>>::new(
+			self.inner_lines, //[1..].to_vec(),
+			CommentMeta { name },
+		))
+	}
+}
+
+impl CodeBlock<CommentMeta> {
+	pub fn new(inner_lines: Vec<String>, meta: CommentMeta) -> Self {
+		Self { inner_lines, meta }
+	}
+}
+
 pub fn raw_into_processable_documentations(
 	raw_input: TokenStream,
 ) -> syn::Result<Vec<Vec<Attribute>>> {
@@ -368,8 +502,12 @@ pub fn raw_into_processable_documentations(
 	}
 }
 
-pub fn extract_doctests(raw_input: TokenStream) -> syn::Result<TokenStream> {
-	raw_into_processable_documentations(raw_input)?;
+pub fn extract_doctests(config: &Config, raw_input: TokenStream) -> syn::Result<TokenStream> {
+	let processed: Vec<_> = raw_into_processable_documentations(raw_input)?
+		.iter()
+		.filter_map(CodeBlock::from_attrs)
+		.filter_map(CodeBlock::check_testable)
+		.collect();
 
 	Ok(quote! {})
 }
@@ -386,7 +524,17 @@ pub fn extract_doctest_impl(
 		));
 	}
 
-	let tests = extract_doctests(raw_input.clone())?;
+	let config = Config::from_current_package().map_err(|e| {
+		syn::Error::new_spanned(
+			raw_input.clone(),
+			format!(
+				"Failed to parse Cargo.toml>package.metadata as Config: {:?}",
+				e
+			),
+		)
+	})?;
+
+	let tests = extract_doctests(&config, raw_input.clone())?;
 
 	let expanded: TokenStream = quote! {
 		#raw_input

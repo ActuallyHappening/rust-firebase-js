@@ -6,7 +6,7 @@ use extract_doctest::extract_doctest;
 /// Documentation
 /// ```rust
 /// // extract-test: name_of_func
-/// assert_eq!(1, 1);
+/// assert_eq!(1, 23);
 /// ```
 #[extract_doctest]
 pub fn nothing() {
