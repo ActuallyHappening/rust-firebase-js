@@ -1,0 +1,17 @@
+[package]
+name = "extract-doctest-proc"
+description = "Proc macro exports for crate extract-doctest"
+version = "0.0.1"
+edition = "2021"
+authors = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+
+[lib]
+proc-macro = true
+
+[dependencies]
+
+[dependencies.extract-doctest-core]
+path = "../core"
+# version = "0.0.1"

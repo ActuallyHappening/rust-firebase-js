@@ -666,9 +666,13 @@ fn to_debug_file(name: &str, tokens: &TokenStream) {
 	// std::fs::write(path, payload).expect("to write debug file");
 }
 
-pub fn js_bind_impl(attr: TokenStream, input: TokenStream) -> syn::Result<TokenStream> {
-	let attrs = parse_attr(attr)?;
-	let input_extern: ItemForeignMod = syn::parse2(input.clone())?;
+struct ProcessableItem {
+
+}
+
+pub fn js_bind_impl(raw_attrs: TokenStream, raw_input: TokenStream) -> syn::Result<TokenStream> {
+	let attrs = parse_attr(raw_attrs)?;
+	let input_extern: ItemForeignMod = syn::parse2(raw_input.clone())?;
 
 	let config = Config::from_package_root(&attrs.config_path).expect("Cannot parse config");
 
@@ -714,7 +718,8 @@ pub fn js_bind_impl(attr: TokenStream, input: TokenStream) -> syn::Result<TokenS
 			});
 	}
 
-	let processed_output = input;
+	// lol TODO: actually process
+	let processed_output = raw_input;
 
 	let expanded = quote! {
 		#prelude

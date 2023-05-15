@@ -1,10 +1,15 @@
 [workspace]
 members = [
 	# "firebase-js",
-	"firebase-js-sys",
+	"extract-doctest",
+	"extract-doctest/proc",
+	"extract-doctest/examples/simple-usage",
+
 	"js-bind",
 	"js-bind/core",
 	"js-bind/proc",
+	
+	"firebase-js-sys",
 	"firebase-types",
 ]
 exclude = ["firebase-js"]

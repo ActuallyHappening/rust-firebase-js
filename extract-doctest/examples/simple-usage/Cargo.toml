@@ -1,0 +1,14 @@
+[package]
+name = "simple_usage_example"
+version = "0.0.0"
+edition = "2021"
+
+[package.metadata.extract-doctest]
+template = """
+pub fn #test_name() {
+	#code
+}
+"""
+
+[dependencies.extract-doctest]
+path = "../.."

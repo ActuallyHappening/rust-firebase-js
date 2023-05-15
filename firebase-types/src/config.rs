@@ -42,7 +42,7 @@ use wasm_bindgen::prelude::*;
 /// assert_eq!(config.app_id, Some("some-app-id".to_owned()));
 /// assert_eq!(config.measurement_id, Some("some-measurement-id".to_owned()));
 /// ```
-/// Conversion into JsValue (requires `js` feature enabled):
+/// Conversion into JsValue (requires `js` feature enabled and wasm runtime):
 /// ```rust,no_run
 /// use firebase_types::config::FirebaseConfig;
 /// use wasm_bindgen::JsValue;

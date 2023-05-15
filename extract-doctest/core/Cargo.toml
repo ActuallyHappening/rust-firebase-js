@@ -1,0 +1,12 @@
+[package]
+name = "extract-doctest-core"
+description = "Core library for extract-doctest"
+version = "0.0.1"
+edition = "2021"
+authors = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+
+[dependencies]
+proc-macro2 = "1.0.56"
+syn = { version = "2.0.16", features = ["full", "extra-traits"] }
