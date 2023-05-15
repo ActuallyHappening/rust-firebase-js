@@ -3,9 +3,9 @@
 use std::unimplemented;
 
 use proc_macro2::TokenStream;
-use serde::Deserialize;
-use syn::{Attribute, Expr, ExprLit, ItemFn, ItemUse, Lit, Meta, Item, spanned::Spanned};
 use quote::quote;
+use serde::Deserialize;
+use syn::{spanned::Spanned, Attribute, Expr, ExprLit, Item, ItemFn, ItemUse, Lit, Meta};
 
 // #[derive(Debug, Clone, Deserialize)]
 // #[serde(deny_unknown_fields)]
@@ -320,16 +320,48 @@ use quote::quote;
 // 	}
 // }
 
-pub fn raw_into_processable_documentations(raw_input: TokenStream) -> syn::Result<Vec<Vec<Attribute>>> {
+pub fn raw_into_processable_documentations(
+	raw_input: TokenStream,
+) -> syn::Result<Vec<Vec<Attribute>>> {
 	// Parse input into syn::Item
 	let input_span = raw_input.span();
 	match syn::parse2::<Item>(raw_input) {
 		Ok(item) => {
-			Ok(vec![])
-		},
+			match item {
+				// gets attrs from extern {} block's functions
+				Item::ForeignMod(foreign_mod) => {
+					return Ok(
+						foreign_mod
+							.items
+							.into_iter()
+							.filter_map(|item| match item {
+								syn::ForeignItem::Fn(foreign_fn) => Some(foreign_fn.attrs),
+								_ => None,
+							})
+							.collect(),
+					);
+				}
+				// gets attrs from free-standing function
+				Item::Fn(item_fn) => {
+					return Ok(vec![item_fn.attrs]);
+				}
+				// gets attrs from struct
+				Item::Struct(item_struct) => {
+					return Ok(vec![item_struct.attrs]);
+				}
+				// give error for unsupported type
+				_ => Err(syn::Error::new(
+					input_span,
+					"#[extract_docs] The item passed to this macro is not yet implemented / supported.",
+				)),
+			}
+		}
 		Err(e) => {
-			let mut base_err = syn::Error::new(input_span, "#[extract_docs] Failed to parse input as a rust item. \
-				Make sure you are using this macro on a valid function, struct or extern block.");
+			let mut base_err = syn::Error::new(
+				input_span,
+				"#[extract_docs] Failed to parse input as a rust item. \
+				Make sure you are using this macro on a valid function, struct or extern block.",
+			);
 			base_err.combine(e);
 			return Err(base_err);
 		}
@@ -339,7 +371,7 @@ pub fn raw_into_processable_documentations(raw_input: TokenStream) -> syn::Resul
 pub fn extract_doctests(raw_input: TokenStream) -> syn::Result<TokenStream> {
 	raw_into_processable_documentations(raw_input)?;
 
-	Ok(quote!{})
+	Ok(quote! {})
 }
 
 pub fn extract_doctest_impl(

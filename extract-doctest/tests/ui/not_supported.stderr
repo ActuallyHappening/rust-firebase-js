@@ -1,0 +1,5 @@
+error: #[extract_docs] The item passed to this macro is not yet implemented / supported.
+ --> tests/ui/not_supported.rs:4:1
+  |
+4 | type Test = ();
+  | ^^^^^^^^^^^^^^^
