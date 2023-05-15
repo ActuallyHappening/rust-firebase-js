@@ -1,0 +1,5 @@
+error: extract_doctest_impl does not take any attributes (yet)
+ --> tests/ui/no_attrs.rs:3:19
+  |
+3 | #[extract_doctest(unknown_attr)]
+  |                   ^^^^^^^^^^^^

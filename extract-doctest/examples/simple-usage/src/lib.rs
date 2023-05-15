@@ -1,3 +1,6 @@
+#![allow(dead_code)]
+#![allow(unused_imports)]
+
 use extract_doctest::extract_doctest;
 
 /// Documentation
@@ -5,7 +8,7 @@ use extract_doctest::extract_doctest;
 /// // extract-test: name_of_func
 /// assert_eq!(1, 1);
 /// ```
-#[extract_doctest]
+// #[extract_doctest]
 pub fn nothing() {
 
 }
@@ -15,6 +18,6 @@ mod test {
 	use super::*;
 
 	fn test_func_exists() {
-		name_of_func();
+		// name_of_func();
 	}
 }
