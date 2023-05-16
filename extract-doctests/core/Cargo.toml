@@ -10,6 +10,7 @@ license = { workspace = true }
 [dependencies]
 anyhow = "1.0.71"
 cargo_toml = "0.15.2"
+derive-new = "0.5.9"
 derive-syn-parse = "0.1.5"
 proc-macro2 = "1.0.56"
 quote = "1.0.27"

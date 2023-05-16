@@ -2,6 +2,7 @@
 
 use anyhow::{anyhow, Context};
 use cargo_toml::Manifest;
+use derive_new::new;
 use derive_syn_parse::Parse;
 use std::{default, unimplemented};
 
@@ -323,24 +324,27 @@ use syn::{spanned::Spanned, Attribute, Expr, ExprLit, Item, ItemFn, ItemUse, Lit
 // 	}
 // }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, new)]
 #[serde(deny_unknown_fields)]
+#[allow(dead_code)]
 pub struct Config {
 	pub template: String,
 
 	#[serde(skip)]
+	#[new(default)]
 	parsed: Option<ConfigParse>,
 }
 
 /// Lower level parsable version of config for attribute parsing purposes
 /// Parses config like:
 /// ```rust
-/// use extract_doctest_core::ConfigParse;
+/// use extract_doctests_core::ConfigParse;
 /// use syn::parse_quote;
 /// 
 /// let config: ConfigParse = parse_quote!{inline_config(template = r##"foobar"##)};
 /// ```
 #[derive(Debug, Clone, Parse)]
+#[allow(dead_code)]
 pub struct ConfigParse {
 	inline_config_ident: Ident,
 	#[paren]
@@ -350,6 +354,7 @@ pub struct ConfigParse {
 }
 
 #[derive(Debug, Clone, Parse)]
+#[allow(dead_code)]
 pub struct InlineConfig {
 	template: Ident,
 	eq_sign: token::Eq,
@@ -436,7 +441,7 @@ impl CodeBlock<NoCommentMeta> {
 	/// Extracts the documentation from a raw list of attributes
 	///
 	/// ```rust
-	/// use extract_doctest_core::CodeBlock;
+	/// use extract_doctests_core::CodeBlock;
 	///
 	/// let attrs = vec![
 	/// 	syn::parse_quote!{ #[doc = r#"
@@ -487,7 +492,7 @@ impl CodeBlock<NoCommentMeta> {
 	/// Parses the potential code block into a `CodeBlock<CommentMeta>`
 	///
 	/// ```rust
-	/// use extract_doctest_core::{CodeBlock, NoCommentMeta};
+	/// use extract_doctests_core::{CodeBlock, NoCommentMeta};
 	///
 	/// let code_block = <CodeBlock<NoCommentMeta>>::new(vec![
 	/// 	" // extract-doctest example_test_name".to_string(),
@@ -602,18 +607,18 @@ pub fn raw_into_processable_documentations(
 /// Does the heavy lifting
 ///
 /// ```rust
-/// use extract_doctest_core::{Config, extract_doctests};
+/// use extract_doctests_core::{Config, extract_doctests};
 /// use quote::ToTokens;
 /// use syn::parse_quote;
 /// use quote::quote;
 ///
-/// let config = Config {
-/// 	template: r#"
+/// let config = Config::new(
+/// 	r#"
 /// 		fn {test_name}() {
 /// 			{code}
 /// 		}
 /// 	"#.to_string(),
-/// };
+/// );
 ///
 /// let input = quote!{
 /// 	#[doc = r#"
