@@ -7,7 +7,7 @@ use std::{default, unimplemented};
 use proc_macro2::TokenStream;
 use quote::quote;
 use serde::Deserialize;
-use syn::{spanned::Spanned, Attribute, Expr, ExprLit, Item, ItemFn, ItemUse, Lit, Meta};
+use syn::{spanned::Spanned, Attribute, Expr, ExprLit, Item, ItemFn, ItemUse, Lit, Meta, parse::Parse};
 
 // #[derive(Debug, Clone, Deserialize)]
 // #[serde(deny_unknown_fields)]
@@ -354,11 +354,23 @@ impl Config {
 		Ok(metadata.config)
 	}
 
+	pub fn from_raw_input(raw_input: TokenStream) -> Option<syn::Result<Self>> {
+		if raw_input.is_empty() { None } else {
+			Some(syn::parse2::<Self>(raw_input))
+		}
+	}
+
 	pub fn interpolate_template(&self, var_code: &str, var_test_name: &str) -> String {
 		let mut template = self.template.clone();
 		template = template.replace("{code}", var_code);
 		template = template.replace("{test_name}", var_test_name);
 		template
+	}
+}
+
+impl Parse for Config {
+	fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+			unimplemented!()
 	}
 }
 
@@ -591,9 +603,9 @@ pub fn extract_doctests(config: &Config, raw_input: TokenStream) -> syn::Result<
 	let processed: Vec<ItemFn> = raw_into_processable_documentations(raw_input)?
 		.iter()
 		.filter_map(CodeBlock::from_attrs)
-		.inspect(|code_block| println!("code_block: {:?}", code_block))
+		// .inspect(|code_block| println!("code_block: {:?}", code_block))
 		.filter_map(CodeBlock::check_testable)
-		.inspect(|code_block| println!("code_block: {:?}", code_block))
+		// .inspect(|code_block| println!("code_block: {:?}", code_block))
 		.map(|code_block| code_block.into_tokens(config))
 		.collect::<Result<_, _>>()?;
 
@@ -606,23 +618,30 @@ pub fn extract_doctest_impl(
 	raw_attrs: TokenStream,
 	raw_input: TokenStream,
 ) -> syn::Result<TokenStream> {
-	// make sure raw_attrs is empty
-	if !raw_attrs.is_empty() {
-		return Err(syn::Error::new_spanned(
-			raw_attrs,
-			"extract_doctest_impl does not take any attributes (yet)",
-		));
-	}
-
-	let config = Config::from_current_package().map_err(|e| {
-		syn::Error::new_spanned(
-			raw_input.clone(),
-			format!(
-				"Failed to parse Cargo.toml>package.metadata as Config: {:?}",
-				e
-			),
-		)
-	})?;
+	let config = match Config::from_raw_input(raw_attrs.clone()) {
+		Some(Ok(config)) => config,
+		Some(Err(err)) => {
+			let mut base_error = syn::Error::new_spanned(
+				raw_attrs.clone(),
+				"Failed to parse attributes as Config; \
+				#[extract_doctest] checks for inline configuration declerations before reading your Cargo.toml file from disk \
+				This process appears to have failed.
+				",
+			);
+			base_error.combine(err);
+			return Err(base_error);
+		}
+		None => {
+			Config::from_current_package().map_err(|e| {
+				syn::Error::new_spanned(
+					raw_attrs.clone(),
+					format!("Failed to parse Cargo.toml metadata as Config; \
+					#[extract_doctest] no inline attribute configuration was found. Error parsing config: \
+					{:?}", e)
+				)
+			})?
+		}
+	};
 
 	let tests = extract_doctests(&config, raw_input.clone())?;
 

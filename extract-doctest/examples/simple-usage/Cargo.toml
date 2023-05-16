@@ -4,6 +4,7 @@ version = "0.0.0"
 edition = "2021"
 
 [package.metadata.extract-doctest]
+# This template is dead simple, to make a point
 template = """
 pub fn {test_name}() {
 	{code}
