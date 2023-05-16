@@ -8,7 +8,7 @@ Currently, only outputing functions is supported (because this is the safest use
 ## Example:
 First, add a template to your package's Cargo.toml:
 ```toml
-[package.metadata.extract-doctest]
+[package.metadata.extract-doctests]
 template = """
 // This rust code is added after the component macro invocation
 
@@ -36,6 +36,7 @@ This config is used every #[extract_doctest] call.
 Now you can use the macro:
 ```rust
 use extract_doctests::extract_doctests;
+use wasm_bindgen::prelude::wasm_bindgen;
 
 /// Some documentation
 /// # Example
@@ -69,7 +70,20 @@ use extract_doctests::extract_doctests;
 /// 
 /// log("This is running on a wasm target!");
 /// ```
-#[extract_doctest]
+#[extract_doctests(inline_config(
+// This is an alternative way of specifying the template, instead of
+// using the `template` key in the `Cargo.toml` file.
+// Makes is MUCH easier to test!	
+	template = r##"
+#[cfg(test)]
+#[::wasm_bindgen_test::wasm_bindgen_test]
+fn {test_name}() {
+	#[cfg(feature = "web-not-node")]
+	::wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+
+	{code}
+}
+"##))]
 pub fn show_wasm_alert() {
 	#[wasm_bindgen]
 	extern "C" {
