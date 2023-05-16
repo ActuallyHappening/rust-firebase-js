@@ -2,12 +2,13 @@
 
 use anyhow::{anyhow, Context};
 use cargo_toml::Manifest;
+use derive_syn_parse::Parse;
 use std::{default, unimplemented};
 
 use proc_macro2::TokenStream;
 use quote::quote;
 use serde::Deserialize;
-use syn::{spanned::Spanned, Attribute, Expr, ExprLit, Item, ItemFn, ItemUse, Lit, Meta, parse::Parse};
+use syn::{spanned::Spanned, Attribute, Expr, ExprLit, Item, ItemFn, ItemUse, Lit, Meta, parse::Parse, token, Ident, LitStr};
 
 // #[derive(Debug, Clone, Deserialize)]
 // #[serde(deny_unknown_fields)]
@@ -326,6 +327,33 @@ use syn::{spanned::Spanned, Attribute, Expr, ExprLit, Item, ItemFn, ItemUse, Lit
 #[serde(deny_unknown_fields)]
 pub struct Config {
 	pub template: String,
+
+	#[serde(skip)]
+	parsed: Option<ConfigParse>,
+}
+
+/// Lower level parsable version of config for attribute parsing purposes
+/// Parses config like:
+/// ```rust
+/// use extract_doctest_core::ConfigParse;
+/// use syn::parse_quote;
+/// 
+/// let config: ConfigParse = parse_quote!{inline_config(template = r##"foobar"##)};
+/// ```
+#[derive(Debug, Clone, Parse)]
+pub struct ConfigParse {
+	inline_config_ident: Ident,
+	#[paren]
+	inline_config_paren: token::Paren,
+	#[inside(inline_config_paren)]
+	inline_config: InlineConfig
+}
+
+#[derive(Debug, Clone, Parse)]
+pub struct InlineConfig {
+	template: Ident,
+	eq_sign: token::Eq,
+	template_value: LitStr,
 }
 
 impl Config {
@@ -368,9 +396,18 @@ impl Config {
 	}
 }
 
+impl From<ConfigParse> for Config {
+	fn from(config_parse: ConfigParse) -> Self {
+		Self {
+			template: config_parse.inline_config.template_value.value(),
+			parsed: Some(config_parse),
+		}
+	}
+}
+
 impl Parse for Config {
 	fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
-			unimplemented!()
+		Ok(input.parse::<ConfigParse>()?.into())
 	}
 }
 
@@ -624,8 +661,8 @@ pub fn extract_doctest_impl(
 			let mut base_error = syn::Error::new_spanned(
 				raw_attrs.clone(),
 				"Failed to parse attributes as Config; \
-				#[extract_doctest] checks for inline configuration declerations before reading your Cargo.toml file from disk \
-				This process appears to have failed.
+				#[extract_doctest] checks for inline configuration declerations before reading your Cargo.toml file from disk, \
+				but the inline configuration was not valid. The exact error is attached below.
 				",
 			);
 			base_error.combine(err);

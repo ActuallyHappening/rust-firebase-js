@@ -3,7 +3,6 @@ members = [
 	# "firebase-js",
 	"extract-doctest",
 	"extract-doctest/proc",
-	"extract-doctest/examples/simple-usage",
 
 	"js-bind",
 	"js-bind/core",
