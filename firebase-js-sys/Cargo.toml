@@ -30,6 +30,7 @@ exclude = [
 [package.metadata.scripts]
 test = "./test.sh"
 testq = "./test.sh 2>/dev/null"
+[package.metadata.extract-doctests]
 
 [features]
 # default = ["node-not-web", "verbose-logging"]
@@ -65,7 +66,7 @@ cfg-if = "1.0.0"
 # Local deps
 
 # firebase-js-sys-proc = { path = "./proc", default-features = false }
-js-bind = { path = "../js-bind" }
+# js-bind = { path = "../js-bind" }
 
 # [dependencies.firebase-types]
 # path = "../firebase-types"

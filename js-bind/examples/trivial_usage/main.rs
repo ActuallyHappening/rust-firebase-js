@@ -19,18 +19,6 @@ extern "C" {
 	fn alert2(s: &str);
 }
 
-#[js_bind(config_path = "js-bind/examples/testing-configs/firebase.js-bind.toml", fallback, extract_tests)]
-extern "C" {
-	/// Documentation of func
-	/// 
-	/// ```rust
-	/// // JS BIND-TEST example_test_name
-	/// assert_eq!("Yes this test executed well!", "")
-	/// ```
-	#[wasm_bindgen(js_name = "alert")]
-	fn alert3(s: &str);
-}
-
 fn main() {
 	// alert1("Hello, world!");
 	// alert2("Hello, world!");

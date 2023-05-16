@@ -257,7 +257,6 @@ dependencies = [
  "console_log",
  "document-features",
  "execute",
- "js-bind",
  "log",
  "serde-wasm-bindgen",
  "serde_json",

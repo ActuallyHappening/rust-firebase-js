@@ -1,13 +1,9 @@
-use js_bind::js_bind;
 use wasm_bindgen::JsValue;
+use wasm_bindgen::prelude::*;
 
-#[js_bind(
-	// config_path = "js-bind.toml",
-	conditional_attrs,
-	extract_tests
-)]
-// #[cfg_attr(feature = "web-not-node", wasm_bindgen(module = "/js/bundle-esm.js"))]
-// #[cfg_attr(feature = "node-not-web", wasm_bindgen(module = "/js/bundle-cjs.js"))]
+#[extract_doctest]
+#[cfg_attr(feature = "web-not-node", wasm_bindgen(module = "/js/bundle-esm.js"))]
+#[cfg_attr(feature = "node-not-web", wasm_bindgen(module = "/js/bundle-cjs.js"))]
 // #[wasm_bindgen]
 extern "C" {
 	/// Takes a config object and returns a firebase app instance.

@@ -10,7 +10,7 @@ use syn::{
 	parse::Parse, parse_quote, Attribute, Expr, ExprLit, ItemFn, ItemForeignMod, ItemUse, Lit, Meta, Token,
 };
 
-use crate::config::{Bundle, Config, DocTestGen};
+use crate::config::{Bundle, Config};
 
 #[cfg(test)]
 fn assert_eq_tokens(left: TokenStream, right: TokenStream) {
@@ -360,9 +360,6 @@ fn to_debug_file(name: &str, tokens: &TokenStream) {
 	// std::fs::write(path, payload).expect("to write debug file");
 }
 
-struct ProcessableItem {
-
-}
 
 pub fn js_bind_impl(raw_attrs: TokenStream, raw_input: TokenStream) -> syn::Result<TokenStream> {
 	let attrs = parse_attr(raw_attrs)?;
@@ -386,32 +383,6 @@ pub fn js_bind_impl(raw_attrs: TokenStream, raw_input: TokenStream) -> syn::Resu
 		prelude = gen_prelude_attrs(bundles)?;
 	}
 
-	let mut doc_test_gen = TokenStream::new();
-	if attrs.extract_tests {
-		let err_msg = "Expected config to have a [doctestgen] table because #[js_bind(extract_tests)] was specified which requires [doctestgen.template] to be specified";
-		let config = config
-			.doc_test_gen
-			.ok_or_else(|| syn::Error::new(attrs.extract_tests_span, err_msg))?;
-
-		doc_test_gen = input_extern
-			.items
-			.iter()
-			.map(|item| {
-				if let syn::ForeignItem::Fn(item_fn) = item {
-					return item_fn;
-				} else {
-					unimplemented!("Only functions are supported for #[js_bind(extract_tests)]")
-				}
-			})
-			.map(|f| gen_doc_test(&config, &f.attrs))
-			.collect::<Vec<_>>()
-			.into_iter()
-			.fold(TokenStream::new(), |mut acc, f| {
-				acc.extend(f.to_token_stream());
-				acc
-			});
-	}
-
 	// lol TODO: actually process
 	let processed_output = raw_input;
 
@@ -419,8 +390,6 @@ pub fn js_bind_impl(raw_attrs: TokenStream, raw_input: TokenStream) -> syn::Resu
 		#prelude
 		#fallback
 		#processed_output
-
-		#doc_test_gen
 	};
 
 	to_debug_file("docgen-macro.rs", &expanded);
