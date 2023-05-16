@@ -364,7 +364,7 @@ impl Config {
 
 		#[derive(Deserialize)]
 		struct RawConfig {
-			#[serde(rename = "extract-doctest")]
+			#[serde(rename = "extract-doctests")]
 			config: Config,
 		}
 
@@ -651,7 +651,7 @@ pub fn extract_doctests(config: &Config, raw_input: TokenStream) -> syn::Result<
 	})
 }
 
-pub fn extract_doctest_impl(
+pub fn extract_doctests_impl(
 	raw_attrs: TokenStream,
 	raw_input: TokenStream,
 ) -> syn::Result<TokenStream> {

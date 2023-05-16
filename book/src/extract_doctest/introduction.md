@@ -35,7 +35,7 @@ package-to-crate = "example_package_name"
 This config is used every #[extract_doctest] call.
 Now you can use the macro:
 ```rust
-use extract_doctest::extract_doctest;
+use extract_doctests::extract_doctests;
 
 /// Some documentation
 /// # Example

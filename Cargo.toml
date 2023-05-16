@@ -1,13 +1,9 @@
 [workspace]
 members = [
-	# "firebase-js",
-	"extract-doctest",
-	"extract-doctest/proc",
+	"extract-doctests",
+	"extract-doctests/proc",
+	"extract-doctests/core",
 
-	"js-bind",
-	"js-bind/core",
-	"js-bind/proc",
-	
 	"firebase-js-sys",
 	"firebase-types",
 ]

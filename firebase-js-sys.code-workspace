@@ -7,7 +7,7 @@
 			"path": "firebase-types"
 		},
 		{
-			"path": "extract-doctest"
+			"path": "extract-doctests"
 		},
 		{
 			"path": "."
