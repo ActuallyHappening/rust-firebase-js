@@ -1,5 +1,5 @@
 [package]
-name = "extract-doctest-core"
+name = "extract-doctests-core"
 description = "Core library for extract-doctest"
 version = "0.0.1"
 edition = "2021"

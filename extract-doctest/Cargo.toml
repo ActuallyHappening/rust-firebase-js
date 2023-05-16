@@ -1,5 +1,5 @@
 [package]
-name = "extract-doctest"
+name = "extract-doctests"
 description = "Proc macro to extract doctests into abitrary code (typically wasm32 unit tests)"
 version = "0.0.1"
 edition = "2021"
@@ -9,11 +9,11 @@ license = { workspace = true }
 # TODO: Add more specific documentation link
 documentation = "https://actuallyhappening.github.io/rust-firebase-js/"
 
-[dependencies.extract-doctest-proc]
+[dependencies.extract-doctests-proc]
 path = "./proc"
 version = "0.0.1"
 
-[dependencies.extract-doctest-core]
+[dependencies.extract-doctests-core]
 path = "./core"
 version = "0.0.1"
 

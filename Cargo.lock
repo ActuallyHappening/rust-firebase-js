@@ -209,17 +209,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8ba569491c70ec8471e34aa7e9c0b9e82bb5d2464c0398442d17d3c4af814e5a"
 
 [[package]]
-name = "extract-doctest"
-version = "0.0.1"
-dependencies = [
- "extract-doctest-core",
- "extract-doctest-proc",
- "trybuild",
- "wasm-bindgen",
- "wasm-bindgen-test",
-]
-
-[[package]]
 name = "extract-doctest-core"
 version = "0.0.1"
 dependencies = [
@@ -237,6 +226,17 @@ name = "extract-doctest-proc"
 version = "0.0.1"
 dependencies = [
  "extract-doctest-core",
+]
+
+[[package]]
+name = "extract-doctests"
+version = "0.0.1"
+dependencies = [
+ "extract-doctest-core",
+ "extract-doctest-proc",
+ "trybuild",
+ "wasm-bindgen",
+ "wasm-bindgen-test",
 ]
 
 [[package]]
