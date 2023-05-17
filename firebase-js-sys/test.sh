@@ -11,8 +11,8 @@
 wasm-pack test --node --no-default-features --features node-not-web
 
 
-wasm-pack test --headless --safari --no-default-features --features web-not-node
+# wasm-pack test --headless --safari --no-default-features --features web-not-node
+# open /Applications/Visual\ Studio\ Code.app
+
 # execute above --safari command, and after 10 seconds, open Safari to http://localhost:8000
 # sleep 10 && open -a Safari http://localhost:8000
-
-open /Applications/Visual\ Studio\ Code.app

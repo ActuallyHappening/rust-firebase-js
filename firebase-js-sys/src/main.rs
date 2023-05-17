@@ -28,8 +28,5 @@ fn main() {
 	log("err: ", &err);
 
 	let code1 = Reflect::get(&err, &JsValue::from_str("code")).expect("Failed to get code");
-	let code2 = err.get("code").expect("Failed to get code");
 	log("code1: ", &code1);
-	log("code2: ", &code2);
-	assert_eq!(code1, code2);
 }

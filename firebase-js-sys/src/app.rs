@@ -29,7 +29,7 @@ extern "C" {
 	/// // extract-doctests initialize_app
 	/// use firebase_js_sys::app::initialize_app;
 	/// use wasm_bindgen::JsValue;
-	///
+	/// 
 	/// // Should Error
 	/// assert!(initialize_app(JsValue::UNDEFINED, JsValue::UNDEFINED).is_err());
 	/// assert!(initialize_app(JsValue::NULL, JsValue::UNDEFINED).is_err());
@@ -40,12 +40,8 @@ extern "C" {
 	/// assert!(initialize_app(serde_wasm_bindgen::to_value(&serde_json::json!({})).unwrap(), JsValue::from_str("project name here")).is_ok());
 	/// ```
 	#[wasm_bindgen(js_name = "initializeApp", catch)]
-	pub fn initialize_app(config: JsValue, optional_name: JsValue) -> Result<JsValue, FirebaseError>;
+	pub fn initialize_app(config: JsValue, optional_name: JsValue) -> Result<JsValue, FirebaseAppError>;
 
-	/// Raw error type
-	#[wasm_bindgen(extends = Error)]
-	pub type FirebaseError;
-
-	#[wasm_bindgen(method, indexing_getter, catch)]
-	pub fn get(this: &FirebaseError, field: &str) -> Result<JsValue, JsValue>;
+	#[wasm_bindgen(extends = Error, js_name = "FirebaseError")]
+	pub type FirebaseAppError;
 }

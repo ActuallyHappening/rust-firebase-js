@@ -175,6 +175,7 @@ dependencies = [
  "document-features",
  "execute",
  "extract-doctests",
+ "firebase-types",
  "js-sys",
  "log",
  "serde-wasm-bindgen",

@@ -1,0 +1,1 @@
+// pub fn initialize_app(config: Config) -> Result<JsValue, 
