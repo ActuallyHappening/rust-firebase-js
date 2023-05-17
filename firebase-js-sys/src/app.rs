@@ -1,4 +1,5 @@
 use extract_doctests::extract_doctests;
+use js_sys::Error;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsValue;
 
@@ -39,7 +40,12 @@ extern "C" {
 	/// assert!(initialize_app(serde_wasm_bindgen::to_value(&serde_json::json!({})).unwrap(), JsValue::from_str("project name here")).is_ok());
 	/// ```
 	#[wasm_bindgen(js_name = "initializeApp", catch)]
-	pub fn initialize_app(config: JsValue, optional_name: JsValue) -> Result<JsValue, JsValue>;
+	pub fn initialize_app(config: JsValue, optional_name: JsValue) -> Result<JsValue, FirebaseError>;
 
+	/// Raw error type
+	#[wasm_bindgen(extends = Error)]
 	pub type FirebaseError;
+
+	#[wasm_bindgen(method, indexing_getter, catch)]
+	pub fn get(this: &FirebaseError, field: &str) -> Result<JsValue, JsValue>;
 }
