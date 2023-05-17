@@ -12,6 +12,8 @@ proc-macro = true
 
 [dependencies]
 
+
 [dependencies.extract-doctests-core]
-path = "../core"
+workspace = true
+# path = "../core"
 # version = "0.0.1"

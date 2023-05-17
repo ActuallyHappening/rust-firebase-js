@@ -20,10 +20,10 @@ default = ["serde"]
 ## Enables generic serde support
 serde = ["dep:serde"]
 
-[package.metadata.scripts]
-testq = """wasm-pack test --headless --safari --node --no-default-features --features js
-open "/Applications/Visual Studio Code.app"
-"""
+# [package.metadata.scripts]
+# testq = """wasm-pack test --headless --safari --node --no-default-features --features js
+# open "/Applications/Visual Studio Code.app"
+# """
 
 [dependencies]
 serde = { version = "1.0.160", features = ["derive"], optional = true }
@@ -36,7 +36,6 @@ smart-default = "0.7.1"
 [dev-dependencies]
 getrandom = { version = "0.2.9", features = ["js"] }
 rand = "0.8.5"
-wasm-bindgen = { version = "0.2" }
 
 [package.metadata.docs.rs]
 cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples=examples"]

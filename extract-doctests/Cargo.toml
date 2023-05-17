@@ -10,12 +10,14 @@ license = { workspace = true }
 documentation = "https://actuallyhappening.github.io/rust-firebase-js/"
 
 [dependencies.extract-doctests-proc]
-path = "./proc"
-version = "0.0.1"
+workspace = true
+# path = "./proc"
+# version = "0.0.1"
 
 [dependencies.extract-doctests-core]
-path = "./core"
-version = "0.0.1"
+workspace = true
+# path = "./core"
+# version = "0.0.1"
 
 [dev-dependencies]
 trybuild = "1.0.80"
