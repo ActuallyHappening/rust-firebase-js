@@ -5,9 +5,8 @@ use cargo_toml::Manifest;
 use derive_new::new;
 use derive_syn_parse::Parse;
 use std::{default, unimplemented};
-
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{quote, quote_spanned, ToTokens};
 use serde::Deserialize;
 use syn::{
 	parse::{Parse, ParseStream},
@@ -185,18 +184,24 @@ impl Parse for Config {
 	}
 }
 
-#[derive(Debug)]
-pub struct CodeBlock<T> {
+#[derive(Debug, Clone)]
+pub struct CodeBlock<T: Clone> {
 	pub inner_lines: Vec<String>,
 	pub meta: T,
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct NoCommentMeta {}
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CommentMeta {
 	pub name: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct ProcessedMeta {
+	pub meta: CommentMeta,
+	pub processed: ItemFn,
 }
 
 impl CodeBlock<NoCommentMeta> {
@@ -343,8 +348,62 @@ impl CodeBlock<CommentMeta> {
 		Self { inner_lines, meta }
 	}
 
+	/// Process the CodeBlock, taking into account `replace-package`
+	/// and other config options.
+	pub fn process(self, config: &Config) -> syn::Result<CodeBlock<ProcessedMeta>> {
+		let mut self_mut = self;
+		// parse as fn
+		let parsed: ItemFn = syn::parse_str(&self.inner_lines.join("\n"))?;
+
+		// replace package name
+		if let Some(name) = config.replace_package {
+			self_mut = parsed.block.stmts.into_iter().map(|line| {
+				if line.trim().starts_with("use ") && line.trim().contains(&name) && line.trim().ends_with(";") {
+					let parsed_line = syn::parse_str::<ItemUse>(&line).expect("to parse as ItemUse");
+					match syn::parse_str::<ItemUse>(&line) {
+						Ok(mut import) => {
+							match import.tree {
+								syn::UseTree::Path(ref mut path) => {
+									// get first ident
+									let first_ident = path.ident.to_string();
+									if first_ident == name {
+										path.ident = syn::Ident::new(
+											"crate",
+											path.ident.span(),
+										);
+										// path.ident = Token![crate](path.ident.span());
+									}
+								}
+								_ => unimplemented!("Only path imports are supported"),
+							}
+							import.to_token_stream().to_string()
+						}
+						Err(err) => {
+							// eprintln!("Error parsing line as rust import. This may not be a fatal error, but often it is an early indicator of bad syntax\nErr:\n{:?}\nline: {:?}", err, line_mut)
+							line
+						}
+					}
+				} else {
+					line
+				}
+			});
+		}
+
+		Ok(CodeBlock {
+			inner_lines: self.inner_lines,
+			meta: ProcessedMeta {
+				meta: self.meta,
+				processed: parsed,
+			},
+		})
+
+		// unimplemented!()
+	}
+}
+
+impl CodeBlock<ProcessedMeta> {
 	pub fn into_tokens(self, config: &Config) -> syn::Result<ItemFn> {
-		let template = config.interpolate_template(&self.inner_lines.join("\n"), &self.meta.name);
+		let template = config.interpolate_template(&self.inner_lines.join("\n"), &self.meta.meta.name);
 
 		// Validate template is an ItemFn
 		match syn::parse_str::<ItemFn>(&template) {
@@ -481,6 +540,7 @@ pub fn raw_into_processable_documentations(
 /// assert_eq!(expected2.to_string(), actual2.to_token_stream().to_string());
 /// ```
 pub fn extract_doctests(config: &Config, raw_input: TokenStream) -> syn::Result<TokenStream> {
+	let span = raw_input.span();
 	let processed: Vec<ItemFn> = raw_into_processable_documentations(raw_input)?
 		.iter()
 		// .inspect(|attrs| println!("Attrs: {:?}", attrs))
@@ -492,7 +552,7 @@ pub fn extract_doctests(config: &Config, raw_input: TokenStream) -> syn::Result<
 		.map(|code_block| code_block.into_tokens(config))
 		.collect::<Result<_, _>>()?;
 
-	Ok(quote! {
+	Ok(quote_spanned! {span=>
 		#(#processed)*
 	})
 }
@@ -529,7 +589,8 @@ pub fn extract_doctests_impl(
 
 	let tests = extract_doctests(&config, raw_input.clone())?;
 
-	let expanded: TokenStream = quote! {
+	let span = raw_input.span();
+	let expanded: TokenStream = quote_spanned! {span=>
 		#raw_input
 
 		#tests
