@@ -11,6 +11,7 @@ use extract_doctests::extract_doctests;
 /// assert_eq!(42, 42);
 /// ```
 /// 
+/// Some more documentation.
 /// 
 /// ```rust,should_panic
 /// // extract-doctests name_of_func

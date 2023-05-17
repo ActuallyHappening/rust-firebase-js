@@ -9,7 +9,10 @@ use std::{default, unimplemented};
 use proc_macro2::TokenStream;
 use quote::quote;
 use serde::Deserialize;
-use syn::{spanned::Spanned, Attribute, Expr, ExprLit, Item, ItemFn, ItemUse, Lit, Meta, parse::Parse, token, Ident, LitStr};
+use syn::{
+	parse::Parse, spanned::Spanned, token, Attribute, Expr, ExprLit, Ident, Item, ItemFn, ItemUse,
+	Lit, LitStr, Meta,
+};
 
 // #[derive(Debug, Clone, Deserialize)]
 // #[serde(deny_unknown_fields)]
@@ -340,7 +343,7 @@ pub struct Config {
 /// ```rust
 /// use extract_doctests_core::ConfigParse;
 /// use syn::parse_quote;
-/// 
+///
 /// let config: ConfigParse = parse_quote!{inline_config(template = r##"foobar"##)};
 /// ```
 #[derive(Debug, Clone, Parse)]
@@ -350,7 +353,7 @@ pub struct ConfigParse {
 	#[paren]
 	inline_config_paren: token::Paren,
 	#[inside(inline_config_paren)]
-	inline_config: InlineConfig
+	inline_config: InlineConfig,
 }
 
 #[derive(Debug, Clone, Parse)]
@@ -388,7 +391,9 @@ impl Config {
 	}
 
 	pub fn from_raw_input(raw_input: TokenStream) -> Option<syn::Result<Self>> {
-		if raw_input.is_empty() { None } else {
+		if raw_input.is_empty() {
+			None
+		} else {
 			Some(syn::parse2::<Self>(raw_input))
 		}
 	}
@@ -442,26 +447,55 @@ impl CodeBlock<NoCommentMeta> {
 	///
 	/// ```rust
 	/// use extract_doctests_core::CodeBlock;
+	/// use syn::parse_quote;
 	///
 	/// let attrs = vec![
-	/// 	syn::parse_quote!{ #[doc = r#"
+	/// 	parse_quote!{ #[doc = r#"
 	/// 	Example test:
 	/// 	```rust
 	/// 		// comment here
-	/// 		assert_eq!(1, 1);
+	/// 		assert_eq!(1, 2);
 	/// 	```
 	/// "#]}
 	/// ];
 	///
 	/// let code_block = CodeBlock::from_attrs(&attrs).expect("to have a code block");
-	/// assert_eq!(code_block.inner_lines.iter().map(|l| l.trim()).collect::<Vec<_>>(), vec![
+	/// assert_eq!(code_block.get(0).unwrap().inner_lines.iter().map(|l| l.trim()).collect::<Vec<_>>(), vec![
 	/// 	"// comment here".to_string(),
+	/// 	"assert_eq!(1, 2);".to_string(),
+	/// ]);
+	///
+	/// let attrs2 = vec![
+	/// 	parse_quote!{ #[doc = r#"```rust"#]},
+	/// 	parse_quote!{ #[doc = r#"// comment here first"#]},
+	/// 	parse_quote!{ #[doc = r#"assert_eq!(1, 1);"#]},
+	/// 	parse_quote!{ #[doc = r#"```"#]},
+	///
+	/// 	parse_quote!{ #[doc = r#"Some documentation"#]},
+	///
+	/// 	parse_quote!{ #[doc = r#"```rust"#]},
+	/// 	parse_quote!{ #[doc = r#"// comment here again"#]},
+	/// 	parse_quote!{ #[doc = r#"assert_eq!(42, 69);"#]},
+	/// 	parse_quote!{ #[doc = r#"```"#]},
+	/// ];
+	///
+	/// let code_block = CodeBlock::from_attrs(&attrs2).expect("to have code blocks");
+	/// println!("code_block: {:?}", code_block);
+	/// assert_eq!(code_block.len(), 2);
+	/// 
+	/// assert_eq!(code_block.get(0).unwrap().inner_lines.iter().map(|l| l.trim()).collect::<Vec<_>>(), vec![
+	/// 	"// comment here first".to_string(),
 	/// 	"assert_eq!(1, 1);".to_string(),
 	/// ]);
+	/// 
+	/// assert_eq!(code_block.get(1).expect("to have second block").inner_lines.iter()
+	/// 	.map(|l| l.trim()).collect::<Vec<_>>(), vec![
+	/// 	"// comment here again".to_string(),
+	/// 	"assert_eq!(42, 69);".to_string(),
+	/// ], "second block");
 	/// ```
-	pub fn from_attrs(attrs: &Vec<Attribute>) -> Option<CodeBlock<NoCommentMeta>> {
-		let mut inner_lines = Vec::new();
-		let mut in_code_block = false;
+	pub fn from_attrs(attrs: &Vec<Attribute>) -> Option<Vec<CodeBlock<NoCommentMeta>>> {
+		let mut raw_doc_lines: Vec<String> = Vec::new();
 		for attr in attrs {
 			if let Meta::NameValue(meta_name_value) = &attr.meta {
 				if meta_name_value.path.is_ident("doc") {
@@ -469,24 +503,34 @@ impl CodeBlock<NoCommentMeta> {
 						lit: Lit::Str(doc), ..
 					}) = &meta_name_value.value
 					{
-						for line in doc.value().lines() {
-							if line.trim().starts_with("```") {
-								in_code_block = !in_code_block;
-							} else if in_code_block {
-								inner_lines.push(line.to_string());
-							}
-						}
+						raw_doc_lines.extend(doc.value().lines().map(|l| l.to_string()))
 					}
 				}
 			}
 		}
-		if inner_lines.len() == 0 {
-			return None;
+
+		let mut code_blocks = Vec::new();
+		let mut current_block = Vec::new();
+		let mut in_code_block = false;
+		for line in raw_doc_lines {
+			if line.trim().starts_with("```") {
+				if in_code_block {
+					code_blocks.push(CodeBlock::new(current_block));
+					current_block = Vec::new();
+					in_code_block = false;
+				} else {
+					in_code_block = true;
+				}
+			} else if in_code_block {
+				current_block.push(line.to_string());
+			}
 		}
-		Some(Self {
-			inner_lines,
-			meta: NoCommentMeta::default(),
-		})
+
+		if code_blocks.len() == 0 {
+			return None;
+		} else {
+			Some(code_blocks)
+		}
 	}
 
 	/// Parses the potential code block into a `CodeBlock<CommentMeta>`
@@ -523,7 +567,7 @@ impl CodeBlock<NoCommentMeta> {
 			.trim()
 			.to_string();
 
-		Some(<CodeBlock<CommentMeta>>::new(
+		Some(<CodeBlock<CommentMeta>>::new_with_meta(
 			self.inner_lines, //[1..].to_vec(),
 			CommentMeta { name },
 		))
@@ -531,7 +575,7 @@ impl CodeBlock<NoCommentMeta> {
 }
 
 impl CodeBlock<CommentMeta> {
-	pub fn new(inner_lines: Vec<String>, meta: CommentMeta) -> Self {
+	pub fn new_with_meta(inner_lines: Vec<String>, meta: CommentMeta) -> Self {
 		Self { inner_lines, meta }
 	}
 
@@ -556,6 +600,11 @@ impl CodeBlock<CommentMeta> {
 	}
 }
 
+/// Returns a vector for each item found, and within each item's vector
+/// a vector containing the attributes of the item (ALL the attributes,
+/// not just the doc ones)
+///
+/// TODO: Change to references for proper error bubbling
 pub fn raw_into_processable_documentations(
 	raw_input: TokenStream,
 ) -> syn::Result<Vec<Vec<Attribute>>> {
@@ -640,14 +689,42 @@ pub fn raw_into_processable_documentations(
 /// let actual = extract_doctests(&config, input).expect("to have a test");
 ///
 /// assert_eq!(expected.to_string(), actual.to_token_stream().to_string());
+///
+/// let input2 = quote!{
+/// 	#[doc = r#"
+/// 	Example test (that is not extracted):
+/// 	```rust
+/// 		assert_eq!(42, 42);
+/// 	```
+///
+/// 	Example test that IS extracted:
+/// 	```rust
+/// 		// extract-doctests example_test_name_extracted
+/// 		assert_eq!(1, 1);
+/// 	```
+/// "#]
+/// fn example() {}
+/// };
+///
+/// let expected2 = quote!{
+/// 	fn example_test_name_extracted() {
+/// 		assert_eq!(1, 1);
+/// 	}
+/// };
+///
+/// let actual2 = extract_doctests(&config, input2).expect("to have a test");
+///
+/// assert_eq!(expected2.to_string(), actual2.to_token_stream().to_string());
 /// ```
 pub fn extract_doctests(config: &Config, raw_input: TokenStream) -> syn::Result<TokenStream> {
 	let processed: Vec<ItemFn> = raw_into_processable_documentations(raw_input)?
 		.iter()
+		// .inspect(|attrs| println!("Attrs: {:?}", attrs))
 		.filter_map(CodeBlock::from_attrs)
-		// .inspect(|code_block| println!("code_block: {:?}", code_block))
+		.flatten()
+		.inspect(|code_block| println!("code_block: {:?}", code_block))
 		.filter_map(CodeBlock::check_testable)
-		// .inspect(|code_block| println!("code_block: {:?}", code_block))
+		.inspect(|code_block| println!("code_blocks processed: {:?}", code_block))
 		.map(|code_block| code_block.into_tokens(config))
 		.collect::<Result<_, _>>()?;
 
@@ -673,16 +750,17 @@ pub fn extract_doctests_impl(
 			base_error.combine(err);
 			return Err(base_error);
 		}
-		None => {
-			Config::from_current_package().map_err(|e| {
-				syn::Error::new_spanned(
-					raw_attrs.clone(),
-					format!("Failed to parse Cargo.toml metadata as Config; \
+		None => Config::from_current_package().map_err(|e| {
+			syn::Error::new_spanned(
+				raw_attrs.clone(),
+				format!(
+					"Failed to parse Cargo.toml metadata as Config; \
 					#[extract_doctest] no inline attribute configuration was found. Error parsing config: \
-					{:?}", e)
-				)
-			})?
-		}
+					{:?}",
+					e
+				),
+			)
+		})?,
 	};
 
 	let tests = extract_doctests(&config, raw_input.clone())?;
