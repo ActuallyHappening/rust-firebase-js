@@ -23,6 +23,7 @@ pub struct Config {
 
 	/// Package name to replace with `crate`
 	#[serde(default)]
+	#[serde(rename = "replace-package")]
 	pub replace_package: Option<String>,
 
 	#[serde(skip)]
@@ -452,6 +453,7 @@ pub fn raw_into_processable_documentations(
 /// 			{code}
 /// 		}
 /// 	"#.to_string(),
+/// 	None
 /// );
 ///
 /// let input = quote!{
