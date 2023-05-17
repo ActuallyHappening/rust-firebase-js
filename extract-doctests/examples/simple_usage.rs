@@ -5,7 +5,7 @@ use extract_doctests::extract_doctests;
 
 /// Documentation
 /// ```rust,should_panic
-/// // extract-doctest name_of_func
+/// // extract-doctests name_of_func
 ///
 /// // This statement is only executed by rustdoc because
 /// // of the template that is used, see Cargo.toml

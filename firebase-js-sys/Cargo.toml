@@ -32,8 +32,21 @@ test = "./test.sh"
 testq = "./test.sh 2>/dev/null"
 
 [package.metadata.extract-doctests]
-template = """
+#replace-package = "firebase_js_sys" # TODO: implement
+# template = """
+# #[cfg(test)]
+# #[::wasm_bindgen_test::wasm_bindgen_test]
+# fn {test_name}_jsbind_doctestgen() {
+# 	#[cfg(feature = "web-not-node")]
+# 	::wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
+# 	{code}
+# }
+# """
+template = """
+fn nothing() {
+	panic!("template working");
+}
 """
 
 [features]

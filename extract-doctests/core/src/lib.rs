@@ -495,13 +495,13 @@ impl CodeBlock<NoCommentMeta> {
 	/// use extract_doctests_core::{CodeBlock, NoCommentMeta};
 	///
 	/// let code_block = <CodeBlock<NoCommentMeta>>::new(vec![
-	/// 	" // extract-doctest example_test_name".to_string(),
+	/// 	" // extract-doctests example_test_name".to_string(),
 	/// 	"assert_eq!(1, 1);".to_string(),
 	/// ]);
 	///
 	/// let code_block = code_block.check_testable().expect("to have a testable code block");
 	/// assert_eq!(code_block.inner_lines.iter().map(|l| l.trim()).collect::<Vec<_>>(), vec![
-	/// 	"// extract-doctest example_test_name".to_string(),
+	/// 	"// extract-doctests example_test_name".to_string(),
 	/// 	"assert_eq!(1, 1);".to_string(),
 	/// ]);
 	pub fn check_testable(self) -> Option<CodeBlock<CommentMeta>> {
@@ -515,11 +515,11 @@ impl CodeBlock<NoCommentMeta> {
 			.trim_start_matches("#")
 			.trim_start_matches("//")
 			.trim();
-		if !stripped.starts_with("extract-doctest") {
+		if !stripped.starts_with("extract-doctests") {
 			return None;
 		}
 		let name = stripped
-			.trim_start_matches("extract-doctest")
+			.trim_start_matches("extract-doctests")
 			.trim()
 			.to_string();
 
@@ -624,7 +624,7 @@ pub fn raw_into_processable_documentations(
 /// 	#[doc = r#"
 /// 	Example test:
 /// 	```rust
-/// 		// extract-doctest example_test_name
+/// 		// extract-doctests example_test_name
 /// 		assert_eq!(1, 1);
 /// 	```
 /// "#]

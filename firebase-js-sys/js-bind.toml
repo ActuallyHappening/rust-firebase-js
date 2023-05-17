@@ -17,16 +17,3 @@ to-build = "rollup -args"
 # import { #name as _#name } from '#mod';
 # export const #name = _#name;
 # """
-
-[doctestgen]
-replace-package = "firebase_js_sys"
-template = """
-#[cfg(test)]
-#[::wasm_bindgen_test::wasm_bindgen_test]
-fn #test_name_jsbind_doctestgen() {
-	#[cfg(feature = "web-not-node")]
-	::wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
-
-	#code
-}
-"""

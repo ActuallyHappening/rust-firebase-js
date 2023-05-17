@@ -24,7 +24,7 @@ extern "C" {
 	///
 	/// ## Examples
 	/// ```rust,no_run
-	/// // JSBIND-TEST test_initialize_app
+	/// // extract-doctests initialize_app
 	/// use firebase_js_sys::app::initialize_app;
 	/// use wasm_bindgen::JsValue;
 	///
@@ -35,4 +35,8 @@ extern "C" {
 	/// ```
 	#[wasm_bindgen(js_name = "initializeApp", catch)]
 	pub fn initialize_app(config: JsValue, optional_name: JsValue) -> Result<JsValue, JsValue>;
+}
+
+fn _nothing() {
+	nothing();
 }
