@@ -9,7 +9,7 @@ authors = { workspace = true }
 homepage = { workspace = true }
 license = { workspace = true }
 # TODO: Add more specific documentation link
-documentation = "https://actuallyhappening.github.io/rust-firebase-js/" 
+documentation = "https://actuallyhappening.github.io/rust-firebase-js/"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -25,6 +25,19 @@ serde = ["dep:serde"]
 # open "/Applications/Visual Studio Code.app"
 # """
 
+[package.metadata.extract-doctests]
+replace-package = "firebase-types"
+template = """
+#[cfg(test)]
+#[::wasm_bindgen_test::wasm_bindgen_test]
+fn {test_name}_jsbind_doctestgen() {
+	#[cfg(feature = "web-not-node")]
+	::wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+
+	{code}
+}
+"""
+
 [dependencies]
 serde = { version = "1.0.160", features = ["derive"], optional = true }
 serde-wasm-bindgen = { version = "0.5.0" }
@@ -32,10 +45,12 @@ document-features = { version = "0.2.7" }
 js-sys = { workspace = true }
 wasm-bindgen = { workspace = true }
 smart-default = "0.7.1"
+extract-doctests = { workspace = true }
 
 [dev-dependencies]
 getrandom = { version = "0.2.9", features = ["js"] }
 rand = "0.8.5"
+
 
 [package.metadata.docs.rs]
 cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples=examples"]

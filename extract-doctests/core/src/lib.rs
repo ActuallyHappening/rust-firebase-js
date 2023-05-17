@@ -420,6 +420,12 @@ pub fn raw_into_processable_documentations(
 				Item::Struct(item_struct) => {
 					return Ok(vec![item_struct.attrs]);
 				}
+				
+				// gets attrs from enum
+				Item::Enum(item_enum) => {
+					return Ok(vec![item_enum.attrs]);
+				}
+
 				// give error for unsupported type
 				_ => Err(syn::Error::new(
 					input_span,

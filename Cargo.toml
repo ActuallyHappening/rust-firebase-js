@@ -19,14 +19,18 @@ license-file = "LICENSE"
 documentation = "https://actuallyhappening.github.io/rust-firebase-js/"
 
 [workspace.dependencies]
-js-sys = "=0.3.61"
-wasm-bindgen = { version = "=0.2.84", features = ["serde"] }
-wasm-bindgen-test = "=0.3.33"
+js-sys = "0.3.61"
+wasm-bindgen = { version = "0.2.84", features = ["serde"] }
+wasm-bindgen-test = "0.3.33"
+
+[workspace.dependencies.extract-doctests]
+path = "./extract-doctests"
+# version = "0.0.1"
 
 [workspace.dependencies.extract-doctests-proc]
 path = "./extract-doctests/proc"
-version = "0.0.1"
+# version = "0.0.1"
 
 [workspace.dependencies.extract-doctests-core]
 path = "./extract-doctests/core"
-version = "0.0.1"
+# version = "0.0.1"

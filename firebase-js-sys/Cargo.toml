@@ -78,8 +78,9 @@ wasm-bindgen = { workspace = true }
 
 # Local deps
 [dependencies.extract-doctests]
-path = "../extract-doctests"
-version = "0.0.1"
+workspace = true
+# path = "../extract-doctests"
+# version = "0.0.1"
 
 [dependencies.firebase-types]
 path = "../firebase-types"

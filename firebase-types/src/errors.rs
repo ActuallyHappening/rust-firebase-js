@@ -1,5 +1,5 @@
 use std::{collections::HashMap};
-use serde::{Deserialize, Serialize};
+use extract_doctests::extract_doctests;
 use smart_default::SmartDefault;
 use wasm_bindgen::{JsValue};
 use js_sys::Reflect;
@@ -58,6 +58,7 @@ pub enum FirebaseAppError {
 	/// 
 	/// ## JS Example:
 	/// ```rust,no_run
+	/// // extract-doctests err_app_no_options
 	/// use firebase_js_sys::app::initialize_app;
 	/// 
 	/// let err: FirebaseAppError = initialize_app(JsValue::UNDEFINED, JsValue::UNDEFINED).expect_err("didn't err?").into();
