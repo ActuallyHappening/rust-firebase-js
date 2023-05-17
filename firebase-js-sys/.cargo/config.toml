@@ -1,8 +1,9 @@
 [alias]
 # t = "test --target wasm32-unknown-unknown"
 # tm = "test --quiet test_macro -- --nocapture"
-t = "run-script test"
-tq = "run-script testq"
+# t = "run-script test"
+# tq = "run-script testq"
+ts = "t run_test_script"
 
 em = "expand --lib firebase-js-sys"
 # Full testing command:  rm debug.rs && RUSTFLAGS="-Zmacro-backtrace" cargo em > debug.rs
