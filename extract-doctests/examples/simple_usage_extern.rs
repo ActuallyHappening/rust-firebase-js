@@ -10,7 +10,8 @@ fn {test_name}() -> i32 {
 "##))]
 extern "C" {
 	/// Documentation
-	/// ```rust,should_panic
+	/// Using 'no_run' as an example
+	/// ```rust,no_run
 	/// // extract-doctests name_of_func
 	///
 	/// // This statement is only executed by rustdoc because

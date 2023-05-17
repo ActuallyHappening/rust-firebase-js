@@ -4,6 +4,14 @@
 use extract_doctests::extract_doctests;
 
 /// Documentation
+/// 
+/// ## Normal (not extracted) doctest
+/// This is not extracted because 'extract-doctests <name>' is not present on first line
+/// ```rust
+/// assert_eq!(42, 42);
+/// ```
+/// 
+/// 
 /// ```rust,should_panic
 /// // extract-doctests name_of_func
 ///
