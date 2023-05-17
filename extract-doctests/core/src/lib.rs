@@ -406,18 +406,38 @@ impl Config {
 	}
 }
 
-impl From<ConfigParse> for Config {
-	fn from(config_parse: ConfigParse) -> Self {
-		Self {
+impl TryFrom<ConfigParse> for Config {
+	type Error = syn::Error;
+
+	fn try_from(config_parse: ConfigParse) -> syn::Result<Self> {
+		config_parse.inline_config_ident
+			.to_string()
+			.as_str()
+			.strip_prefix("inline_config")
+			.ok_or_else(|| {
+				syn::Error::new(
+					config_parse.inline_config_ident.span(),
+					format!("Expected inline_config, not {}", config_parse.inline_config_ident),
+				)
+			})?;
+		
+		config_parse.inline_config.template.to_string().as_str().strip_prefix("template").ok_or_else(|| {
+			syn::Error::new(
+				config_parse.inline_config.template.span(),
+				format!("Expected template, not {}", config_parse.inline_config.template),
+			)
+		})?;
+
+		Ok(Self {
 			template: config_parse.inline_config.template_value.value(),
 			parsed: Some(config_parse),
-		}
+		})
 	}
 }
 
 impl Parse for Config {
 	fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
-		Ok(input.parse::<ConfigParse>()?.into())
+		Ok(input.parse::<ConfigParse>()?.try_into()?)
 	}
 }
 

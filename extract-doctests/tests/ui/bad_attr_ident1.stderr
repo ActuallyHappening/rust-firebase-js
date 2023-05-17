@@ -1,0 +1,12 @@
+error: Failed to parse attributes as Config; #[extract_doctest] checks for inline configuration declerations before reading your Cargo.toml file from disk, but the inline configuration was not valid. The exact error is attached below.
+
+ --> tests/ui/bad_attr_ident1.rs:3:20
+  |
+3 | #[extract_doctests(bad_attr(template = ""))]
+  |                    ^^^^^^^^^^^^^^^^^^^^^^^
+
+error: Expected inline_config, not bad_attr
+ --> tests/ui/bad_attr_ident1.rs:3:20
+  |
+3 | #[extract_doctests(bad_attr(template = ""))]
+  |                    ^^^^^^^^
