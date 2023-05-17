@@ -4,14 +4,15 @@ use anyhow::{anyhow, Context};
 use cargo_toml::Manifest;
 use derive_new::new;
 use derive_syn_parse::Parse;
-use std::{default, unimplemented};
 use proc_macro2::TokenStream;
 use quote::{quote, quote_spanned, ToTokens};
 use serde::Deserialize;
+use std::{default, unimplemented};
 use syn::{
 	parse::{Parse, ParseStream},
 	spanned::Spanned,
-	token, Attribute, Expr, ExprLit, Ident, Item, ItemFn, ItemUse, Lit, LitStr, Meta, Token,
+	token, Attribute, Expr, ExprLit, Ident, Item, ItemFn, ItemUse, Lit, LitStr, Meta, Stmt, Token,
+	UsePath, UseTree,
 };
 
 #[derive(Debug, Clone, Deserialize, new)]
@@ -155,10 +156,7 @@ impl TryFrom<ConfigParse> for Config {
 		}
 		confirm_ident(&config_parse.config_ident, "inline_config")?;
 
-		confirm_ident(
-			&config_parse.config_template.template_ident,
-			"template",
-		)?;
+		confirm_ident(&config_parse.config_template.template_ident, "template")?;
 
 		if let Some(replace_package) = &config_parse.config_replace_package {
 			confirm_ident(&replace_package.package_ident, "replace_package")?;
@@ -196,12 +194,6 @@ pub struct NoCommentMeta {}
 #[derive(Debug, Clone)]
 pub struct CommentMeta {
 	pub name: String,
-}
-
-#[derive(Debug, Clone)]
-pub struct ProcessedMeta {
-	pub meta: CommentMeta,
-	pub processed: ItemFn,
 }
 
 impl CodeBlock<NoCommentMeta> {
@@ -350,76 +342,46 @@ impl CodeBlock<CommentMeta> {
 
 	/// Process the CodeBlock, taking into account `replace-package`
 	/// and other config options.
-	pub fn process(self, config: &Config) -> syn::Result<CodeBlock<ProcessedMeta>> {
+	pub fn process(self, config: &Config) -> syn::Result<ItemFn> {
 		let mut self_mut = self;
 		// parse as fn
-		let parsed: ItemFn = syn::parse_str(&self.inner_lines.join("\n"))?;
+		let lines = config.interpolate_template(&self_mut.inner_lines.join("\n"), &self_mut.meta.name);
+		let mut parsed: ItemFn = match syn::parse_str(&lines) {
+			Ok(item_fn) => item_fn,
+			Err(e) => {
+				eprintln!(
+					"Failed to parse as fn:\n {:?}",
+					self_mut.inner_lines.join("\n")
+				);
+				return Err(e);
+			}
+		};
 
 		// replace package name
-		if let Some(name) = config.replace_package {
-			self_mut = parsed.block.stmts.into_iter().map(|line| {
-				if line.trim().starts_with("use ") && line.trim().contains(&name) && line.trim().ends_with(";") {
-					let parsed_line = syn::parse_str::<ItemUse>(&line).expect("to parse as ItemUse");
-					match syn::parse_str::<ItemUse>(&line) {
-						Ok(mut import) => {
-							match import.tree {
-								syn::UseTree::Path(ref mut path) => {
-									// get first ident
-									let first_ident = path.ident.to_string();
-									if first_ident == name {
-										path.ident = syn::Ident::new(
-											"crate",
-											path.ident.span(),
-										);
-										// path.ident = Token![crate](path.ident.span());
-									}
-								}
-								_ => unimplemented!("Only path imports are supported"),
-							}
-							import.to_token_stream().to_string()
-						}
-						Err(err) => {
-							// eprintln!("Error parsing line as rust import. This may not be a fatal error, but often it is an early indicator of bad syntax\nErr:\n{:?}\nline: {:?}", err, line_mut)
-							line
-						}
+		if let Some(name) = &config.replace_package {
+			parsed.block.stmts.iter_mut().for_each(|line| {
+				if let Stmt::Item(Item::Use(ItemUse {
+					tree: UseTree::Path(UsePath { ref mut ident, .. }),
+					..
+				})) = line
+				{
+					if &ident.to_string() == name {
+						*ident = Ident::new("crate", ident.span());
 					}
-				} else {
-					line
 				}
 			});
+			self_mut.inner_lines = parsed
+				.clone()
+				.into_token_stream()
+				.to_string()
+				.lines()
+				.map(|l| l.to_string())
+				.collect();
 		}
 
-		Ok(CodeBlock {
-			inner_lines: self.inner_lines,
-			meta: ProcessedMeta {
-				meta: self.meta,
-				processed: parsed,
-			},
-		})
+		// println!("parsed: {:?}", parsed);
 
-		// unimplemented!()
-	}
-}
-
-impl CodeBlock<ProcessedMeta> {
-	pub fn into_tokens(self, config: &Config) -> syn::Result<ItemFn> {
-		let template = config.interpolate_template(&self.inner_lines.join("\n"), &self.meta.meta.name);
-
-		// Validate template is an ItemFn
-		match syn::parse_str::<ItemFn>(&template) {
-			Ok(item_fn) => {
-				// println!("item_fn: {:?}", item_fn);
-				Ok(item_fn)
-			}
-			Err(err) => {
-				let mut base_error = syn::Error::new_spanned(
-					template,
-					"Failed to parse template as a rust function. Make sure your template produces valid rust code after interpolation.",
-				);
-				base_error.combine(err);
-				Err(base_error)
-			}
-		}
+		Ok(parsed)
 	}
 }
 
@@ -549,8 +511,8 @@ pub fn extract_doctests(config: &Config, raw_input: TokenStream) -> syn::Result<
 		// .inspect(|code_block| println!("code_block: {:?}", code_block))
 		.filter_map(CodeBlock::check_testable)
 		// .inspect(|code_block| println!("code_blocks processed: {:?}", code_block))
-		.map(|code_block| code_block.into_tokens(config))
-		.collect::<Result<_, _>>()?;
+		.map(|block| block.process(&config))
+		.collect::<Result<Vec<_>, _>>()?;
 
 	Ok(quote_spanned! {span=>
 		#(#processed)*
