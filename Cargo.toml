@@ -17,3 +17,8 @@ repository = "https://github.com/ActuallyHappening/rust-firebase-js"
 license = "MIT"
 license-file = "LICENSE"
 documentation = "https://actuallyhappening.github.io/rust-firebase-js/"
+
+[workspace.dependencies]
+js-sys = "=0.3.61"
+wasm-bindgen = { version = "=0.2.84", features = ["serde"] }
+wasm-bindgen-test = "=0.3.33"

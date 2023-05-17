@@ -14,15 +14,11 @@ documentation = "https://actuallyhappening.github.io/rust-firebase-js/"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-## By default, no features are enabled
-default = ["js"]
+## By default, js is enabled
+default = ["serde"]
 
 ## Enables generic serde support
 serde = ["dep:serde"]
-
-## Enables wasm-bindgen support, including serialization and de-serialization, JsValue dereferencing, e.t.c.
-## Implies `serde` feature
-js = ["serde", "dep:wasm-bindgen", "dep:serde-wasm-bindgen"]
 
 [package.metadata.scripts]
 testq = """wasm-pack test --headless --safari --node --no-default-features --features js
@@ -31,9 +27,11 @@ open "/Applications/Visual Studio Code.app"
 
 [dependencies]
 serde = { version = "1.0.160", features = ["derive"], optional = true }
-serde-wasm-bindgen = { version = "0.5.0", optional = true }
-wasm-bindgen = { version = "0.2", optional = true }
-document-features = { version = "0.2.7", optional = false }
+serde-wasm-bindgen = { version = "0.5.0" }
+document-features = { version = "0.2.7" }
+js-sys = { workspace = true }
+wasm-bindgen = { workspace = true }
+smart-default = "0.7.1"
 
 [dev-dependencies]
 getrandom = { version = "0.2.9", features = ["js"] }

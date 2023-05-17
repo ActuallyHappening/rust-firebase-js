@@ -2,10 +2,7 @@ use std::env::VarError;
 
 #[cfg(feature = "serde")]
 use serde::{Serialize, Deserialize};
-#[cfg(feature = "js")]
 use wasm_bindgen::prelude::*;
-// #[cfg(feature = "js")]
-// use serde_wasm_bindgen::*;
 
 /// ## Represents a Firebase config object.
 /// This object **is serializable to JS** as you expect.
@@ -143,7 +140,6 @@ impl FirebaseConfig {
 	}
 }
 
-#[cfg(feature = "js")]
 impl TryFrom<FirebaseConfig> for JsValue {
 	type Error = JsValue;
 
@@ -232,7 +228,6 @@ impl TryFrom<FirebaseConfig> for JsValue {
 /// }.into_config().expect("projectId to be provided");
 /// ```
 #[allow(non_snake_case)]
-#[cfg(feature = "js")]
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct JsFirebaseConfigConstructor<'a> {
 	pub projectId: &'a str,
@@ -245,7 +240,6 @@ pub struct JsFirebaseConfigConstructor<'a> {
 	pub databaseURL: &'a str,
 }
 
-#[cfg(feature = "js")]
 impl<'a> JsFirebaseConfigConstructor<'a> {
 	/// ## Convert a [JsFirebaseConfigConstructor] into a [FirebaseConfig].
 	/// 
@@ -293,7 +287,6 @@ impl<'a> JsFirebaseConfigConstructor<'a> {
 	}
 }
 
-#[cfg(feature = "js")]
 #[cfg(test)]
 mod js_config_constructor_tests {
 	use super::*;
