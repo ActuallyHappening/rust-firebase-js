@@ -722,9 +722,9 @@ pub fn extract_doctests(config: &Config, raw_input: TokenStream) -> syn::Result<
 		// .inspect(|attrs| println!("Attrs: {:?}", attrs))
 		.filter_map(CodeBlock::from_attrs)
 		.flatten()
-		.inspect(|code_block| println!("code_block: {:?}", code_block))
+		// .inspect(|code_block| println!("code_block: {:?}", code_block))
 		.filter_map(CodeBlock::check_testable)
-		.inspect(|code_block| println!("code_blocks processed: {:?}", code_block))
+		// .inspect(|code_block| println!("code_blocks processed: {:?}", code_block))
 		.map(|code_block| code_block.into_tokens(config))
 		.collect::<Result<_, _>>()?;
 

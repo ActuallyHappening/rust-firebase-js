@@ -2,11 +2,7 @@ use wasm_bindgen::JsValue;
 use wasm_bindgen::prelude::*;
 use extract_doctests::extract_doctests;
 
-#[extract_doctests(inline_config(template = r##"
-fn nothing() {
-	panic!("template working");
-}
-"##))]
+#[extract_doctests]
 #[cfg_attr(feature = "web-not-node", wasm_bindgen(module = "/js/bundle-esm.js"))]
 #[cfg_attr(feature = "node-not-web", wasm_bindgen(module = "/js/bundle-cjs.js"))]
 // #[wasm_bindgen]
@@ -39,8 +35,4 @@ extern "C" {
 	/// ```
 	#[wasm_bindgen(js_name = "initializeApp", catch)]
 	pub fn initialize_app(config: JsValue, optional_name: JsValue) -> Result<JsValue, JsValue>;
-}
-
-fn _nothing() {
-	nothing();
 }
