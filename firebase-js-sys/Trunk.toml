@@ -1,3 +1,7 @@
 [serve]
 port = 3042
 open = true
+
+# wasm-bindgen args args=["--target=web", "--out-dir=/Users/calebyates/Desktop/rust-firebase-js/target/wasm-bindgen/debug", "--out-name=firebase-js-sys-eae4ba34ab565613", "/Users/calebyates/Desktop/rust-firebase-js/target/wasm32-unknown-unknown/debug/firebase_js_sys.wasm", "--no-typescript"]
+# above command properly formatted
+# wasm-bindgen --target=web --out-dir=/Users/calebyates/Desktop/rust-firebase-js/target/wasm-bindgen/debug --out-name=firebase-js-sys-eae4ba34ab565613 /Users/calebyates/Desktop/rust-firebase-js/target/wasm32-unknown-unknown/debug/firebase_js_sys.wasm --no-typescript

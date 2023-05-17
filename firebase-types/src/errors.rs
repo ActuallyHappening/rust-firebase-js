@@ -1,12 +1,17 @@
+use std::collections::HashMap;
 
+use serde::{Deserialize, Serialize};
 
-/// Structure representing Firebase error
+/// Represents a generic JS firebase error.
 /// 
 /// # Example
 /// The following example 
 /// ```rust
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
-pub struct FirebaseError {
+/// 
+/// ```
+#[cfg(feature = "js")]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+pub struct JsFirebaseError {
 	/// The error code for this error.
 	/// ```ts
 	/// readonly code: string
@@ -16,6 +21,5 @@ pub struct FirebaseError {
 	/// ```ts
 	/// customData?: Record<string, unknown> | undefined;
 	/// ```
-	#[serde(rename = "custom_data")]
-	customData: Option<HashMap<String, JsValue>>,
+	custom_data: Option<HashMap<String, String>>,
 }

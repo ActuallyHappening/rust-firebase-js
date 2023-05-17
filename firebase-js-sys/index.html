@@ -1,4 +1,41 @@
 <html>
 	<head>
 	</head>
+	<body>
+		<!-- use script module by specifying type="module" -->
+		<script type="module">
+			import { initializeApp, FirebaseError } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
+			import { getFirestore, collection, getDocs } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-lite.js';
+			// Follow this pattern to import other Firebase services
+			// import {} from "https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}/firebase-analytics.js";
+			// import {} from "https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}/firebase-app-check.js";
+			// import {} from "https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}/firebase-auth.js";
+			// import {} from "https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}/firebase-functions.js";
+			// import {} from "https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}/firebase-firestore.js";
+			// import {} from "https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}/firebase-storage.js";
+			// import {} from "https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}/firebase-performance.js";
+			// import {} from "https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}/firebase-remote-config.js";
+			// import {} from "https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}/firebase-messaging.js";
+			// import {} from "https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}/firebase-database.js";
+
+			// TODO: Replace the following with your app's Firebase project configuration
+			const firebaseConfig = {
+				//...
+			};
+
+			const app = initializeApp();
+			console.log(app);
+			
+
+			// const db = getFirestore(app);
+
+			// // Get a list of cities from your database
+			// async function getCities(db) {
+			// 	const citiesCol = collection(db, 'cities');
+			// 	const citySnapshot = await getDocs(citiesCol);
+			// 	const cityList = citySnapshot.docs.map(doc => doc.data());
+			// 	return cityList;
+			// }
+		</script>
+	</body>
 </html>
