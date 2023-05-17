@@ -189,6 +189,7 @@ version = "0.0.1"
 dependencies = [
  "document-features",
  "extract-doctests",
+ "firebase-js-sys",
  "getrandom",
  "js-sys",
  "rand",

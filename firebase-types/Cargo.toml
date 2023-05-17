@@ -48,6 +48,7 @@ smart-default = "0.7.1"
 extract-doctests = { workspace = true }
 
 [dev-dependencies]
+firebase-js-sys = { workspace = true }
 getrandom = { version = "0.2.9", features = ["js"] }
 rand = "0.8.5"
 
