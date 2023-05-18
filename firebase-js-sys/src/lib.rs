@@ -22,8 +22,8 @@ fn run_test_script() {
 	println!("test.sh finished");
 }
 
-pub mod app;
-pub use app::*;
+pub mod exports;
+pub use exports::*;
 
 #[cfg(test)]
 pub mod testing;

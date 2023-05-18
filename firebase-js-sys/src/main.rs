@@ -1,7 +1,7 @@
-use std::assert_eq;
+#![allow(unused_imports)]
 
-use firebase_js_sys::initialize_app;
-use js_sys::Reflect;
+use firebase_js_sys::exports::app::initialize_app;
+use js_sys::{Reflect, Object};
 use log::info;
 use wasm_bindgen::{JsValue, prelude::wasm_bindgen};
 
@@ -23,10 +23,10 @@ fn main() {
 
 	info!("firebase-js: main.rs()");
 
-	let err = initialize_app(JsValue::UNDEFINED, JsValue::UNDEFINED).expect_err("didn't err?");
+	let _err = initialize_app(Object::new(), None).expect("didn't err?");
 
-	log("err: ", &err);
+	// log("err: ", &err);
 
-	let code1 = Reflect::get(&err, &JsValue::from_str("code")).expect("Failed to get code");
-	log("code1: ", &code1);
+	// let code1 = Reflect::get(&err, &JsValue::from_str("code")).expect("Failed to get code");
+	// log("code1: ", &code1);
 }

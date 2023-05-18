@@ -1,6 +1,6 @@
 [package]
 name = "firebase-types"
-description = "Implementation agnostic types of firebase for use in rust"
+description = "wasm32 Rust types for the Firebase JS SDK"
 version = "0.0.1"
 edition = "2021"
 repository = "https://github.com/ActuallyHappening/rust-firebase-js/tree/master/firebase-types"
@@ -14,7 +14,7 @@ documentation = "https://actuallyhappening.github.io/rust-firebase-js/"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-## By default, js is enabled
+## By default, serde is enabled
 default = ["serde"]
 
 ## Enables generic serde support
@@ -53,8 +53,8 @@ getrandom = { version = "0.2.9", features = ["js"] }
 rand = "0.8.5"
 
 
-[package.metadata.docs.rs]
-cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples=examples"]
-# Alternative: enable all features so they are all documented
-# features = ["document-features"]
-all-features = true
+# [package.metadata.docs.rs]
+# cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples=examples"]
+# # Alternative: enable all features so they are all documented
+# # features = ["document-features"]
+# all-features = true

@@ -1,17 +1,17 @@
-# Firebase JS sys
-This crate provides a low-level wrapper around the Firebase JS SDK, the useful
-functions and types are `#[wasm_bindgen]`ed into Rust, keeping JS semantics.
+# Firebase JS SYS
+**Raw wrappers around the `firebase` npm package** for `Rust` consumption.
+Delicious!
 
-This package intends to be a solid foundation for building onto of, with
-extensive tests and common known errors mapped into Rust.
+## WARNING: ⚠️ ENABLE `web-not-node` (default) or `node-not-web`, **not both!** ⚠️ 
 
-Contributions welcome!
+See [the `firebase-js` package](https://github.com/ActuallyHappening/rust-firebase-js/tree/master/firebase-js)
+for a high level implementation layer ontop of this crate, which is probably what you want rather
+than having to manually deal with each `JsValue`.
 
-## Aim
-To provide the very first 'glue' between Rust and JS for firebase.
-Any errors emenating from this library should be soley from the JavaScript world,
-caused by an incorrect value being passed into a *rust* function that should
-be interpretted as a *JS* function.
+## Recommended Documentation:
+Documentation in Rust-Firebase-JS project book: https://actuallyhappening.github.io/rust-firebase-js/firebase_js_sys/introduction.html
 
-This library is definitely not practical to use, is is designed to provide a
-stable base to build other libraries on top of, notably `firebase-js`.
+## Design
+This crate exposes the lowest level bindings to the underlying JS!
+That means you will be dealing with `js_sys::Error`, `js_sys::Object`,
+`wasm_bindgen::JsValue`, e.t.c. directly.
