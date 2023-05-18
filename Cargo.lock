@@ -66,6 +66,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "derive-deref-rs"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fb44ba65b4c7afe45d03d8e33ecb53a21c57d0ffff196f04aefa15c43671f8a6"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
 name = "derive-new"
 version = "0.5.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -166,6 +177,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "firebase-js"
+version = "0.0.1"
+dependencies = [
+ "console_error_panic_hook",
+ "console_log",
+ "derive-deref-rs",
+ "derive-new",
+ "firebase-js-sys",
+ "log",
+ "serde",
+ "serde-wasm-bindgen",
+ "thiserror",
+ "wasm-bindgen",
+ "wasm-bindgen-test",
+]
+
+[[package]]
 name = "firebase-js-sys"
 version = "0.0.1"
 dependencies = [
@@ -174,7 +202,6 @@ dependencies = [
  "document-features",
  "execute",
  "extract-doctests",
- "firebase-types",
  "js-sys",
  "log",
  "serde-wasm-bindgen",
@@ -449,6 +476,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "be55cf8942feac5c765c2c993422806843c9a9a45d4d5c407ad6dd2ea95eb9b6"
 dependencies = [
  "winapi-util",
+]
+
+[[package]]
+name = "thiserror"
+version = "1.0.40"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "978c9a314bd8dc99be594bc3c175faaa9794be04a5a5e153caba6915336cebac"
+dependencies = [
+ "thiserror-impl",
+]
+
+[[package]]
+name = "thiserror-impl"
+version = "1.0.40"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f9456a42c5b0d803c8cd86e73dd7cc9edd429499f37a3550d286d5e86720569f"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.16",
 ]
 
 [[package]]

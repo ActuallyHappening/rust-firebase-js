@@ -16,15 +16,18 @@ categories = ["api-bindings", "wasm", "web-programming"]
 console_error_panic_hook = "0.1.7"
 console_log = { version = "1.0.0" }
 log = "0.4.17"
-serde-wasm-bindgen = "0.5.0"
-wasm-bindgen = { version = "0.2.84", features = ["serde"] }
-
-# Local dep
-firebase-js-sys = { path = "../firebase-js-sys", version = "0.1.0" }
+serde-wasm-bindgen = { workspace = true }
+wasm-bindgen = { workspace = true }
 serde = { version = "1.0.160", features = ["derive"] }
 thiserror = "1.0.40"
 derive-deref-rs = "0.1.1"
 derive-new = "0.5.9"
+
+# Local dep
+# firebase-js-sys = { path = "../firebase-js-sys" }
+[dependencies.firebase-js-sys]
+workspace = true
+
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.34"

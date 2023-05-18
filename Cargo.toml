@@ -5,9 +5,10 @@ members = [
 	"extract-doctests/core",
 
 	"firebase-js-sys",
+	"firebase-js",
 	"firebase-types",
 ]
-exclude = ["firebase-js"]
+# exclude = ["firebase-js"]
 
 [workspace.package]
 # REMEMBER: UPDATE in js-bind/Cargo.toml !!
@@ -22,6 +23,7 @@ documentation = "https://actuallyhappening.github.io/rust-firebase-js/"
 js-sys = "0.3.63"
 wasm-bindgen = { version = "0.2.86", features = ["serde"] }
 wasm-bindgen-test = "0.3.36"
+serde-wasm-bindgen = { version = "0.5.0" }
 
 [workspace.dependencies.firebase-js-sys]
 path = "./firebase-js-sys"

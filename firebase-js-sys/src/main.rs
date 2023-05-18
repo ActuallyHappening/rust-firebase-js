@@ -1,6 +1,6 @@
 #![allow(unused_imports)]
 
-use firebase_js_sys::exports::app::initialize_app;
+use firebase_js_sys::app::initialize_app;
 use js_sys::{Reflect, Object};
 use log::info;
 use wasm_bindgen::{JsValue, prelude::wasm_bindgen};

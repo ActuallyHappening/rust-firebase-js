@@ -82,8 +82,8 @@ workspace = true
 # path = "../extract-doctests"
 # version = "0.0.1"
 
-[dependencies.firebase-types]
-path = "../firebase-types"
+# [dependencies.firebase-types]
+# path = "../firebase-types"
 # version = "0.0.1" # TODO: Update firebase-types on crates.io
 
 # firebase-js-sys-proc = { path = "./proc", default-features = false }

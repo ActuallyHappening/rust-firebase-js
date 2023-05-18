@@ -1,6 +1,7 @@
 target
 dist
 node_modules
+pkg
 
 secrets.rs
 .DS_Store
