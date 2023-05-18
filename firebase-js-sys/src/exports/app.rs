@@ -1,8 +1,12 @@
+#![allow(unused_imports)]
+
 use extract_doctests::extract_doctests;
-use js_sys::Error;
-use js_sys::Object;
+use js_sys::{Error, Object, Reflect};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsValue;
+
+#[cfg(test)]
+use wasm_bindgen_test::wasm_bindgen_test;
 
 #[extract_doctests]
 #[cfg_attr(feature = "web-not-node", wasm_bindgen(module = "/js/bundle-esm.js"))]
@@ -25,72 +29,103 @@ extern "C" {
 	/// ```
 	///
 	/// ## Examples
-	/// Raw example, asserting various known properties
 	/// ```rust,no_run
-	/// // ext ract-doctests initialize_app
+	/// // extract-doctests initialize_app
 	/// use firebase_js_sys::app::initialize_app;
 	/// use wasm_bindgen::JsValue;
 	/// use js_sys::{Object, Reflect};
-	/// 
+	///
 	/// fn set<T>(target: &JsValue, prop: &str, val: T) where JsValue: From<T> {
 	/// 	Reflect::set(&target, &JsValue::from_str(prop), &JsValue::from(val)).unwrap();
 	/// }
 	/// 
-	/// let names = vec![
-	/// 	None,
-	/// 	Some(""),
-	/// 	Some("hello"),
-	///   Some("📖 unicode supported"),
-	/// ];
+	/// let config = Object::new();
+	/// set(&config, "projectId", "test");
 	/// 
-	/// let valid_configs = vec![
-	/// 	Object::new(),
-	/// 	{
-	/// 		let obj = Object::new();
-	/// 		set(&obj, "projectId", "test");
-	/// 		obj
-	/// 	},
-	/// 	{
-	/// 		let obj = Object::new();
-	/// 		set(&obj, "foo", "test");
-	/// 		set(&obj, "bar", 69);
-	/// 		obj
-	/// 	},
-	/// ];
+	/// // initialize with no name
+	/// initialize_app(config.clone(), None).expect("Failed to initialize app");
 	/// 
-	/// let invalid_configs: Vec<Object> = vec![
-	/// ];
-	/// 
-	/// // Should error
-	/// for config in invalid_configs.clone() {
-	/// 	for name in names.clone() {
-	/// 		let result = initialize_app(config.clone(), name);
-	/// 		assert!(result.is_err());
-	/// 	}
-	/// }
-	/// 
-	/// // Should not error
-	/// for config in valid_configs.clone() {
-	/// 	for name in names.clone() {
-	/// 		let result = initialize_app(config.clone(), name);
-	/// 		assert!(result.is_ok());
-	/// 	}
-	/// }
+	/// // initialize with name
+	/// initialize_app(config.clone(), Some("test")).expect("Failed to initialize app");
 	/// ```
 	#[wasm_bindgen(js_name = "initializeApp", catch)]
 	pub fn initialize_app(config: Object, optional_name: Option<&str>) -> Result<JsValue, Error>;
 }
 
 // #[cfg(test)]
-// #[test]
+// #[wasm_bindgen_test]
 // fn test_initialize_app() {
-//     use js_sys::Reflect;
+// 	#[cfg(feature = "web-not-node")]
+// 	::wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
-// 	let config = Object::new();
-// 	Reflect::set(&config, &JsValue::from_str("projectId"), &JsValue::from_str("test")).unwrap();
+// 	fn set<T>(target: &JsValue, prop: &str, val: T)
+// 	where
+// 		JsValue: From<T>,
+// 	{
+// 		Reflect::set(&target, &JsValue::from_str(prop), &JsValue::from(val)).unwrap();
+// 	}
 
-// 	let result = initialize_app(config, None);
-// 	assert!(result.is_ok());
-// 	let app = result.unwrap();
-// 	assert!(app.is_object());
+// 	let good_names = vec![None, Some("hello"), Some("📖 unicode supported"),Some("\n newlines"), Some("\t tabs")];
+
+// 	let bad_names = vec![Some(""), ];
+
+// 	let good_configs = vec![
+// 		Object::new(),
+// 		{
+// 			let obj = Object::new();
+// 			set(&obj, "projectId", "test");
+// 			obj
+// 		},
+// 		{
+// 			let obj = Object::new();
+// 			set(&obj, "foo", "test");
+// 			set(&obj, "bar", 69);
+// 			obj
+// 		},
+// 		{
+// 			let obj = Object::new();
+// 			set(&obj, "projectId", "");
+// 			obj
+// 		},
+// 	];
+
+// 	let bad_configs: Vec<Object> = vec![];
+
+// 	fn assert(config: Object, name: Option<&str>, should_err: bool) {
+// 		let result = initialize_app(config.clone(), name);
+// 		assert!(
+// 			match should_err {
+// 				true => result.is_err(),
+// 				false => result.is_ok(),
+// 			},
+// 			"Assertion failed: Expected an {} return, found opposite. config: {:?}, name: {:?}. Full Error: {:?}",
+// 			match should_err {
+// 				true => "error",
+// 				false => "ok",
+// 			},
+// 			config.clone(),
+// 			name,
+// 			result
+// 		);
+// 	}
+
+// 	// Should error
+// 	bad_configs.clone().into_iter().for_each(|config| {
+// 		good_names.clone().into_iter().for_each(|name| {
+// 			assert(config.clone(), name, true);
+// 		});
+// 		bad_names.clone().into_iter().for_each(|name| {
+// 			assert(config.clone(), name, true);
+// 		});
+// 	});
+
+// 	// Shouldn't error
+// 	good_configs.clone().into_iter().for_each(|config| {
+// 		good_names.clone().into_iter().for_each(|name| {
+// 			assert(config.clone(), name, false);
+// 		});
+// 		bad_names.clone().into_iter().for_each(|name| {
+// 			assert(config.clone(), name, true);
+// 		});
+// 	});
 // }

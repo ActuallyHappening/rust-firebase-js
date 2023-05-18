@@ -14,7 +14,7 @@ fn run_test_script() {
 	// run ./test.sh
 	println!("Running test.sh");
 	let mut output = std::process::Command::new("sh")
-		.arg("../test.sh")
+		.arg("./test.sh")
 		.spawn()
 		.expect("Failed to run test.sh");
 	output.wait().expect("Failed to wait on test.sh");
