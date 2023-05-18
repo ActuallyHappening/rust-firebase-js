@@ -1,0 +1,33 @@
+{
+	"folders": [
+		{
+			"name": "rust-firebase-js",
+			"path": "."
+		},
+		{
+			"name": "firebase-js-sys",
+			"path": "firebase-js-sys"
+		},
+		{
+			"name": "firebase-types",
+			"path": "firebase-types"
+		},
+		{
+			"name": "firebase-js",
+			"path": "firebase-js"
+		},
+		{
+			"name": "extract-doctests",
+			"path": "extract-doctests"
+		},
+		{
+			"name": "SmilePal",
+			"path": "../SmilePal"
+		},
+		{
+			"name": "front-and-backend",
+			"path": "../SmilePal/front-and-backend"
+		}
+	],
+	"settings": {}
+}

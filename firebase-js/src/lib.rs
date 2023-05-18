@@ -5,13 +5,12 @@
 
 use thiserror::Error;
 use wasm_bindgen::prelude::Closure;
-use wasm_bindgen::{JsValue};
+use wasm_bindgen::JsValue;
 
 #[allow(non_camel_case_types)]
 type closure<Args> = Closure<dyn FnMut(Args)>;
 
-pub mod js_semantic;
-pub mod rusty;
+pub mod app;
 
 #[derive(Debug, Error)]
 pub enum FirebaseError {
