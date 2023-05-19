@@ -1,7 +1,7 @@
 use extract_doctests::extract_doctests;
 use js_sys::Error;
-use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
-
+use wasm_bindgen::{prelude::wasm_bindgen, JsValue, JsCast};
+use std::fmt::{Debug, Formatter, self};
 use crate::TClosure;
 
 #[extract_doctests]
@@ -83,6 +83,13 @@ extern "C" {
 	/// ```js
 	/// import { onValue } from 'firebase/database';
 	/// ```
-	#[wasm_bindgen(js_name = "onValue")]
-	pub fn on_value(db_ref: &JsValue, callback: &TClosure<DatabaseSnapshot>) -> JsValue;
+	#[wasm_bindgen(js_name = "onValue", catch)]
+	pub fn on_value(db_ref: &JsValue, callback: &TClosure<DatabaseSnapshot>) -> Result<JsValue, Error>;
+}
+
+impl Debug for DatabaseSnapshot {
+	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+		let js_val: &JsValue = self.dyn_ref().expect("Failed to cast to JsValue: should NEVER happen??");
+		js_val.fmt(f)
+	}
 }

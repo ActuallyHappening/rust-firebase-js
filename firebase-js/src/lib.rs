@@ -3,40 +3,41 @@
 //! ## WIP:
 //! Currently, no errors are handled :(
 
+use std::cell::RefCell;
+
 use app::App;
 use firebase_js_sys::database::DatabaseSnapshot;
 use js_sys::Error;
 use thiserror::Error as DeriveError;
-use wasm_bindgen::{convert::FromWasmAbi, prelude::Closure};
+use wasm_bindgen::{prelude::Closure, convert::FromWasmAbi};
 
 type TClosure<Args> = Closure<dyn FnMut(Args)>;
 pub type FResult<T> = std::result::Result<T, FirebaseError>;
 
 pub mod app;
 pub mod db;
+pub use firebase_types as types;
 
 #[derive(Debug)]
 /// Represents the lifetime of closures passed to the Firebase JS SDK.
 ///
 /// TODO: Make generic over any type
-pub struct Global<'this> {
-	app: App<'this>,
-	closures: Vec<&'this Closure<dyn FnMut(DatabaseSnapshot)>>,
+pub struct ClosureGlobal<T> {
+	closures: RefCell<Vec<Closure<dyn FnMut(T)>>>,
 }
 
-impl<'this> Global<'this> {
-	pub fn new(app: App<'this>) -> Self {
+// type T = DatabaseSnapshot;
+
+impl<Params> ClosureGlobal<Params> {
+	pub fn new() -> Self {
 		Self {
-			app,
-			closures: Vec::new(),
+			closures: RefCell::new(Vec::new()),
 		}
 	}
 
-	pub fn register_closure<T: FromWasmAbi>(closure: impl FnMut(T)) {
-		let closure = Closure::wrap(Box::new(closure) as Box<dyn FnMut(T)>);
+	pub fn take_closure(&self, closure: Closure<dyn FnMut(Params)>) {
+		self.closures.borrow_mut().push(closure);
 	}
-
-	fn take_closure<T>(closure: Closure<dyn FnMut(T)>) {}
 }
 
 #[derive(Debug, DeriveError)]
