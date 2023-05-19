@@ -2,12 +2,16 @@
 //! ## Features:
 #![doc = document_features::document_features!()]
 
+use wasm_bindgen::prelude::Closure;
+
 // compile error is niether feature is enabled
 #[cfg(not(any(feature = "web-not-node", feature = "node-not-web")))]
 compile_error!("You must enable either the `web-not-node` or `node-not-web` feature to use this crate");
 // compile error if both features are enabled
 // #[cfg(all(feature = "web-not-node", feature = "node-not-web"))]
 // compile_error!("You must enable either the `web-not-node` or `node-not-web` feature to use this crate, not both");
+
+type TClosure<Args> = Closure<dyn FnMut(Args)>;
 
 #[test]
 fn run_test_script() {
@@ -49,6 +53,8 @@ fn run_examples() {
 }
 
 pub mod app;
+pub mod database;
 
-#[cfg(test)]
-pub mod testing;
+// #[cfg(any(test))]
+#[path = "testing.rs"]
+pub mod __testing;

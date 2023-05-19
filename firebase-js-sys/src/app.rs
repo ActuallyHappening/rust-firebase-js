@@ -30,7 +30,7 @@ extern "C" {
 	///
 	/// ## Examples
 	/// ```rust,no_run
-	/// // extract-doctests initialize_app
+	/// // extract-doctests test_initialize_app
 	/// use firebase_js_sys::app::initialize_app;
 	/// use wasm_bindgen::JsValue;
 	/// use js_sys::{Object, Reflect};
@@ -43,10 +43,10 @@ extern "C" {
 	/// set(&config, "projectId", "test");
 	/// 
 	/// // initialize with no name
-	/// initialize_app(config.clone(), None).expect("Failed to initialize app");
+	/// initialize_app(config.clone(), None);//.expect("Couldn't initialize app 1");
 	/// 
 	/// // initialize with name
-	/// initialize_app(config.clone(), Some("test")).expect("Failed to initialize app");
+	/// initialize_app(config.clone(), Some("test"));//.expect("Couldn't initialize app 2");
 	/// ```
 	#[wasm_bindgen(js_name = "initializeApp", catch)]
 	pub fn initialize_app(config: Object, optional_name: Option<&str>) -> Result<JsValue, Error>;

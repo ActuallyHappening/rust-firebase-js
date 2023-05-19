@@ -17,10 +17,10 @@
 	// }
 	"js-bind": {
 		"scope": "typescript",
-		"prefix": "jsb-old",
+		"prefix": "jsbo",
 		"body": [
 			"import { $1 as _$1 } from \"firebase/$2\";",
-			"_$2.$1 = wrapper(\"$1\", _$1);"
+			"export const $1 = _$1",
 		]
 	},
 	"js-bind2": {

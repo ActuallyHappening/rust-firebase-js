@@ -1,4 +1,4 @@
-use js_sys::JsString;
+use js_sys::{JsString, Object, Reflect};
 use wasm_bindgen::{JsValue, JsCast};
 
 /// Returns every equivalent representation of a JS string.
@@ -26,4 +26,11 @@ pub fn get_bools(bool: bool) -> Vec<JsValue> {
 			false => JsValue::FALSE,
 		}
 	]
+}
+
+pub fn get_test_app() -> JsValue {
+	let config = Object::new();
+	Reflect::set(&config, &JsValue::from_str("projectId"), &JsValue::from_str("test")).unwrap();
+
+	crate::app::initialize_app(config, Some("testing")).expect("Couldn't create test app")
 }
