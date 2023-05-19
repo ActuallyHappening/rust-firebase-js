@@ -23,7 +23,7 @@ fn main() {
 
 	info!("firebase-js: main.rs()");
 
-	let _err = initialize_app(Object::new(), None).expect("didn't err?");
+	let _err = initialize_app(Object::new(), None).expect("Couldn't init app");
 
 	// log("err: ", &err);
 

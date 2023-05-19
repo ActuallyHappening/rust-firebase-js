@@ -20,6 +20,7 @@ extern "C" {
 	/// ```
 	/// 
 	/// ## Examples:
+	/// Minimal example:
 	/// ```rust,no_run
 	/// // extract-doctests test_get_database
 	/// use firebase_js_sys::app::initialize_app;
@@ -48,6 +49,22 @@ extern "C" {
 	/// ```
 	///
 	/// Pass [None] as second arg to get a reference to the root of the database
+	/// 
+	/// ## Examples:
+	/// Minimal example:
+	/// ```rust,no_run
+	/// // extract-doctests test_get_ref
+	/// 
+	/// use firebase_js_sys::app::initialize_app;
+	/// use firebase_js_sys::database::{get_ref, get_database};
+	/// 
+	/// use firebase_js_sys::__testing::get_test_app;
+	/// let app = get_test_app();
+	/// 
+	/// let db = get_database(&app, None).expect("Failed to get database");
+	/// 
+	/// let db_ref = get_ref(&db, Some("test/path")).expect("db ref to be ok");
+	/// ```
 	#[wasm_bindgen(js_name = "ref", catch)]
 	pub fn get_ref(db: &JsValue, path: Option<&str>) -> Result<JsValue, Error>;
 

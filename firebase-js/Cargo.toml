@@ -29,6 +29,8 @@ derive-new = "0.5.9"
 workspace = true
 [dependencies.firebase-types]
 workspace = true
+[dependencies.js-sys]
+workspace = true
 
 
 [dev-dependencies]
