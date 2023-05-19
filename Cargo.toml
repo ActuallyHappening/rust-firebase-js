@@ -29,6 +29,9 @@ serde-wasm-bindgen = { version = "0.5.0" }
 path = "./firebase-js-sys"
 # version = "0.0.1"
 
+[workspace.dependencies.firebase-types]
+path = "./firebase-types"
+
 [workspace.dependencies.extract-doctests]
 path = "./extract-doctests"
 # version = "0.0.1"

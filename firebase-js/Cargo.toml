@@ -27,6 +27,8 @@ derive-new = "0.5.9"
 # firebase-js-sys = { path = "../firebase-js-sys" }
 [dependencies.firebase-js-sys]
 workspace = true
+[dependencies.firebase-types]
+workspace = true
 
 
 [dev-dependencies]

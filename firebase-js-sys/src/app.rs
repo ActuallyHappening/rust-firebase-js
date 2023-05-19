@@ -50,6 +50,9 @@ extern "C" {
 	/// ```
 	#[wasm_bindgen(js_name = "initializeApp", catch)]
 	pub fn initialize_app(config: Object, optional_name: Option<&str>) -> Result<JsValue, Error>;
+
+	#[wasm_bindgen(js_name = "initializeApp", catch)]
+	pub fn initialize_app_untyped(config: JsValue, optional_name: JsValue) -> Result<JsValue, JsValue>;
 }
 
 // #[cfg(test)]

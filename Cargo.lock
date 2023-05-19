@@ -185,6 +185,7 @@ dependencies = [
  "derive-deref-rs",
  "derive-new",
  "firebase-js-sys",
+ "firebase-types",
  "log",
  "serde",
  "serde-wasm-bindgen",
