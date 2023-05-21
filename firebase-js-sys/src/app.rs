@@ -43,10 +43,10 @@ extern "C" {
 	/// set(&config, "projectId", "test");
 	/// 
 	/// // initialize with no name
-	/// initialize_app(config.clone(), None);//.expect("Couldn't initialize app 1");
+	/// initialize_app(config.clone(), None).expect("Couldn't initialize app 1");
 	/// 
 	/// // initialize with name
-	/// initialize_app(config.clone(), Some("test"));//.expect("Couldn't initialize app 2");
+	/// initialize_app(config.clone(), Some("test")).expect("Couldn't initialize app 2");
 	/// ```
 	#[wasm_bindgen(js_name = "initializeApp", catch)]
 	pub fn initialize_app(config: Object, optional_name: Option<&str>) -> Result<JsValue, Error>;

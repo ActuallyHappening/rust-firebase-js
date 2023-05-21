@@ -61,9 +61,12 @@ extern "C" {
 	/// use firebase_js_sys::__testing::get_test_app;
 	/// let app = get_test_app();
 	/// 
-	/// let db = get_database(&app, None).expect("Failed to get database");
+	/// let db: JsValue = get_database(&app, None).expect("Failed to get database");
 	/// 
-	/// let db_ref = get_ref(&db, Some("test/path")).expect("db ref to be ok");
+	/// let db_ref: JsValue = get_ref(&db, Some("test/path")).expect("db ref to be ok");
+	/// 
+	/// println!("db_ref: {:?}", db_ref);
+	/// //assert!(false);
 	/// ```
 	#[wasm_bindgen(js_name = "ref", catch)]
 	pub fn get_ref(db: &JsValue, path: Option<&str>) -> Result<JsValue, Error>;
